@@ -24,4 +24,24 @@ void main() {
     expect(pvec.toString(),
         equals('pvec=mult(r,add(mult(sin(th),ihat),mult(cos(th),jhat)))'));
   });
+
+  test('Solve a simple equation', () {
+    var resolver = new ExprResolver();
+    resolver.addResolver('add', (args) => args[0] + args[1]);
+    resolver.addResolver('sub', (args) => args[0] - args[1]);
+    resolver.addResolver('mult', (args) => args[0] * args[1]);
+    resolver.addResolver('div', (args) => args[0] / args[1]);
+
+    var eq = new Eq.parse('add(mult(x, 2), 5) = 9');
+    eq.wrap(
+        new Expr.parse('add(a, b)'), ['a', 'b'], new Expr.parse('sub(%, b)'));
+    eq.sub(new Eq.parse('sub(add(a, b), b) = a'), gen: ['a', 'b']);
+    eq.wrap(
+        new Expr.parse('mult(a, b)'), ['a', 'b'], new Expr.parse('div(%, b)'));
+    eq.sub(new Eq.parse('div(mult(a, b), b) = a'), gen: ['a', 'b']);
+    eq.compute(resolver);
+
+    // Check
+    expect(eq.toString(), equals('x=2.0'));
+  });
 }

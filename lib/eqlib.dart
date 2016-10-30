@@ -6,5 +6,6 @@ library eqlib;
 
 import 'package:quiver/core.dart';
 
+part 'src/resolver.dart';
 part 'src/expr.dart';
 part 'src/eq.dart';

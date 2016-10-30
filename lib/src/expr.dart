@@ -17,16 +17,22 @@ class Expr {
   /// Construct from the given label and arguments.
   Expr.from(this.label, this.args);
 
+  /// Construct by parsing the given expression.
+  factory Expr.parse(String str) {
+    return new Expr()..parseUnsafe(str.replaceAll(' ', ''));
+  }
+
   /// Parse an expression string.
-  String parse(String str) {
-    final lblre = new RegExp('([a-z0-9]+)');
+  /// Note: the given string should not contain white spaces.
+  String parseUnsafe(String str) {
+    final lblre = new RegExp('([-.%a-z0-9]+)');
     label = lblre.matchAsPrefix(str).group(1);
     str = str.substring(label.length);
     if (str.startsWith('(')) {
       str = str.substring(1);
       while (!str.startsWith(')')) {
         args.add(new Expr());
-        str = args.last.parse(str);
+        str = args.last.parseUnsafe(str);
         if (str.startsWith(',')) {
           str = str.substring(1);
         }
@@ -95,6 +101,7 @@ class Expr {
 
   /// If this expression is in the [mapping] table, this will return the new
   /// expression. Else this will remap all arguments.
+  /// This method creates a new expression instance.
   Expr remap(Map<String, Expr> mapping) {
     if (mapping.containsKey(label)) {
       return mapping[label].clone();
@@ -104,14 +111,28 @@ class Expr {
     }
   }
 
+  /// Replace the data by the data from another expression.
+  void _replace(Expr other) {
+    label = other.label;
+    args.clear();
+    for (final arg in other.args) {
+      args.add(arg.clone());
+    }
+  }
+
   /// Forced substitute the given [equation] right hand side and remap it using
   /// the provided [mapping] table.
   void _sub(Eq equation, Map<String, Expr> mapping) {
-    label = equation.r.label;
-    args.clear();
-    // Copy all arguments
-    for (final arg in equation.r.args) {
-      args.add(arg.remap(mapping));
+    // If the equation replacement is in the mapping table, use it and return.
+    if (mapping.containsKey(equation.r.label)) {
+      _replace(mapping[equation.r.label]);
+    } else {
+      label = equation.r.label;
+      args.clear();
+      // Copy all arguments
+      for (final arg in equation.r.args) {
+        args.add(arg.remap(mapping));
+      }
     }
   }
 
@@ -138,6 +159,49 @@ class Expr {
     }
 
     return index;
+  }
+
+  /// Check if this expression is numeric.
+  /// TODO: clearner and more efficient approach.
+  bool get isNumeric => args.isEmpty && num.parse(label, (_) => null) != null;
+
+  /// Compute numeric expressions.
+  num compute(ExprResolver resolver) {
+    // Check if this expression is numeric, in this case, return the numeric value.
+    if (isNumeric) {
+      return num.parse(label);
+    }
+
+    // Check if there is a resolver for this expression.
+    else if (resolver.canResolve(label)) {
+      var numArgs = new List<num>(args.length);
+
+      // Collect all arguments as numeric values.
+      for (var i = 0; i < args.length; i++) {
+        // Try to resolve argument to a number.
+        num value = args[i].compute(resolver);
+        if (value == null) {
+          numArgs = null;
+        } else {
+          numArgs[i] = value;
+
+          // Replace argument with numeric value.
+          args[i] = new Expr.from(value.toString(), []);
+        }
+      }
+
+      // Return numeric expression with the numeric value, or null if it is not
+      // possible to compute a numeric value.
+      if (numArgs != null) {
+        return resolver.resolve(label, numArgs);
+      } else {
+        return null;
+      }
+    } else {
+      // Return null, indicating that this expression cannot be resolved to a
+      // numeric value.
+      return null;
+    }
   }
 
   /// Generate string representation.

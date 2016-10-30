@@ -14,8 +14,8 @@ class Eq {
   /// Parse an equation string representation.
   factory Eq.parse(String str) {
     final sides = str.split('=');
-    return new Eq(new Expr()..parse(sides[0].replaceAll(' ', '')),
-        new Expr()..parse(sides[1].replaceAll(' ', '')));
+    return new Eq(new Expr()..parseUnsafe(sides[0].replaceAll(' ', '')),
+        new Expr()..parseUnsafe(sides[1].replaceAll(' ', '')));
   }
 
   /// Substitute the given equation.
@@ -23,6 +23,30 @@ class Eq {
     idx = l.sub(eq, gen, idx);
     if (idx != -1) {
       r.sub(eq, gen, idx);
+    }
+  }
+
+  /// Wrap both sides of the equation using the given condition.
+  void wrap(Expr condition, List<String> generic, Expr wrapping) {
+    final lmap = l.matchSuperset(condition, generic);
+    if (lmap != null) {
+      lmap['%'] = l;
+      l = wrapping.remap(lmap);
+      lmap['%'] = r;
+      r = wrapping.remap(lmap);
+    }
+  }
+
+  /// Compute both sides of the equation as far as possible using the given
+  /// resolver.
+  void compute(ExprResolver resolver) {
+    num lvalue = l.compute(resolver);
+    if (lvalue != null) {
+      l = new Expr.from(lvalue.toString(), []);
+    }
+    num rvalue = r.compute(resolver);
+    if (rvalue != null) {
+      r = new Expr.from(rvalue.toString(), []);
     }
   }
 
