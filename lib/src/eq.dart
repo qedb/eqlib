@@ -7,49 +7,69 @@ part of eqlib;
 /// Equation of two expressions
 class Eq {
   /// Left and right hand side.
-  Expr l, r;
+  Expr left, right;
 
-  Eq(this.l, this.r);
+  Eq(this.left, this.right);
 
   /// Parse an equation string representation.
   factory Eq.parse(String str) {
     final sides = str.split('=');
-    return new Eq(new Expr()..parseUnsafe(sides[0].replaceAll(' ', '')),
-        new Expr()..parseUnsafe(sides[1].replaceAll(' ', '')));
+    if (sides.length == 2) {
+      return new Eq(new Expr.parse(sides[0]), new Expr.parse(sides[1]));
+    } else {
+      throw new FormatException(
+          "the equation should be of the format 'Expr=Expr'");
+    }
   }
 
   /// Substitute the given equation.
-  void sub(Eq eq, {List<String> gen: const [], int idx: 0}) {
-    idx = l.sub(eq, gen, idx);
-    if (idx != -1) {
-      r.sub(eq, gen, idx);
+  void substitute(Eq eq, {List<int> gen: const [], int idx: 0}) {
+    final index = new W<int>(idx);
+    left = left.substitute(eq, gen, index);
+    if (index.v != -1) {
+      right = right.substitute(eq, gen, index);
     }
   }
 
   /// Wrap both sides of the equation using the given condition.
-  void wrap(Expr condition, List<String> generic, Expr wrapping) {
-    final lmap = l.matchSuperset(condition, generic);
+  void wrap(Expr condition, List<int> generic, Expr wrapping) {
+    final lmap = left.matchSuperset(condition, generic);
     if (lmap != null) {
-      lmap['%'] = l;
-      l = wrapping.remap(lmap);
-      lmap['%'] = r;
-      r = wrapping.remap(lmap);
+      _wrap(wrapping, lmap);
+    } else {
+      final rmap = right.matchSuperset(condition, generic);
+      if (rmap != null) {
+        _wrap(wrapping, rmap);
+      } else {
+        throw new Exception('the condition does not match left or right');
+      }
     }
+  }
+
+  /// Wrap both sides of the equation using the provided [wrapping] expression
+  /// and expression [mapping].
+  void _wrap(Expr wrapping, Map<int, Expr> mapping) {
+    mapping[0] = left;
+    left = wrapping.remap(mapping);
+    mapping[0] = right;
+    right = wrapping.remap(mapping);
   }
 
   /// Compute both sides of the equation as far as possible using the given
   /// resolver.
-  void compute(ExprResolver resolver) {
-    num lvalue = l.compute(resolver);
+  void compute(
+      [ExprCanCompute canCompute = defaultCanCompute,
+      ExprCompute computer = defaultCompute]) {
+    num lvalue = left.compute(canCompute, computer);
     if (lvalue != null) {
-      l = new Expr.from(lvalue.toString(), []);
+      left = new Expr.numeric(lvalue);
     }
-    num rvalue = r.compute(resolver);
+    num rvalue = right.compute(canCompute, computer);
     if (rvalue != null) {
-      r = new Expr.from(rvalue.toString(), []);
+      right = new Expr.numeric(rvalue);
     }
   }
 
   /// Generate string representation.
-  String toString() => '$l=$r';
+  String toString() => '$left=$right';
 }

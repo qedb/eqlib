@@ -4,42 +4,44 @@
 
 import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
+import 'package:eqlib/compute.dart';
 
 void main() {
+  final symbolA = defaultResolver('a');
+  final symbolB = defaultResolver('b');
+  final symbolC = defaultResolver('c');
+
   test('Derivation of centripetal acceleration (step 1)', () {
     var pvec = new Eq.parse('pvec = vec2d');
-    pvec.sub(new Eq.parse('vec2d = add(mult(x, ihat), mult(y, jhat))'));
-    pvec.sub(new Eq.parse('x = px'));
-    pvec.sub(new Eq.parse('y = py'));
-    pvec.sub(new Eq.parse('px = mult(r, sin(th))'));
-    pvec.sub(new Eq.parse('py = mult(r, cos(th))'));
-    pvec.sub(new Eq.parse('mult(mult(a, b), c) = mult(a, mult(b, c))'),
-        gen: ['a', 'b', 'c']);
-    pvec.sub(new Eq.parse('mult(mult(a, b), c) = mult(a, mult(b, c))'),
-        gen: ['a', 'b', 'c']);
-    pvec.sub(new Eq.parse('add(mult(a, b), mult(a, c)) = mult(a, add(b, c))'),
-        gen: ['a', 'b', 'c']);
+    pvec.substitute(new Eq.parse('vec2d = add(mul(x, ihat), mul(y, jhat))'));
+    pvec.substitute(new Eq.parse('x = px'));
+    pvec.substitute(new Eq.parse('y = py'));
+    pvec.substitute(new Eq.parse('px = mul(r, sin(th))'));
+    pvec.substitute(new Eq.parse('py = mul(r, cos(th))'));
+    pvec.substitute(new Eq.parse('mul(mul(a, b), c) = mul(a, mul(b, c))'),
+        gen: [symbolA, symbolB, symbolC]);
+    pvec.substitute(new Eq.parse('mul(mul(a, b), c) = mul(a, mul(b, c))'),
+        gen: [symbolA, symbolB, symbolC]);
+    pvec.substitute(
+        new Eq.parse('add(mul(a, b), mul(a, c)) = mul(a, add(b, c))'),
+        gen: [symbolA, symbolB, symbolC]);
 
     // Check
     expect(pvec.toString(),
-        equals('pvec=mult(r,add(mult(sin(th),ihat),mult(cos(th),jhat)))'));
+        equals('pvec={r}*{{sin(th)}*{ihat} + {cos(th)}*{jhat}}'));
   });
 
   test('Solve a simple equation', () {
-    var resolver = new ExprResolver();
-    resolver.addResolver('add', (args) => args[0] + args[1]);
-    resolver.addResolver('sub', (args) => args[0] - args[1]);
-    resolver.addResolver('mult', (args) => args[0] * args[1]);
-    resolver.addResolver('div', (args) => args[0] / args[1]);
-
-    var eq = new Eq.parse('add(mult(x, 2), 5) = 9');
-    eq.wrap(
-        new Expr.parse('add(a, b)'), ['a', 'b'], new Expr.parse('sub(%, b)'));
-    eq.sub(new Eq.parse('sub(add(a, b), b) = a'), gen: ['a', 'b']);
-    eq.wrap(
-        new Expr.parse('mult(a, b)'), ['a', 'b'], new Expr.parse('div(%, b)'));
-    eq.sub(new Eq.parse('div(mult(a, b), b) = a'), gen: ['a', 'b']);
-    eq.compute(resolver);
+    var eq = new Eq.parse('add(mul(x, 2), 5) = 9');
+    eq.wrap(new Expr.parse('add(a, b)'), [symbolA, symbolB],
+        new Expr.parse('sub(%, b)'));
+    eq.substitute(new Eq.parse('sub(add(a, b), b) = a'),
+        gen: [symbolA, symbolB]);
+    eq.wrap(new Expr.parse('mul(a, b)'), [symbolA, symbolB],
+        new Expr.parse('div(%, b)'));
+    eq.substitute(new Eq.parse('div(mul(a, b), b) = a'),
+        gen: [symbolA, symbolB]);
+    eq.compute();
 
     // Check
     expect(eq.toString(), equals('x=2.0'));
