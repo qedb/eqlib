@@ -3,15 +3,13 @@
 // that can be found in the LICENSE file.
 
 /// TODO:
-/// - Store numeric values inside the Expr.
-/// - Make Expr final, operations ALWAYS produce a new instance.
-/// - Provide functions and operators for inline expression building.
 /// - Create a binary format for dense expression storage.
 library eqlib;
 
 import 'package:quiver/core.dart';
-import 'package:eqlib/compute.dart';
 import 'package:eqlib/utils.dart';
+import 'package:eqlib/inline.dart';
+import 'package:eqlib/default.dart';
 
 part 'src/expr.dart';
 part 'src/eq.dart';

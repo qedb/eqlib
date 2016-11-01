@@ -2,7 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqlib.compute;
+part of eqlib.default_handlers;
 
 /// All computable functions that are implemented by default.
 enum ComputableExpr { add, subtract, multiply, divide }
@@ -18,6 +18,9 @@ const Map<String, ComputableExpr> defaultExprLabels = const {
 /// Printer expression dictionary.
 final defaultPrinterDict = new Map<int, String>();
 
+/// Flag for [defaultPrinter] to enable the use of operator characters.
+bool defaultPrinterOpChars = false;
+
 /// Default implementation of [ExprPrinter].
 String defaultPrinter(num value, bool isNumeric, List<Object> args) {
   if (isNumeric) {
@@ -28,23 +31,31 @@ String defaultPrinter(num value, bool isNumeric, List<Object> args) {
       switch (ComputableExpr.values[value - 1]) {
         case ComputableExpr.add:
           assert(args.length == 2);
-          return '${args[0]} + ${args[1]}';
+          return defaultPrinterOpChars
+              ? '${args[0]} + ${args[1]}'
+              : 'add(${args[0]}, ${args[1]})';
         case ComputableExpr.subtract:
           assert(args.length == 2);
-          return '${args[0]} - ${args[1]}';
+          return defaultPrinterOpChars
+              ? '${args[0]} - ${args[1]}'
+              : 'sub(${args[0]}, ${args[1]})';
         case ComputableExpr.multiply:
           assert(args.length == 2);
-          return '{${args[0]}}*{${args[1]}}';
+          return defaultPrinterOpChars
+              ? '{${args[0]}}*{${args[1]}}'
+              : 'mul(${args[0]}, ${args[1]})';
         case ComputableExpr.divide:
           assert(args.length == 2);
-          return '{${args[0]}}/{${args[1]}}';
+          return defaultPrinterOpChars
+              ? '{${args[0]}}/{${args[1]}}'
+              : 'div(${args[0]}, ${args[1]})';
         default:
           throw new Exception('this is 100% impossible');
       }
     } else if (args.isEmpty) {
       return '${defaultPrinterDict[value]}';
     } else {
-      return '${defaultPrinterDict[value]}(${args.join(',')})';
+      return '${defaultPrinterDict[value]}(${args.join(', ')})';
     }
   }
 }
@@ -53,11 +64,11 @@ String defaultPrinter(num value, bool isNumeric, List<Object> args) {
 /// [String.hashCode].
 int defaultResolver(String expr) {
   if (expr == '%') {
-    // % is reserved to represent expression code 0, which is used for
+    // % is reserved to represent expression ID 0, which is used for
     // substitutions.
     return 0;
   } else if (defaultExprLabels.containsKey(expr)) {
-    // Add 1 because 0 is a reserved expression code.
+    // Add 1 because 0 is a reserved expression ID.
     return defaultExprLabels[expr].index + 1;
   } else {
     // In order to work with the default printer, we need to keep a dictionary
@@ -79,7 +90,7 @@ bool defaultCanCompute(int expr) {
 /// assumes you are using the [_defaultResolver].
 num defaultCompute(int expr, List<num> args) {
   assert(expr > 0);
-  // Note: subtract one because 0 is a reserved expression code.
+  // Note: subtract one because 0 is a reserved expression ID.
   if (expr - 1 < ComputableExpr.values.length) {
     switch (ComputableExpr.values[expr - 1]) {
       case ComputableExpr.add:

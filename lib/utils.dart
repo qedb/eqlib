@@ -4,4 +4,8 @@
 
 library eqlib.utils;
 
-part 'src/utils.dart';
+/// Object wrapper
+class W<T> {
+  T v;
+  W(T intial) : v = intial;
+}

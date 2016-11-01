@@ -7,7 +7,7 @@ part of eqlib;
 /// Function that should resolve an expression string into an integer.
 typedef int ExprResolve(String expr);
 
-/// Function that should compute a numeric value for the given expression code
+/// Function that should compute a numeric value for the given expression ID
 /// and arguments.
 typedef num ExprCompute(int expr, List<num> args);
 
@@ -21,7 +21,7 @@ typedef String ExprPrinter(num value, bool isNumeric, List<Expr> args);
 class Expr {
   /// Expression value
   ///
-  /// The expression value can either be interpreted as expression code, or as
+  /// The expression value can either be interpreted as expression ID, or as
   /// numeric value, [isNumeric] indicates if the latter is the case.
   final num value;
 
@@ -71,7 +71,7 @@ class Expr {
       value = num.parse(label);
       isNumeric = true;
     } on FormatException {
-      // Use expression resolver to get expression code.
+      // Use expression resolver to get an expression ID.
       value = resolver(label);
       isNumeric = false;
     }
@@ -146,7 +146,7 @@ class Expr {
         return mapping;
       }
 
-      // If the superset expression code is equal to this, and the number of
+      // If the superset expression ID is equal to this, and the number of
       // arguments is equal, both expressions could be compatible.
       else if (superset.value == value && superset.args.length == args.length) {
         final mapping = new Map<int, Expr>();
@@ -193,7 +193,7 @@ class Expr {
   /// Substitute the given [expression] and remap it using the provided
   /// [mapping] table. Returns an instance of [Expr] where the equation is
   /// substituted.
-  Expr _substitute(Expr expression, Map<int, Expr> mapping) {
+  Expr _subs(Expr expression, Map<int, Expr> mapping) {
     // If the equation replacement is in the mapping table, use it and return.
     if (mapping.containsKey(expression.value)) {
       return mapping[expression.value];
@@ -209,7 +209,7 @@ class Expr {
   /// Substitute the given [equation] at the given superset [index].
   /// Returns an instance of [Expr] where the equation is substituted.
   /// Never returns null, instead returns itself if nothing is substituted.
-  Expr substitute(Eq equation, List<int> generic, W<int> index) {
+  Expr subs(Eq equation, List<int> generic, W<int> index) {
     // Try to map to this expression.
     final mapping = matchSuperset(equation.left, generic);
     if (mapping != null) {
@@ -219,13 +219,13 @@ class Expr {
       // If the index was 0, it is now -1 due to the prevous decrement. In that
       // case we have to execute the substitution on this expression.
       if (index.v == -1) {
-        return _substitute(equation.right, mapping);
+        return _subs(equation.right, mapping);
       }
     }
 
     // Iterate through arguments, and try to substitute the equation there.
     for (var i = 0; i < args.length; i++) {
-      args[i] = args[i].substitute(equation, generic, index);
+      args[i] = args[i].subs(equation, generic, index);
       if (index.v == -1) {
         // This indicates the substitution position has been found, which means
         // we can break this loop.
@@ -284,4 +284,16 @@ class Expr {
 
   /// Generate string representation.
   String toString() => stringPrinter(value, isNumeric, args);
+
+  /// Add other expression.
+  Expr operator +(other) => add(this, other);
+
+  /// Subtract other expression.
+  Expr operator -(other) => sub(this, other);
+
+  /// Multiply with other expression.
+  Expr operator *(other) => mul(this, other);
+
+  /// Divide by other expression.
+  Expr operator /(other) => div(this, other);
 }

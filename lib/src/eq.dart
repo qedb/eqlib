@@ -23,11 +23,11 @@ class Eq {
   }
 
   /// Substitute the given equation.
-  void substitute(Eq eq, {List<int> gen: const [], int idx: 0}) {
+  void subs(Eq eq, [List<int> generic = const [], int idx = 0]) {
     final index = new W<int>(idx);
-    left = left.substitute(eq, gen, index);
+    left = left.subs(eq, generic, index);
     if (index.v != -1) {
-      right = right.substitute(eq, gen, index);
+      right = right.subs(eq, generic, index);
     }
   }
 
@@ -69,6 +69,18 @@ class Eq {
       right = new Expr.numeric(rvalue);
     }
   }
+
+  /// Compare two equations.
+  bool operator ==(other) {
+    if (other is Eq) {
+      return left == other.left && right == other.right;
+    } else {
+      return false;
+    }
+  }
+
+  /// Equation hashcode.
+  int get hashCode => hash2(left, right);
 
   /// Generate string representation.
   String toString() => '$left=$right';

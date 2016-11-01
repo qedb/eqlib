@@ -2,10 +2,9 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqlib.utils;
+library eqlib.inline;
 
-/// Object wrapper
-class W<T> {
-  T v;
-  W(T intial) : v = intial;
-}
+import 'package:eqlib/eqlib.dart';
+import 'package:eqlib/default.dart';
+
+part 'src/inline.dart';
