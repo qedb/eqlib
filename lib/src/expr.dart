@@ -61,7 +61,7 @@ class Expr {
   /// Parse an expression string that does not contain white spaces.
   static Expr parseUnsafe(W<String> str, ExprResolve resolver) {
     // Get expression label.
-    final lblre = new RegExp('([-.%a-z0-9]+)');
+    final lblre = new RegExp(r'([-.%a-z\d]+)');
     final label = lblre.matchAsPrefix(str.v).group(1);
 
     // Try to parse the label as numeric value.

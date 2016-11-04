@@ -1,0 +1,70 @@
+<div #wrapper class="wrapper" style="height: 0;">
+  <div>
+    <material-button (click)="onInsert()" class="insert-btn" aria-label="insert" icon>
+      <glyph icon="unfold_more"></glyph>
+    </material-button>
+  </div>
+  <div class="entry">
+    <div class="entry-number">{{index}}</div>
+    <div class="content">
+      <div class="configure" [hidden]="type != 'empty'">
+        <material-button raised
+          (click)="configure('symbol')">Special symbol</material-button>
+        <material-button raised
+          (click)="configure('define')">Definition</material-button>
+        <material-button raised
+          (click)="configure('apply')">Apply definition</material-button>
+        <material-button raised
+          (click)="configure('compute')">Numeric simplify</material-button>
+      </div>
+      <div [hidden]="type != 'symbol'">
+        <div class="left-panel">
+          <div class="panel-col">
+            <material-input
+              type="text" label="name"
+              displayBottomPanel="false"
+              leadingText="Symbol name"></material-input>
+            <material-input
+              type="text" label="LaTeX"
+              displayBottomPanel="false"
+              leadingText="LaTeX style"></material-input>
+          </div>
+        </div>
+      </div>
+      <div [hidden]="type != 'define'">
+        <div #guppyDefine class="mathbox"></div>
+      </div>
+      <div [hidden]="type != 'apply'">
+        <div class="left-panel">
+          <div class="panel-col">
+            <material-input
+              type="text" label="source"
+              displayBottomPanel="false"
+              leadingText="Source"></material-input>
+            <material-input
+              type="text" label="apply"
+              displayBottomPanel="false"
+              leadingText="Apply"></material-input>
+            <material-input
+              type="text" label="index"
+              displayBottomPanel="false"
+              leadingText="Index"></material-input>
+          </div>
+        </div>
+      </div>
+      <div [hidden]="type != 'compute'">
+        <div class="left-panel">
+          <div class="panel-col">
+            <material-input
+              type="text" label="source"
+              displayBottomPanel="false"
+              leadingText="Compute"></material-input>
+          </div>
+        </div>
+      </div>
+    </div>
+    <material-button (click)="onDelete()" class="delete-btn" aria-label="delete" icon>
+      <glyph icon="delete"></glyph>
+    </material-button>
+  </div>
+</div>

@@ -1,0 +1,70 @@
+// Copyright (c) 2016, Herman Bergwerf. All rights reserved.
+// Use of this source code is governed by an AGPL-3.0-style license
+// that can be found in the LICENSE file.
+
+@import 'params';
+
+.wrapper {
+  overflow: hidden;
+}
+
+.insert-btn {
+  margin: 0 1.2em;
+}
+
+.insert-btn:not(:hover) {
+  opacity: .5;
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+}
+
+.entry-number {
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 19px;
+  line-height: 1;
+  margin: 8px;
+  width: 3em;
+}
+
+.entry-number:before, .entry-number:after {
+  font-size: 1.2em;
+}
+
+.entry-number:before {
+  content: '[';
+}
+
+.entry-number:after {
+  content: ']';
+}
+
+.content {
+  flex-grow: 1;
+  text-align: center;
+}
+
+.configure > material-button {
+  background: $primary;
+  margin: .5em .29em;
+  padding: 0 .8em;
+  color: white;
+  font-weight: bold;
+}
+
+.entry:not(:hover) > .delete-btn {
+  opacity: .5;
+}
+
+.left-panel {
+  max-width: 50%;
+}
+
+.panel-col {
+  width: 176px;
+  margin: 0 auto;
+  text-align: left;
+}
