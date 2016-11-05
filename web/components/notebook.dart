@@ -46,9 +46,9 @@ class NotebookComponent implements OnInit {
   }
 
   /// One record has been updated.
-  void updateData(int index, EntryData data) {
+  void updateType(int index, EntryType type) {
     // Do not replace the record as this might confuse ngFor.
-    entries[index].replace(data);
+    entries[index].type = type;
   }
 
   /// Add a new entry to the bottom of the list.

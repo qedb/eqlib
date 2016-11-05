@@ -2,7 +2,7 @@
   <notebook-entry
     *ngFor="let entry of entries; let i = index;"
     [data]="entry"
-    (dataChanged)="updateData(i, $event)"
+    (typeChanged)="updateType(i, $event)"
     (entryInsert)="insertEntry(i)"
     (entryDelete)="deleteEntry(i)">
   </notebook-entry>

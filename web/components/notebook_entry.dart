@@ -8,9 +8,9 @@ import 'dart:async';
 import 'package:angular2/core.dart';
 import 'package:angular2_components/angular2_components.dart';
 import 'package:guppy_dart/guppy_dart.dart';
-import 'package:katex_js/katex_js.dart' as katex;
 
 import 'entry_data.dart';
+import 'symbols_table.dart';
 
 /// Use this instead of CSS transitions because we need all kinds of shady
 /// delays to make them work.
@@ -32,12 +32,19 @@ void _animateHeight(
   selector: 'notebook-entry',
   templateUrl: 'notebook_entry.html',
   styleUrls: const ['notebook_entry.css'],
-  directives: const [materialDirectives, MaterialNumberInputValidatorDirective],
+  directives: const [
+    materialDirectives,
+    MaterialNumberInputValidatorDirective,
+    SymbolsTableComponent
+  ],
   providers: const [materialProviders],
 )
 class NotebookEntryComponent implements AfterViewInit {
+  @Input()
+  EntryData data;
+
   // Stream controllers for bindings with the parent notebook.
-  final _dataChanged = new StreamController<EntryData>();
+  final _typeChanged = new StreamController<EntryType>();
   final _entryInsert = new StreamController<Null>();
   final _entryDelete = new StreamController<Null>();
 
@@ -46,25 +53,6 @@ class NotebookEntryComponent implements AfterViewInit {
 
   @ViewChild('guppyDefine')
   ElementRef guppyDefine;
-
-  @ViewChildren('symbolLaTeXRendered')
-  QueryList<ElementRef> symbolLaTeXRendered;
-
-  void addSymbol(int index) {
-    data.symbols.insert(index, new SymbolData('', ''));
-  }
-
-  void updateSymbol(int index) {
-    final name = data.symbols[index].name;
-    final latex = data.symbols[index].latex;
-    katex.render(latex, symbolLaTeXRendered.toList()[index].nativeElement);
-    guppyRemoveSymbol(name);
-    guppyAddSymbol(name, latex, name);
-  }
-
-  void removeSymbol(int index) {
-    data.symbols.removeAt(index);
-  }
 
   void ngAfterViewInit() {
     final div = wrapper.nativeElement as DivElement;
@@ -76,17 +64,12 @@ class NotebookEntryComponent implements AfterViewInit {
         div.style.height = 'auto';
       });
       div.style.height = '0';
-    } else if (data.type == EntryType.symbols) {
-      // Render all LaTeX strings.
-      for (var i = 0; i < data.symbols.length; i++) {
-        updateSymbol(i);
-      }
     }
   }
 
   void configure(int typeIndex) {
     data.type = EntryType.values[typeIndex];
-    _dataChanged.add(data);
+    _typeChanged.add(data.type);
 
     if (data.type == EntryType.symbols) {
       // Add initial row.
@@ -111,11 +94,8 @@ class NotebookEntryComponent implements AfterViewInit {
 
   void onInsert() => _entryInsert.add(null);
 
-  @Input()
-  EntryData data;
-
   @Output()
-  Stream<EntryData> get dataChanged => _dataChanged.stream;
+  Stream<EntryType> get typeChanged => _typeChanged.stream;
 
   @Output()
   Stream<Null> get entryInsert => _entryInsert.stream;

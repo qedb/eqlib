@@ -58,23 +58,12 @@ class EntryData {
     computeSource = data['computeSource'];
   }
 
-  /// Replace all fields with data from the given instance.
-  void replace(EntryData other) {
-    index = other.index;
-    type = other.type;
-    symbols = other.symbols;
-    defineXml = other.defineXml;
-    applySource = other.applySource;
-    applyTarget = other.applyTarget;
-    applyIndex = other.applyIndex;
-    computeSource = other.computeSource;
-  }
-
   /// Add [change] to all indices starting at [start] (inclusive).
   void changeIndicesFrom(int start, int change) {
     if (index >= start) {
       index += change;
     }
+
     if (applySource != null && applySource >= start) {
       applySource += change;
     }
