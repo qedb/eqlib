@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:angular2/core.dart';
 import 'package:angular2_components/angular2_components.dart';
 import 'package:guppy_dart/guppy_dart.dart';
+import 'package:katex_js/katex_js.dart' as katex;
 
 import 'entry_data.dart';
 
@@ -31,12 +32,11 @@ void _animateHeight(
   selector: 'notebook-entry',
   templateUrl: 'notebook_entry.html',
   styleUrls: const ['notebook_entry.css'],
-  directives: const [materialDirectives],
+  directives: const [materialDirectives, MaterialNumberInputValidatorDirective],
   providers: const [materialProviders],
 )
 class NotebookEntryComponent implements AfterViewInit {
-  int index = 0;
-  String type = 'empty';
+  // Stream controllers for bindings with the parent notebook.
   final _dataChanged = new StreamController<EntryData>();
   final _entryInsert = new StreamController<Null>();
   final _entryDelete = new StreamController<Null>();
@@ -47,22 +47,58 @@ class NotebookEntryComponent implements AfterViewInit {
   @ViewChild('guppyDefine')
   ElementRef guppyDefine;
 
-  ngAfterViewInit() {
-    // Animate wrapper.
-    final div = wrapper.nativeElement as DivElement;
-    div.style.height = 'auto';
-    _animateHeight(div, 0, div.clientHeight, 6, () {
-      div.style.height = 'auto';
-    });
-    div.style.height = '0';
+  @ViewChildren('symbolLaTeXRendered')
+  QueryList<ElementRef> symbolLaTeXRendered;
+
+  void addSymbol(int index) {
+    data.symbols.insert(index, new SymbolData('', ''));
   }
 
-  void configure(String _type) {
-    type = _type;
-    if (type == 'define') {
-      guppyInit('packages/guppy_dart/deps/transform.xsl',
-          'packages/guppy_dart/deps/symbols.json');
-      new Guppy(guppyDefine.nativeElement);
+  void updateSymbol(int index) {
+    final name = data.symbols[index].name;
+    final latex = data.symbols[index].latex;
+    katex.render(latex, symbolLaTeXRendered.toList()[index].nativeElement);
+    guppyRemoveSymbol(name);
+    guppyAddSymbol(name, latex, name);
+  }
+
+  void removeSymbol(int index) {
+    data.symbols.removeAt(index);
+  }
+
+  void ngAfterViewInit() {
+    final div = wrapper.nativeElement as DivElement;
+    div.style.height = 'auto';
+
+    if (data.type == EntryType.empty) {
+      // Animate wrapper when entry is new.
+      _animateHeight(div, 0, div.clientHeight, 6, () {
+        div.style.height = 'auto';
+      });
+      div.style.height = '0';
+    } else if (data.type == EntryType.symbols) {
+      // Render all LaTeX strings.
+      for (var i = 0; i < data.symbols.length; i++) {
+        updateSymbol(i);
+      }
+    }
+  }
+
+  void configure(int typeIndex) {
+    data.type = EntryType.values[typeIndex];
+    _dataChanged.add(data);
+
+    if (data.type == EntryType.symbols) {
+      // Add initial row.
+      data.symbols.add(new SymbolData('', ''));
+    } else if (data.type == EntryType.define) {
+      // Wait for 100ms so Angular can add the root element to the DOM
+      new Future.delayed(new Duration(milliseconds: 100), () {
+        // Initialize new Guppy editor.
+        guppyInit('packages/guppy_dart/deps/transform.xsl',
+            'packages/guppy_dart/deps/symbols.json');
+        new Guppy(guppyDefine.nativeElement);
+      });
     }
   }
 
@@ -76,9 +112,7 @@ class NotebookEntryComponent implements AfterViewInit {
   void onInsert() => _entryInsert.add(null);
 
   @Input()
-  set data(EntryData data) {
-    index = data.index;
-  }
+  EntryData data;
 
   @Output()
   Stream<EntryData> get dataChanged => _dataChanged.stream;

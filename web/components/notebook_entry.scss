@@ -12,7 +12,7 @@
   margin: 0 1.2em;
 }
 
-.insert-btn:not(:hover) {
+.insert-btn, .delete-btn {
   opacity: .5;
 }
 
@@ -55,8 +55,21 @@
   font-weight: bold;
 }
 
-.entry:not(:hover) > .delete-btn {
+.symbols-table {
+  padding: 1em;
+  margin: 3px auto;
+  background-color: #eaeaea;
+  border-radius: 3px;
+  text-align: left;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+
+.symbols-table material-button {
   opacity: .5;
+}
+
+.symbols-latex-rendered {
+  text-align: center;
 }
 
 .left-panel {

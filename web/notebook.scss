@@ -4,10 +4,11 @@
 
 // Some overrides on the <material-input> to make it look better in our UI.
 material-input {
-  width: 13em !important;
+  width: auto !important;
+  min-width: 5em;
 }
 
 .leading-text {
   font-weight: bold;
-  width: 7.5em;
+  width: 5.5em;
 }

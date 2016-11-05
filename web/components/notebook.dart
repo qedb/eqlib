@@ -2,7 +2,9 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
+import 'dart:html';
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:angular2/core.dart';
 import 'package:angular2_components/angular2_components.dart';
@@ -18,24 +20,58 @@ import 'entry_data.dart';
   providers: const [materialProviders],
 )
 class NotebookComponent implements OnInit {
+  /// Local Storage key where the notebook is stored.
+  static const localStorageKey = 'eqlib-notebook-session';
+
+  /// All notebook entries.
   final entries = new List<EntryData>();
-  int largestIndex = 0;
 
   Future<Null> ngOnInit() async {
-    addEntry();
+    // Store entries in the local storage before unload.
+    window.onBeforeUnload.listen((_) {
+      window.localStorage[localStorageKey] = JSON.encode(entries);
+    });
+
+    // Restore entries from the Local Storage.
+    if (window.localStorage.containsKey(localStorageKey)) {
+      List list = JSON.decode(window.localStorage[localStorageKey]);
+      for (final item in list) {
+        entries
+            .add(new EntryData.fromJson(new Map<String, dynamic>.from(item)));
+      }
+    } else {
+      // Add empty initial entry.
+      addEntry();
+    }
   }
 
-  void updateData(int index, EntryData data) {}
-
-  void addEntry() {
-    entries.add(new EntryData(++largestIndex));
+  /// One record has been updated.
+  void updateData(int index, EntryData data) {
+    // Do not replace the record as this might confuse ngFor.
+    entries[index].replace(data);
   }
 
+  /// Add a new entry to the bottom of the list.
+  void addEntry() => entries.add(new EntryData(entries.length));
+
+  /// Insert a new entry at the given index.
   void insertEntry(int index) {
-    entries.insert(index, new EntryData(++largestIndex));
+    // Increment all indices that are equal or larger than index.
+    for (final entry in entries) {
+      entry.changeIndicesFrom(index, 1);
+    }
+
+    // Insert new entry at index.
+    entries.insert(index, new EntryData(index));
   }
 
+  /// Delete entry at the given index.
   void deleteEntry(int index) {
     entries.removeAt(index);
+
+    // Decrement all indices that are larger than this one.
+    for (final entry in entries) {
+      entry.changeIndicesFrom(index + 1, -1);
+    }
   }
 }

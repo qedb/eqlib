@@ -5,60 +5,104 @@
     </material-button>
   </div>
   <div class="entry">
-    <div class="entry-number">{{index}}</div>
-    <div class="content">
-      <div class="configure" [hidden]="type != 'empty'">
+    <div class="entry-number">{{data.index + 1}}</div>
+    <div class="content" [ngSwitch]="data.type.index">
+      <div class="configure" *ngSwitchWhen="0">
         <material-button raised
-          (click)="configure('symbol')">Special symbol</material-button>
+          (click)="configure(1)">Symbol table</material-button>
         <material-button raised
-          (click)="configure('define')">Definition</material-button>
+          (click)="configure(2)">Definition</material-button>
         <material-button raised
-          (click)="configure('apply')">Apply definition</material-button>
+          (click)="configure(3)">Apply definition</material-button>
         <material-button raised
-          (click)="configure('compute')">Numeric simplify</material-button>
+          (click)="configure(4)">Numeric simplify</material-button>
       </div>
-      <div [hidden]="type != 'symbol'">
-        <div class="left-panel">
-          <div class="panel-col">
-            <material-input
-              type="text" label="name"
-              displayBottomPanel="false"
-              leadingText="Symbol name"></material-input>
-            <material-input
-              type="text" label="LaTeX"
-              displayBottomPanel="false"
-              leadingText="LaTeX style"></material-input>
-          </div>
-        </div>
+      <div *ngSwitchWhen="1">
+        <table class="symbols-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Name</th>
+              <th>LaTeX</th>
+              <th>Rendered</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let symbol of data.symbols; let i = index;">
+              <td>
+                <material-button (click)="addSymbol(i)"
+                    aria-label="insert" icon>
+                  <glyph icon="add"></glyph>
+                </material-button>
+              </td>
+              <td>
+                <material-input
+                  type="text" displayBottomPanel="false"
+                  [(inputText)]="symbol.name"
+                  (change)="updateSymbol(i)">
+                </material-input>
+              </td>
+              <td>
+                <material-input
+                  type="text" displayBottomPanel="false"
+                  [(inputText)]="symbol.latex"
+                  (change)="updateSymbol(i)">
+                </material-input>
+              </td>
+              <td class="symbols-latex-rendered">
+                <span #symbolLaTeXRendered></span>
+              </td>
+              <td>
+                <material-button (click)="removeSymbol(i)"
+                    aria-label="remove" icon>
+                  <glyph icon="remove"></glyph>
+                </material-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div [hidden]="type != 'define'">
+      <div *ngSwitchWhen="2">
         <div #guppyDefine class="mathbox"></div>
       </div>
-      <div [hidden]="type != 'apply'">
+      <div *ngSwitchWhen="3">
         <div class="left-panel">
           <div class="panel-col">
             <material-input
-              type="text" label="source"
+              type="number" label="source"
               displayBottomPanel="false"
-              leadingText="Source"></material-input>
+              leadingText="Source"
+              [(numericValue)]="data.applySource"
+              [checkInteger]="true"
+              [checkPositive]="true"></material-input>
             <material-input
-              type="text" label="apply"
+              type="number" label="target"
               displayBottomPanel="false"
-              leadingText="Apply"></material-input>
+              leadingText="Target"
+              [(numericValue)]="data.applyTarget"
+              [checkInteger]="true"
+              [checkPositive]="true"></material-input>
             <material-input
-              type="text" label="index"
+              type="number" label="index"
               displayBottomPanel="false"
-              leadingText="Index"></material-input>
+              leadingText="Index"
+              [(numericValue)]="data.applyIndex"
+              [checkInteger]="true"
+              [checkPositive]="true"></material-input>
           </div>
         </div>
       </div>
-      <div [hidden]="type != 'compute'">
+      <div *ngSwitchWhen="4">
         <div class="left-panel">
           <div class="panel-col">
             <material-input
-              type="text" label="source"
+              type="number" label="source"
               displayBottomPanel="false"
-              leadingText="Compute"></material-input>
+              leadingText="Compute"
+              [(numericValue)]="data.computeSource"
+              [checkInteger]="true"
+              [checkPositive]="true"></material-input>
           </div>
         </div>
       </div>
