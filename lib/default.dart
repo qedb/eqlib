@@ -5,3 +5,4 @@
 library eqlib.default_handlers;
 
 part 'src/default.dart';
+part 'src/latex_printer.dart';

@@ -5,11 +5,18 @@
 import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/default.dart';
+import 'package:eqlib/parsers.dart';
+import 'package:eqlib/inline.dart';
 
 void main() {
   final a = defaultResolver('a');
   final b = defaultResolver('b');
   final c = defaultResolver('c');
+
+  test('Parse mathematical expressions', () {
+    var e = parseWithMathExpressions('2 * x + 5', defaultResolver);
+    expect(e, equals(add(mul(2, symbol('x')), 5)));
+  });
 
   test('Derivation of centripetal acceleration (step 1)', () {
     var pvec = new Eq.parse('pvec = vec2d');

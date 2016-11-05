@@ -13,3 +13,4 @@ import 'package:eqlib/default.dart';
 
 part 'src/expr.dart';
 part 'src/eq.dart';
+part 'src/parse_simple.dart';
