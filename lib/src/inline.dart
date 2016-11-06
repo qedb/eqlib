@@ -28,6 +28,9 @@ Expr mul(dynamic a, dynamic b) => _twoArgsExpr(defaultResolver('mul'), a, b);
 /// a / b
 Expr div(dynamic a, dynamic b) => _twoArgsExpr(defaultResolver('div'), a, b);
 
+/// a ^ b
+Expr pow(dynamic a, dynamic b) => _twoArgsExpr(defaultResolver('pow'), a, b);
+
 /// Quick syntax for equation contruction.
 Eq eq(dynamic left, dynamic right) => new Eq(
     left is num ? new Expr.numeric(left) : left as Expr,

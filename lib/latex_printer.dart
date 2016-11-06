@@ -2,10 +2,9 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-library eqlib.parsers;
+library eqlib.latex_printer;
 
 import 'package:eqlib/eqlib.dart';
-import 'package:eqlib/inline.dart';
-import 'package:math_expressions/math_expressions.dart' as mexpr;
+import 'package:eqlib/default.dart';
 
-part 'src/parse_readable.dart';
+part 'src/latex_printer.dart';

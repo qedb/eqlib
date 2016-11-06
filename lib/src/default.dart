@@ -4,8 +4,11 @@
 
 part of eqlib.default_handlers;
 
+/// Default substitution character.
+const defaultSubsCharacter = '@';
+
 /// All computable functions that are implemented by default.
-enum ComputableExpr { add, subtract, multiply, divide }
+enum ComputableExpr { add, subtract, multiply, divide, power }
 
 /// Expr labels for all default computable functions.
 const Map<String, ComputableExpr> defaultExprLabels = const {
@@ -13,6 +16,7 @@ const Map<String, ComputableExpr> defaultExprLabels = const {
   'sub': ComputableExpr.subtract,
   'mul': ComputableExpr.multiply,
   'div': ComputableExpr.divide,
+  'pow': ComputableExpr.power
 };
 
 /// Printer expression dictionary.
@@ -49,6 +53,11 @@ String defaultPrinter(num value, bool isNumeric, List<Object> args) {
           return defaultPrinterOpChars
               ? '{${args[0]}}/{${args[1]}}'
               : 'div(${args[0]}, ${args[1]})';
+        case ComputableExpr.power:
+          assert(args.length == 2);
+          return defaultPrinterOpChars
+              ? '{${args[0]}}^{${args[1]}}'
+              : 'pow(${args[0]}, ${args[1]})';
         default:
           throw new Exception('this is 100% impossible');
       }
@@ -63,9 +72,9 @@ String defaultPrinter(num value, bool isNumeric, List<Object> args) {
 /// Default implementation of [ExprResolve] that uses [defaultExprLabels] and
 /// [String.hashCode].
 int defaultResolver(String expr) {
-  if (expr == '%') {
-    // % is reserved to represent expression ID 0, which is used for
-    // substitutions.
+  if (expr == defaultSubsCharacter) {
+    // This character is reserved to represent expression ID 0, which is used
+    // for substitutions.
     return 0;
   } else if (defaultExprLabels.containsKey(expr)) {
     // Add 1 because 0 is a reserved expression ID.
@@ -105,6 +114,9 @@ num defaultCompute(int expr, List<num> args) {
       case ComputableExpr.divide:
         assert(args.length == 2);
         return args[0] / args[1];
+      case ComputableExpr.power:
+        assert(args.length == 2);
+        return pow(args[0], args[1]);
       default:
         throw new Exception('this is 100% impossible');
     }

@@ -44,7 +44,11 @@
 
 .content {
   flex-grow: 1;
-  text-align: center;
+  text-align: right;
+  margin: 0 6em;
+
+  // Settings this forces the content to not overflow the entry.
+  min-width: 0;
 }
 
 .configure > material-button {
@@ -55,12 +59,23 @@
   font-weight: bold;
 }
 
-.left-panel {
-  max-width: 50%;
+.apply-flex {
+  display: flex;
+  align-items: center;
+}
+
+.left-panel, .right-panel {
+  display: inline-block;
+}
+
+.right-panel {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin-left: 1em;
+  flex-grow: 1;
 }
 
 .panel-col {
   width: 176px;
-  margin: 0 auto;
   text-align: left;
 }

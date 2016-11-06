@@ -2,6 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
+import 'package:eqlib/latex_printer.dart';
 import 'package:angular2/core.dart';
 import 'package:angular2_components/angular2_components.dart';
 import 'package:guppy_dart/guppy_dart.dart';
@@ -17,6 +18,8 @@ import 'entry_data.dart';
   providers: const [materialProviders],
 )
 class SymbolsTableComponent implements AfterViewInit {
+  String oldName;
+
   @Input()
   List<SymbolData> symbols;
 
@@ -37,9 +40,15 @@ class SymbolsTableComponent implements AfterViewInit {
   void updateSymbol(int index) {
     final name = symbols[index].name;
     final latex = symbols[index].latex;
+
     katex.render(latex, renderedSymbol.toList()[index].nativeElement);
-    guppyRemoveSymbol(name);
+    if (oldName != null) {
+      guppyRemoveSymbol(name);
+      defaultLatexPrinterDict.remove(name);
+    }
     guppyAddSymbol(name, latex, name);
+    defaultLatexPrinterDict[name] = latex;
+    oldName = name;
   }
 
   void removeSymbol(int index) {

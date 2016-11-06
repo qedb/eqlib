@@ -2,13 +2,16 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqlib.default_handlers;
+part of eqlib.latex_printer;
 
 /// Dictionary of expression strings and their LaTeX equivalent
-final latexDict = new Map<String, String>();
+final Map<String, String> defaultLatexPrinterDict = new Map<String, String>();
+
+/// Check if the given expression ID requires parenthesis in LaTeX.
+bool _useParenthesis(int value) => value - 1 < ComputableExpr.values.length;
 
 /// Simple LaTeX printer.
-String latexPrinter(num value, bool isNumeric, List<Object> args) {
+String defaultLatexPrinter(num value, bool isNumeric, List<Expr> args) {
   if (isNumeric) {
     return value.toString();
   } else {
@@ -23,16 +26,26 @@ String latexPrinter(num value, bool isNumeric, List<Object> args) {
           return '${args[0]} - ${args[1]}';
         case ComputableExpr.multiply:
           assert(args.length == 2);
-          return '{${args[0]}}\\cdot {${args[1]}}';
+          return [
+            '${_useParenthesis(args[0].value) ? "\\left(${args[0]}\\right)" : args[0]}',
+            '\\cdot',
+            '${_useParenthesis(args[1].value) ? "\\left(${args[1]}\\right)" : args[1]}'
+          ].join();
         case ComputableExpr.divide:
           assert(args.length == 2);
           return '\\frac{${args[0]}}{${args[1]}}';
+        case ComputableExpr.power:
+          assert(args.length == 2);
+          return [
+            '${_useParenthesis(args[0].value) ? "\\left(${args[0]}\\right)" : args[0]}',
+            '^{${args[1]}}'
+          ].join();
         default:
           throw new Exception('this is 100% impossible');
       }
     } else if (args.isEmpty) {
       final key = defaultPrinterDict[value];
-      return '{${latexDict[key] ?? "\\text{$key}"}}';
+      return '{${defaultLatexPrinterDict[key] ?? "\\text{$key}"}}';
     } else {
       return '\\text{${defaultPrinterDict[value]}}\\left(${args.join(', ')}\\right)';
     }

@@ -5,9 +5,12 @@
 import 'dart:html';
 import 'dart:async';
 
+import 'package:eqlib/eqlib.dart';
+import 'package:eqlib/latex_printer.dart';
 import 'package:angular2/core.dart';
 import 'package:angular2_components/angular2_components.dart';
 import 'package:guppy_dart/guppy_dart.dart';
+import 'package:katex_js/katex_js.dart' as katex;
 
 import 'entry_data.dart';
 import 'symbols_table.dart';
@@ -43,6 +46,8 @@ class NotebookEntryComponent implements AfterViewInit {
   @Input()
   EntryData data;
 
+  Guppy eqEditor;
+
   // Stream controllers for bindings with the parent notebook.
   final _typeChanged = new StreamController<EntryType>();
   final _entryInsert = new StreamController<Null>();
@@ -54,6 +59,9 @@ class NotebookEntryComponent implements AfterViewInit {
   @ViewChild('guppyDefine')
   ElementRef guppyDefine;
 
+  @ViewChild('appliedEquation')
+  ElementRef appliedEquation;
+
   void ngAfterViewInit() {
     final div = wrapper.nativeElement as DivElement;
     div.style.height = 'auto';
@@ -64,6 +72,11 @@ class NotebookEntryComponent implements AfterViewInit {
         div.style.height = 'auto';
       });
       div.style.height = '0';
+    } else if (data.type == EntryType.define) {
+      initEqEditor();
+      eqEditor.set_content(data.defineXml);
+    } else if (data.type == EntryType.apply) {
+      updateApply();
     }
   }
 
@@ -75,14 +88,37 @@ class NotebookEntryComponent implements AfterViewInit {
       // Add initial row.
       data.symbols.add(new SymbolData('', ''));
     } else if (data.type == EntryType.define) {
-      // Wait for 100ms so Angular can add the root element to the DOM
-      new Future.delayed(new Duration(milliseconds: 100), () {
-        // Initialize new Guppy editor.
-        guppyInit('packages/guppy_dart/deps/transform.xsl',
-            'packages/guppy_dart/deps/symbols.json');
-        new Guppy(guppyDefine.nativeElement);
-      });
+      // Wait for 100ms so Angular can add the Guppy root element to the DOM
+      new Future.delayed(new Duration(milliseconds: 100), initEqEditor);
     }
+  }
+
+  /// Initialize new Guppy editor.
+  void initEqEditor() {
+    guppyInit('packages/guppy_dart/deps/transform.xsl',
+        'packages/guppy_dart/deps/symbols.json');
+
+    // Set/override 'to' symbol.
+    guppyAddSymbol('to', '\\to', '→');
+
+    // Set/override inner symbol.
+    // TODO: this is not a very good pattern.
+    guppyAddSymbol('inner', '\\%', '%');
+
+    eqEditor = new Guppy(guppyDefine.nativeElement);
+  }
+
+  void saveEquation() {
+    data.defineXml = eqEditor.get_content('xml');
+    data.updateEqFromText(eqEditor.get_content('text'));
+  }
+
+  void updateApply() {
+    data.updateEqByApply();
+
+    // Render new equation.
+    Expr.stringPrinter = defaultLatexPrinter;
+    katex.render(data.eq.toString(), appliedEquation.nativeElement);
   }
 
   void onDelete() {

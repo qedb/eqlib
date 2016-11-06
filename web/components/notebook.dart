@@ -36,14 +36,17 @@ class NotebookComponent implements OnInit {
     if (window.localStorage.containsKey(localStorageKey)) {
       List list = JSON.decode(window.localStorage[localStorageKey]);
       for (final item in list) {
-        entries
-            .add(new EntryData.fromJson(new Map<String, dynamic>.from(item)));
+        entries.add(new EntryData.fromJson(
+            new Map<String, dynamic>.from(item), entryLookup));
       }
     } else {
       // Add empty initial entry.
       addEntry();
     }
   }
+
+  /// Equation lookup function.
+  EntryData entryLookup(int index) => entries[index];
 
   /// One record has been updated.
   void updateType(int index, EntryType type) {
@@ -52,7 +55,7 @@ class NotebookComponent implements OnInit {
   }
 
   /// Add a new entry to the bottom of the list.
-  void addEntry() => entries.add(new EntryData(entries.length));
+  void addEntry() => entries.add(new EntryData(entries.length, entryLookup));
 
   /// Insert a new entry at the given index.
   void insertEntry(int index) {
@@ -62,7 +65,7 @@ class NotebookComponent implements OnInit {
     }
 
     // Insert new entry at index.
-    entries.insert(index, new EntryData(index));
+    entries.insert(index, new EntryData(index, entryLookup));
   }
 
   /// Delete entry at the given index.

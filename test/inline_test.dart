@@ -46,7 +46,7 @@ void main() {
     e.subs(eq((a + b) - b, a), exprIds([a, b]));
     e.wrap(a * b, exprIds([a, b]), innerExpression / b);
     e.subs(eq((a * b) / b, a), exprIds([a, b]));
-    e.compute();
+    e.eval();
 
     // Check
     expect(e, equals(eq(x, 2)));

@@ -2,14 +2,7 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqlib.parsers;
-
-/// Parse an expression string using the Parser from the `math_expressions`
-/// library. This function partially uses the default operator codes.
-Expr parseWithMathExpressions(String str, ExprResolve resolver) {
-  final expr = new mexpr.Parser().parse(str);
-  return _exprFromMexpr(expr, resolver);
-}
+part of eqlib;
 
 /// Maps mexpr types to default function strings.
 final _mexprMap = new Map<Type, String>.from({
@@ -29,7 +22,7 @@ Expr _exprFromMexpr(mexpr.Expression expr, ExprResolve resolver) {
       return new Expr.numeric(expr.value);
     } else {
       throw new UnsupportedError(
-          'mexpr.Literal of type ${expr.runtimeType} is not supported');
+          'mexpr.Literal of type ${expr.runtimeType} is not supported.');
     }
   } else if (expr is mexpr.UnaryMinus) {
     return mul(-1, expr.exp);
@@ -41,9 +34,17 @@ Expr _exprFromMexpr(mexpr.Expression expr, ExprResolve resolver) {
         _exprFromMexpr(expr.second, resolver)
       ]);
     } else {
-      throw new UnimplementedError();
+      throw new UnimplementedError(
+          'mexpr.BinaryOperator of type ${expr.runtimeType} is not implemented');
     }
+  } else if (expr is mexpr.MathFunction) {
+    return new Expr(
+        resolver(expr.name),
+        false,
+        new List<Expr>.generate(
+            expr.args.length, (i) => _exprFromMexpr(expr.args[i], resolver)));
   } else {
-    throw new UnimplementedError();
+    throw new UnsupportedError(
+        'expr type ${expr.runtimeType} is not supported.');
   }
 }

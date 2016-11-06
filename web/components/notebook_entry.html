@@ -21,15 +21,16 @@
         <symbols-table [symbols]="data.symbols"></symbols-table>
       </div>
       <div *ngSwitchWhen="2">
-        <div #guppyDefine class="mathbox"></div>
+        <div #guppyDefine (blur)="saveEquation()" class="mathbox"></div>
       </div>
-      <div *ngSwitchWhen="3">
+      <div *ngSwitchWhen="3" class="apply-flex">
         <div class="left-panel">
           <div class="panel-col">
             <material-input
               type="number" label="source"
               displayBottomPanel="false"
               leadingText="Source"
+              (change)="updateApply()"
               [(numericValue)]="data.applySource"
               [checkInteger]="true"
               [lowerBound]="0"></material-input>
@@ -37,6 +38,7 @@
               type="number" label="target"
               displayBottomPanel="false"
               leadingText="Target"
+              (change)="updateApply()"
               [(numericValue)]="data.applyTarget"
               [checkInteger]="true"
               [lowerBound]="0"></material-input>
@@ -44,10 +46,14 @@
               type="number" label="index"
               displayBottomPanel="false"
               leadingText="Index"
+              (change)="updateApply()"
               [(numericValue)]="data.applyIndex"
               [checkInteger]="true"
               [lowerBound]="0"></material-input>
           </div>
+        </div>
+        <div class="right-panel">
+          <span #appliedEquation></span>
         </div>
       </div>
       <div *ngSwitchWhen="4">

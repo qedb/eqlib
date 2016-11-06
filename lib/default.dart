@@ -4,5 +4,6 @@
 
 library eqlib.default_handlers;
 
+import 'dart:math';
+
 part 'src/default.dart';
-part 'src/latex_printer.dart';

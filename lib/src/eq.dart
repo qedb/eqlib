@@ -22,6 +22,9 @@ class Eq {
     }
   }
 
+  /// Create deep copy.
+  Eq clone() => new Eq(left.clone(), right.clone());
+
   /// Substitute the given equation.
   void subs(Eq eq, [List<int> generic = const [], int idx = 0]) {
     final index = new W<int>(idx);
@@ -57,14 +60,14 @@ class Eq {
 
   /// Compute both sides of the equation as far as possible using the given
   /// resolver.
-  void compute(
+  void eval(
       [ExprCanCompute canCompute = defaultCanCompute,
       ExprCompute computer = defaultCompute]) {
-    num lvalue = left.compute(canCompute, computer);
+    num lvalue = left.eval(canCompute, computer);
     if (lvalue != null) {
       left = new Expr.numeric(lvalue);
     }
-    num rvalue = right.compute(canCompute, computer);
+    num rvalue = right.eval(canCompute, computer);
     if (rvalue != null) {
       right = new Expr.numeric(rvalue);
     }

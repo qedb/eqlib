@@ -53,6 +53,13 @@ class Expr {
         new W<String>(str.replaceAll(new RegExp(r'\s'), '')), resolver);
   }
 
+  /// Construct from an [Expression] instance from the `math_expressions`
+  /// package.
+  factory Expr.fromMathExpressions(mexpr.Expression expr,
+      [ExprResolve resolver = defaultResolver]) {
+    return _exprFromMexpr(expr, resolver);
+  }
+
   /// Create deep copy.
   Expr clone() {
     return new Expr(value, isNumeric,
@@ -196,7 +203,7 @@ class Expr {
   }
 
   /// Compute numeric expressions.
-  num compute(ExprCanCompute canCompute, ExprCompute computer) {
+  num eval(ExprCanCompute canCompute, ExprCompute computer) {
     // Check if this expression is numeric, in this case, return the numeric
     // value.
     if (isNumeric) {
@@ -210,7 +217,7 @@ class Expr {
       // Collect all arguments as numeric values.
       for (var i = 0; i < args.length; i++) {
         // Try to resolve argument to a number.
-        num value = args[i].compute(canCompute, computer);
+        num value = args[i].eval(canCompute, computer);
         if (value == null) {
           numArgs = null;
         } else {
