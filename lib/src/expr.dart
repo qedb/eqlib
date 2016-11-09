@@ -42,22 +42,27 @@ class Expr {
     assert(!(value is double) || isNumeric);
   }
 
+  /// Wrap the given dynamic variable into an expression.
+  factory Expr.wrap(dynamic value) {
+    if (value is Expr) {
+      return value;
+    } else if (value is num) {
+      return new Expr.numeric(value);
+    } else {
+      throw new ArgumentError('value must be of type Expr or num');
+    }
+  }
+
+  /// Construct function expression.
+  factory Expr.function(int id, List<Expr> args) => new Expr(id, false, args);
+
   /// Construct numeric expression.
-  Expr.numeric(this.value)
-      : isNumeric = true,
-        args = [];
+  factory Expr.numeric(num value) => new Expr(value, true, []);
 
   /// Construct by parsing the given expression.
   factory Expr.parse(String str, [ExprResolve resolver = defaultResolver]) {
     return parseExpressionUnsafe(
         new W<String>(str.replaceAll(new RegExp(r'\s'), '')), resolver);
-  }
-
-  /// Construct from an [Expression] instance from the `math_expressions`
-  /// package.
-  factory Expr.fromMathExpressions(mexpr.Expression expr,
-      [ExprResolve resolver = defaultResolver]) {
-    return _exprFromMexpr(expr, resolver);
   }
 
   /// Create deep copy.
@@ -251,15 +256,30 @@ class Expr {
   /// Generate string representation.
   String toString() => stringPrinter(value, isNumeric, args);
 
+  // Standard operator IDs used by built-in operators.
+  static int opAddId = defaultResolver('add');
+  static int opSubId = defaultResolver('sub');
+  static int opMulId = defaultResolver('mul');
+  static int opDivId = defaultResolver('div');
+  static int opPowId = defaultResolver('pow');
+
   /// Add other expression.
-  Expr operator +(other) => add(this, other);
+  Expr operator +(other) =>
+      new Expr.function(opAddId, [this, new Expr.wrap(other)]);
 
   /// Subtract other expression.
-  Expr operator -(other) => sub(this, other);
+  Expr operator -(other) =>
+      new Expr.function(opSubId, [this, new Expr.wrap(other)]);
 
   /// Multiply with other expression.
-  Expr operator *(other) => mul(this, other);
+  Expr operator *(other) =>
+      new Expr.function(opMulId, [this, new Expr.wrap(other)]);
 
   /// Divide by other expression.
-  Expr operator /(other) => div(this, other);
+  Expr operator /(other) =>
+      new Expr.function(opDivId, [this, new Expr.wrap(other)]);
+
+  /// Power by other expression.
+  Expr operator ^(other) =>
+      new Expr.function(opPowId, [this, new Expr.wrap(other)]);
 }

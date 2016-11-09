@@ -6,13 +6,10 @@ library eqlib;
 
 import 'package:quiver/core.dart';
 import 'package:eqlib/utils.dart';
-import 'package:eqlib/inline.dart';
 import 'package:eqlib/default.dart';
 import 'package:petitparser/petitparser.dart';
-import 'package:math_expressions/math_expressions.dart' as mexpr;
 
-part 'src/expr.dart';
 part 'src/eq.dart';
-part 'src/parse_simple.dart';
-part 'src/parse_petitparser.dart';
-part 'src/math_expressions.dart';
+part 'src/expr.dart';
+part 'src/parser_simple.dart';
+part 'src/parser_petitparser.dart';

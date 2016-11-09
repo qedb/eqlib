@@ -32,7 +32,8 @@ class EqExGrammarDefinition extends GrammarDefinition {
           .seq(ref(fnArgs))
           .seq(ref(token, char(')')))
           .optional());
-  Parser fnName() => ref(token, letter().seq((word() | char('_')).star()));
+  Parser fnName() => ref(
+      token, letter().seq((word() | char('_') | char('{') | char('}')).star()));
   Parser fnArgs() =>
       ref(lvl1).separatedBy(ref(token, char(',')), includeSeparators: false);
 
@@ -67,16 +68,16 @@ class EqExParserDefinition extends EqExGrammarDefinition {
   Parser sub() => super.sub().map((values) => values[0] - values[2]);
   Parser mul() => super.mul().map((values) => values[0] * values[2]);
   Parser div() => super.div().map((values) => values[0] / values[2]);
-  Parser power() => super.power().map((values) => pow(values[0], values[2]));
+  Parser power() => super.power().map((values) => values[0] ^ values[2]);
 
   Parser fn() => super.fn().map((values) {
         final code = resolver(values.first);
         if (values[1] is List && values[1][1] is List) {
           final List args = values[1][1];
-          return new Expr(code, false,
-              new List<Expr>.generate(args.length, (i) => args[i]));
+          return new Expr.function(
+              code, new List<Expr>.generate(args.length, (i) => args[i]));
         } else {
-          return new Expr(code, false, []);
+          return new Expr.function(code, []);
         }
       });
 

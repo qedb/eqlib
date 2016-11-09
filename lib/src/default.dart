@@ -5,7 +5,7 @@
 part of eqlib.default_handlers;
 
 /// Default substitution character.
-const defaultSubsCharacter = '@';
+const dfltInnerExprLbl = '{}';
 
 /// All computable functions that are implemented by default.
 enum ComputableExpr { add, subtract, multiply, divide, power }
@@ -72,9 +72,9 @@ String defaultPrinter(num value, bool isNumeric, List<Object> args) {
 /// Default implementation of [ExprResolve] that uses [defaultExprLabels] and
 /// [String.hashCode].
 int defaultResolver(String expr) {
-  if (expr == defaultSubsCharacter) {
-    // This character is reserved to represent expression ID 0, which is used
-    // for substitutions.
+  if (expr == dfltInnerExprLbl) {
+    // This expression label is reserved to represent expression ID 0, which is
+    // used to reference the inner expression in substitutions.
     return 0;
   } else if (defaultExprLabels.containsKey(expr)) {
     // Add 1 because 0 is a reserved expression ID.
@@ -84,8 +84,7 @@ int defaultResolver(String expr) {
     // of all expression strings.
     defaultPrinterDict[expr.hashCode] = expr;
 
-    // Note that this value is computed differently in dart2js compared to the
-    // Dart VM.
+    // Note that this value is computed different in dart2js and the Dart VM.
     return expr.hashCode;
   }
 }

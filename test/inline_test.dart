@@ -42,13 +42,21 @@ void main() {
   test('Solve a simple equation', () {
     final x = symbol('x');
     final e = eq(x * 2 + 5, 9);
-    e.wrap(a + b, exprIds([a, b]), innerExpression - b);
+    e.wrap(a + b, exprIds([a, b]), innerExpr - b);
     e.subs(eq((a + b) - b, a), exprIds([a, b]));
-    e.wrap(a * b, exprIds([a, b]), innerExpression / b);
+    e.wrap(a * b, exprIds([a, b]), innerExpr / b);
     e.subs(eq((a * b) / b, a), exprIds([a, b]));
     e.eval();
 
     // Check
     expect(e, equals(eq(x, 2)));
+  });
+
+  test('Test operators', () {
+    expect(
+        eq(symbol('y'), symbol('x') ^ 3)
+          ..subs(eq(symbol('x'), 3))
+          ..eval(),
+        equals(eq(symbol('y'), 27)));
   });
 }

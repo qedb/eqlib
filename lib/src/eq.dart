@@ -26,11 +26,14 @@ class Eq {
   Eq clone() => new Eq(left.clone(), right.clone());
 
   /// Substitute the given equation.
-  void subs(Eq eq, [List<int> generic = const [], int idx = 0]) {
+  bool subs(Eq eq, [List<int> generic = const [], int idx = 0]) {
     final index = new W<int>(idx);
     left = left.subs(eq, generic, index);
     if (index.v != -1) {
       right = right.subs(eq, generic, index);
+      return index.v == -1;
+    } else {
+      return true;
     }
   }
 

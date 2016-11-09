@@ -7,8 +7,14 @@ part of eqlib;
 /// Parse an expression string that does not contain white spaces.
 Expr parseExpressionUnsafe(W<String> str, ExprResolve resolver) {
   // Get expression label.
-  final lblre = new RegExp(r'([-.@a-z\d]+)');
-  final label = lblre.matchAsPrefix(str.v).group(1);
+  final lblre = new RegExp(r'([-.{}a-z\d]+)');
+  final match = lblre.matchAsPrefix(str.v);
+
+  // If the label could not be parsed, throw an error.
+  if (match == null) {
+    throw new FormatException('wrong expression format: ${str.v}');
+  }
+  final label = match.group(1);
 
   // Try to parse the label as numeric value.
   num value;
