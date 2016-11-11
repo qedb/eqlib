@@ -2,6 +2,10 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
+/// TODO:
+/// - Put notebook in separate repository.
+/// - Implement optimized classes for numeric expressions.
+/// - Implement generic function mapping.
 library eqlib;
 
 import 'package:quiver/core.dart';

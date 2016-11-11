@@ -46,3 +46,10 @@ typedef Expr ExprGenerator1(Expr arg1);
 /// Create single argument expression generator.
 ExprGenerator1 fn1(String label) =>
     (arg1) => new Expr.function(defaultResolver(label), [arg1]);
+
+/// Double argument expression generator
+typedef Expr ExprGenerator2(Expr arg1, Expr arg2);
+
+/// Create double argument expression generator.
+ExprGenerator2 fn2(String label) =>
+    (arg1, arg2) => new Expr.function(defaultResolver(label), [arg1, arg2]);

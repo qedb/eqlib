@@ -52,7 +52,24 @@ void main() {
     expect(e, equals(eq(x, 2)));
   });
 
-  test('Test operators', () {
+  test('Chain rule', () {
+    final sin = fn1('sin');
+    final cos = fn1('cos');
+    final diff = fn2('diff');
+    final fn = fn1('fn');
+    final x = symbol('x');
+
+    /// Use chain rule to find derivative of sin(x^3)
+    final e = eq(symbol('y'), diff(sin(x ^ 3), x));
+    e.subs(eq(diff(fn(a), b), diff(a, b) * diff(fn(a), a)),
+        exprIds([a, b, fn(a)]));
+    e.subs(eq(diff(a ^ b, a), b * a ^ (b - 1)), exprIds([a, b]));
+    e.subs(eq(diff(sin(a), a), cos(a)), exprIds([a]));
+    e.eval();
+    expect(e, equals(eq(symbol('y'), (x ^ 2) * 3 * cos(x ^ 3))));
+  }, skip: true);
+
+  test('Power operator', () {
     expect(
         eq(symbol('y'), symbol('x') ^ 3)
           ..subs(eq(symbol('x'), 3))
