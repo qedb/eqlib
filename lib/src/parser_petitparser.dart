@@ -51,7 +51,7 @@ class EqExGrammarDefinition extends GrammarDefinition {
 
 /// EqEx parser.
 class EqExParser extends GrammarParser {
-  EqExParser([ExprResolve resolver = defaultResolver])
+  EqExParser([ExprResolve resolver = standaloneResolver])
       : super(new EqExParserDefinition(resolver));
 }
 

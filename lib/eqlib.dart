@@ -6,12 +6,11 @@
 /// - Put notebook in separate repository.
 /// - Implement optimized classes for numeric expressions.
 /// - Implement generic function mapping.
-/// - Rename default.dart to standalone.dart
 library eqlib;
 
 import 'package:quiver/core.dart';
 import 'package:eqlib/utils.dart';
-import 'package:eqlib/default.dart';
+import 'package:eqlib/standalone.dart';
 import 'package:petitparser/petitparser.dart';
 
 part 'src/eq.dart';

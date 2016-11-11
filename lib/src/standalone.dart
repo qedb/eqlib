@@ -2,16 +2,17 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-part of eqlib.default_handlers;
+/// TODO: wrapping class for all functions?
+part of eqlib.standalone;
 
 /// Default substitution character.
 const dfltInnerExprLbl = '{}';
 
-/// All computable functions that are implemented by default.
+/// All computable functions that are implemented by standalone handlers.
 enum ComputableExpr { add, subtract, multiply, divide, power }
 
 /// Expr labels for all default computable functions.
-const Map<String, ComputableExpr> defaultExprLabels = const {
+const Map<String, ComputableExpr> _computableExprLabels = const {
   'add': ComputableExpr.add,
   'sub': ComputableExpr.subtract,
   'mul': ComputableExpr.multiply,
@@ -20,13 +21,13 @@ const Map<String, ComputableExpr> defaultExprLabels = const {
 };
 
 /// Printer expression dictionary.
-final defaultPrinterDict = new Map<int, String>();
+final standalonePrinterDict = new Map<int, String>();
 
-/// Flag for [defaultPrinter] to enable the use of operator characters.
-bool defaultPrinterOpChars = false;
+/// Flag for [standalonePrinter] to enable the use of operator characters.
+bool standalonePrinterOpChars = false;
 
-/// Default implementation of [ExprPrinter].
-String defaultPrinter(num value, bool isNumeric, List<Object> args) {
+/// Standalone implementation of [ExprPrinter].
+String standalonePrinter(num value, bool isNumeric, List<Object> args) {
   if (isNumeric) {
     return value.toString();
   } else {
@@ -35,68 +36,68 @@ String defaultPrinter(num value, bool isNumeric, List<Object> args) {
       switch (ComputableExpr.values[value - 1]) {
         case ComputableExpr.add:
           assert(args.length == 2);
-          return defaultPrinterOpChars
+          return standalonePrinterOpChars
               ? '${args[0]} + ${args[1]}'
               : 'add(${args[0]}, ${args[1]})';
         case ComputableExpr.subtract:
           assert(args.length == 2);
-          return defaultPrinterOpChars
+          return standalonePrinterOpChars
               ? '${args[0]} - ${args[1]}'
               : 'sub(${args[0]}, ${args[1]})';
         case ComputableExpr.multiply:
           assert(args.length == 2);
-          return defaultPrinterOpChars
+          return standalonePrinterOpChars
               ? '{${args[0]}}*{${args[1]}}'
               : 'mul(${args[0]}, ${args[1]})';
         case ComputableExpr.divide:
           assert(args.length == 2);
-          return defaultPrinterOpChars
+          return standalonePrinterOpChars
               ? '{${args[0]}}/{${args[1]}}'
               : 'div(${args[0]}, ${args[1]})';
         case ComputableExpr.power:
           assert(args.length == 2);
-          return defaultPrinterOpChars
+          return standalonePrinterOpChars
               ? '{${args[0]}}^{${args[1]}}'
               : 'pow(${args[0]}, ${args[1]})';
         default:
           throw new Exception('this is 100% impossible');
       }
     } else if (args.isEmpty) {
-      return '${defaultPrinterDict[value]}';
+      return '${standalonePrinterDict[value]}';
     } else {
-      return '${defaultPrinterDict[value]}(${args.join(', ')})';
+      return '${standalonePrinterDict[value]}(${args.join(', ')})';
     }
   }
 }
 
-/// Default implementation of [ExprResolve] that uses [defaultExprLabels] and
+/// Standalone implementation of [ExprResolve] that uses [defaultExprLabels] and
 /// [String.hashCode].
-int defaultResolver(String expr) {
+int standaloneResolver(String expr) {
   if (expr == dfltInnerExprLbl) {
     // This expression label is reserved to represent expression ID 0, which is
     // used to reference the inner expression in substitutions.
     return 0;
-  } else if (defaultExprLabels.containsKey(expr)) {
+  } else if (_computableExprLabels.containsKey(expr)) {
     // Add 1 because 0 is a reserved expression ID.
-    return defaultExprLabels[expr].index + 1;
+    return _computableExprLabels[expr].index + 1;
   } else {
     // In order to work with the default printer, we need to keep a dictionary
     // of all expression strings.
-    defaultPrinterDict[expr.hashCode] = expr;
+    standalonePrinterDict[expr.hashCode] = expr;
 
     // Note that this value is computed different in dart2js and the Dart VM.
     return expr.hashCode;
   }
 }
 
-/// Default implementation of [ExprCanCompute].
-bool defaultCanCompute(int expr) {
+/// Standalone implementation of [ExprCanCompute].
+bool standaloneCanCompute(int expr) {
   return expr > 0 && expr - 1 < ComputableExpr.values.length;
 }
 
 /// Default optimized implementation of [ExprCompute]. This implementation
-/// assumes you are using the [_defaultResolver].
-num defaultCompute(int expr, List<num> args) {
+/// assumes you are using the [_standaloneResolver].
+num standaloneCompute(int expr, List<num> args) {
   assert(expr > 0);
   // Note: subtract one because 0 is a reserved expression ID.
   if (expr - 1 < ComputableExpr.values.length) {

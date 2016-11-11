@@ -44,10 +44,11 @@ String defaultLatexPrinter(num value, bool isNumeric, List<Expr> args) {
           throw new Exception('this is 100% impossible');
       }
     } else if (args.isEmpty) {
-      final key = defaultPrinterDict[value];
+      /// TODO: more flexible implementation (name resolver function).
+      final key = standalonePrinterDict[value];
       return '{${defaultLatexPrinterDict[key] ?? "\\text{$key}"}}';
     } else {
-      return '\\text{${defaultPrinterDict[value]}}\\left(${args.join(', ')}\\right)';
+      return '\\text{${standalonePrinterDict[value]}}\\left(${args.join(', ')}\\right)';
     }
   }
 }

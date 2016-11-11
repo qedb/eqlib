@@ -5,6 +5,6 @@
 library eqlib.latex_printer;
 
 import 'package:eqlib/eqlib.dart';
-import 'package:eqlib/default.dart';
+import 'package:eqlib/standalone.dart';
 
 part 'src/latex_printer.dart';

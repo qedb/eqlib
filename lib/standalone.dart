@@ -2,5 +2,8 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-$primary: #607d8b;
-$sheetw: 1000px;
+library eqlib.standalone;
+
+import 'dart:math';
+
+part 'src/standalone.dart';

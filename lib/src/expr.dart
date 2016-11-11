@@ -60,7 +60,7 @@ class Expr {
   factory Expr.numeric(num value) => new Expr(value, true, []);
 
   /// Construct by parsing the given expression.
-  factory Expr.parse(String str, [ExprResolve resolver = defaultResolver]) {
+  factory Expr.parse(String str, [ExprResolve resolver = standaloneResolver]) {
     return parseExpressionUnsafe(
         new W<String>(str.replaceAll(new RegExp(r'\s'), '')), resolver);
   }
@@ -251,17 +251,17 @@ class Expr {
   }
 
   /// Global string printer function.
-  static ExprPrinter stringPrinter = defaultPrinter;
+  static ExprPrinter stringPrinter = standalonePrinter;
 
   /// Generate string representation.
   String toString() => stringPrinter(value, isNumeric, args);
 
   // Standard operator IDs used by built-in operators.
-  static int opAddId = defaultResolver('add');
-  static int opSubId = defaultResolver('sub');
-  static int opMulId = defaultResolver('mul');
-  static int opDivId = defaultResolver('div');
-  static int opPowId = defaultResolver('pow');
+  static int opAddId = standaloneResolver('add');
+  static int opSubId = standaloneResolver('sub');
+  static int opMulId = standaloneResolver('mul');
+  static int opDivId = standaloneResolver('div');
+  static int opPowId = standaloneResolver('pow');
 
   /// Add other expression.
   Expr operator +(other) =>

@@ -64,8 +64,8 @@ class Eq {
   /// Compute both sides of the equation as far as possible using the given
   /// resolver.
   void eval(
-      [ExprCanCompute canCompute = defaultCanCompute,
-      ExprCompute computer = defaultCompute]) {
+      [ExprCanCompute canCompute = standaloneCanCompute,
+      ExprCompute computer = standaloneCompute]) {
     num lvalue = left.eval(canCompute, computer);
     if (lvalue != null) {
       left = new Expr.numeric(lvalue);
