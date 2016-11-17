@@ -4,6 +4,8 @@
 
 library eqlib.latex_printer;
 
+import 'dart:async';
+
 import 'package:eqlib/eqlib.dart';
 
 part 'src/latex_printer.dart';

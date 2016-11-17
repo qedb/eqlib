@@ -14,7 +14,7 @@ void main() {
 
     // (a + 5)^(b * c)
     expect(
-        printer.format(pow(symbol('a') + number(5), symbol('b') * symbol('c')),
+        printer.render(pow(symbol('a') + number(5), symbol('b') * symbol('c')),
             dfltExprEngine.resolveName),
         equals('{\\left({a}+5\\right)}^{{b}\\cdot{c}}'));
   });

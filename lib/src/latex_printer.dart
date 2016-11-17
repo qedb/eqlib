@@ -17,6 +17,14 @@ class LaTeXPrinterEntry {
 class LaTeXPrinter {
   final _dict = new Map<int, LaTeXPrinterEntry>();
 
+  /// Dictionary update events.
+  final _onDictUpdate = new StreamController<Null>();
+  Stream<Null> onDictUpdate;
+
+  LaTeXPrinter() {
+    onDictUpdate = _onDictUpdate.stream;
+  }
+
   void addDefaultEntries(ExprResolve resolver) {
     _dict[resolver('add')] = const LaTeXPrinterEntry('{a}+{b}', true);
     _dict[resolver('sub')] = const LaTeXPrinterEntry('{a}-{b}', true);
@@ -25,7 +33,16 @@ class LaTeXPrinter {
     _dict[resolver('pow')] = const LaTeXPrinterEntry('{(a)}^{{b}}', false);
   }
 
-  String format(Expr input, ExprResolveName resolveName,
+  /// TODO: design more generic methods.
+  void dictReplace(int oldId, int newId, String template) {
+    if (oldId != newId && _dict.containsKey(oldId)) {
+      _dict.remove(oldId);
+    }
+    _dict[newId] = new LaTeXPrinterEntry(template);
+    _onDictUpdate.add(null);
+  }
+
+  String render(Expr input, ExprResolveName resolveName,
       [bool explicitBlock = false]) {
     if (input.isNumeric) {
       return input.value.toString();
@@ -50,7 +67,7 @@ class LaTeXPrinter {
           return [
             '{\\text{$name}\\left(',
             new List<String>.generate(input.args.length,
-                (i) => format(input.args[i], resolveName)).join(', '),
+                (i) => render(input.args[i], resolveName)).join(', '),
             '\\right)}'
           ].join();
         }
@@ -72,7 +89,7 @@ class LaTeXPrinter {
       // Compute argument index.
       final idx = match.group(1).codeUnitAt(0) - 'a'.codeUnitAt(0);
       if (idx < input.args.length) {
-        return format(input.args[idx], resolveName);
+        return render(input.args[idx], resolveName);
       } else {
         return match.group(1);
       }
@@ -83,7 +100,7 @@ class LaTeXPrinter {
       // Compute argument index.
       final idx = match.group(1).codeUnitAt(0) - 'a'.codeUnitAt(0);
       if (idx < input.args.length) {
-        return format(input.args[idx], resolveName, true);
+        return render(input.args[idx], resolveName, true);
       } else {
         return match.group(1);
       }
