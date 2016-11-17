@@ -2,53 +2,93 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
+/// TODO:
+/// - support interpolation expressions
+/// - class based printer
 part of eqlib.latex_printer;
 
-/// Dictionary of expression strings and their LaTeX equivalent
-final Map<String, String> defaultLatexPrinterDict = new Map<String, String>();
+class LaTeXPrinterEntry {
+  final String template;
+  final bool useParenthesis;
+  const LaTeXPrinterEntry(this.template, [this.useParenthesis = false]);
+}
 
-/// Check if the given expression ID requires parenthesis in LaTeX.
-bool _useParenthesis(int value) => value - 1 < ComputableExpr.values.length;
+/// LaTeX Expr printer.
+class LaTeXPrinter {
+  final _dict = new Map<int, LaTeXPrinterEntry>();
 
-/// Simple LaTeX printer.
-String defaultLatexPrinter(num value, bool isNumeric, List<Expr> args) {
-  if (isNumeric) {
-    return value.toString();
-  } else {
-    assert(value is int);
-    if (value - 1 < ComputableExpr.values.length) {
-      switch (ComputableExpr.values[value - 1]) {
-        case ComputableExpr.add:
-          assert(args.length == 2);
-          return '${args[0]} + ${args[1]}';
-        case ComputableExpr.subtract:
-          assert(args.length == 2);
-          return '${args[0]} - ${args[1]}';
-        case ComputableExpr.multiply:
-          assert(args.length == 2);
-          return [
-            '${_useParenthesis(args[0].value) ? "\\left(${args[0]}\\right)" : args[0]}',
-            '\\cdot',
-            '${_useParenthesis(args[1].value) ? "\\left(${args[1]}\\right)" : args[1]}'
-          ].join();
-        case ComputableExpr.divide:
-          assert(args.length == 2);
-          return '\\frac{${args[0]}}{${args[1]}}';
-        case ComputableExpr.power:
-          assert(args.length == 2);
-          return [
-            '${_useParenthesis(args[0].value) ? "\\left(${args[0]}\\right)" : args[0]}',
-            '^{${args[1]}}'
-          ].join();
-        default:
-          throw new Exception('this is 100% impossible');
-      }
-    } else if (args.isEmpty) {
-      /// TODO: more flexible implementation (name resolver function).
-      final key = standalonePrinterDict[value];
-      return '{${defaultLatexPrinterDict[key] ?? "\\text{$key}"}}';
+  void addDefaultEntries(ExprResolve resolver) {
+    _dict[resolver('add')] = const LaTeXPrinterEntry('{a}+{b}', true);
+    _dict[resolver('sub')] = const LaTeXPrinterEntry('{a}-{b}', true);
+    _dict[resolver('mul')] = const LaTeXPrinterEntry('{(a)}\\cdot{(b)}', true);
+    _dict[resolver('div')] = const LaTeXPrinterEntry('\\frac{{a}}{{b}}', true);
+    _dict[resolver('pow')] = const LaTeXPrinterEntry('{(a)}^{{b}}', false);
+  }
+
+  String format(Expr input, ExprResolveName resolveName,
+      [bool explicitBlock = false]) {
+    if (input.isNumeric) {
+      return input.value.toString();
     } else {
-      return '\\text{${standalonePrinterDict[value]}}\\left(${args.join(', ')}\\right)';
+      assert(input.value is int);
+
+      // Check if there is an entry in the dictionary.
+      if (_dict.containsKey(input.value)) {
+        final formatted =
+            renderTemplate(input, _dict[input.value].template, resolveName);
+        if (explicitBlock && _dict[input.value].useParenthesis) {
+          return '{\\left($formatted\\right)}';
+        } else {
+          return formatted;
+        }
+      } else {
+        // Resolve function name using the name resolver.
+        final name = resolveName(input.value);
+        if (input.args.isEmpty) {
+          return '{$name}';
+        } else {
+          return [
+            '{\\text{$name}\\left(',
+            new List<String>.generate(input.args.length,
+                (i) => format(input.args[i], resolveName)).join(', '),
+            '\\right)}'
+          ].join();
+        }
+      }
     }
+  }
+
+  /// Render template
+  String renderTemplate(
+      Expr input, String template, ExprResolveName resolveName) {
+    // Never surround with parenthesis.
+    final openArg = new RegExp(r'{(\w+)}');
+
+    // Surround with parenthesis when argument has useParenthesis set.
+    final closedArg = new RegExp(r'{\((\w+)\)}');
+
+    // Replace all open args.
+    template = template.replaceAllMapped(openArg, (match) {
+      // Compute argument index.
+      final idx = match.group(1).codeUnitAt(0) - 'a'.codeUnitAt(0);
+      if (idx < input.args.length) {
+        return format(input.args[idx], resolveName);
+      } else {
+        return match.group(1);
+      }
+    });
+
+    // Replace all closed args.
+    template = template.replaceAllMapped(closedArg, (match) {
+      // Compute argument index.
+      final idx = match.group(1).codeUnitAt(0) - 'a'.codeUnitAt(0);
+      if (idx < input.args.length) {
+        return format(input.args[idx], resolveName, true);
+      } else {
+        return match.group(1);
+      }
+    });
+
+    return template;
   }
 }

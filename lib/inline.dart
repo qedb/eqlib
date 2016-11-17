@@ -5,6 +5,5 @@
 library eqlib.inline;
 
 import 'package:eqlib/eqlib.dart';
-import 'package:eqlib/standalone.dart';
 
 part 'src/inline.dart';

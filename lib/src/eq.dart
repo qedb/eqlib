@@ -15,7 +15,7 @@ class Eq {
   factory Eq.parse(String str) {
     final sides = str.split('=');
     if (sides.length == 2) {
-      return new Eq(new Expr.parse(sides[0]), new Expr.parse(sides[1]));
+      return new Eq(new Expr.parse(sides.first), new Expr.parse(sides.last));
     } else {
       throw new FormatException(
           "the equation should be of the format 'Expr=Expr'");

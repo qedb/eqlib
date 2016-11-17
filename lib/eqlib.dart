@@ -3,17 +3,19 @@
 // that can be found in the LICENSE file.
 
 /// TODO:
-/// - Put notebook in separate repository.
 /// - Implement optimized classes for numeric expressions.
 /// - Implement generic function mapping.
 library eqlib;
 
+import 'dart:math';
+
 import 'package:quiver/core.dart';
 import 'package:eqlib/utils.dart';
-import 'package:eqlib/standalone.dart';
 import 'package:petitparser/petitparser.dart';
 
 part 'src/eq.dart';
 part 'src/expr.dart';
+part 'src/interface.dart';
+part 'src/standalone.dart';
 part 'src/parser_simple.dart';
 part 'src/parser_petitparser.dart';

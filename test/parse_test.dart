@@ -4,12 +4,11 @@
 
 import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
-import 'package:eqlib/standalone.dart';
 
 void main() {
-  final a = standaloneResolver('a');
-  final b = standaloneResolver('b');
-  final c = standaloneResolver('c');
+  final a = dfltExprEngine.resolve('a');
+  final b = dfltExprEngine.resolve('b');
+  final c = dfltExprEngine.resolve('c');
 
   test('Parse using EqExParser', () {
     var result = new EqExParser().parse('3 * fn(a, b, 3 - 2 * 5) ^ (10 + -5)');
@@ -32,7 +31,7 @@ void main() {
         [a, b, c]);
 
     // Check
-    standalonePrinterOpChars = true;
+    dfltExprEngine.printerOpChars = true;
     expect(pvec.toString(),
         equals('pvec={r}*{{sin(theta)}*{ihat} + {cos(theta)}*{jhat}}'));
   });

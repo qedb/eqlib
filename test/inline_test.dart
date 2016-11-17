@@ -69,6 +69,10 @@ void main() {
     expect(e, equals(eq(symbol('y'), (x ^ 2) * 3 * cos(x ^ 3))));
   }, skip: true);
 
+  test('Fibonaci', () {
+    //
+  });
+
   test('Power operator', () {
     expect(
         eq(symbol('y'), symbol('x') ^ 3)

@@ -4,19 +4,6 @@
 
 part of eqlib;
 
-/// Function that should resolve an expression string into an integer.
-typedef int ExprResolve(String expr);
-
-/// Function that should compute a numeric value for the given expression ID
-/// and arguments.
-typedef num ExprCompute(int expr, List<num> args);
-
-/// Function that can lookup whether a given expression can be computed.
-typedef bool ExprCanCompute(int expr);
-
-/// String printing entry function.
-typedef String ExprPrinter(num value, bool isNumeric, List<Expr> args);
-
 /// Expression of a variable or function
 class Expr {
   /// Expression value
@@ -60,7 +47,7 @@ class Expr {
   factory Expr.numeric(num value) => new Expr(value, true, []);
 
   /// Construct by parsing the given expression.
-  factory Expr.parse(String str, [ExprResolve resolver = standaloneResolver]) {
+  factory Expr.parse(String str, [ExprResolve resolver = standaloneResolve]) {
     return parseExpressionUnsafe(
         new W<String>(str.replaceAll(new RegExp(r'\s'), '')), resolver);
   }
@@ -180,6 +167,8 @@ class Expr {
   /// Substitute the given [equation] at the given superset [index].
   /// Returns an instance of [Expr] where the equation is substituted.
   /// Never returns null, instead returns itself if nothing is substituted.
+  ///
+  /// TODO: use Set<int> for generic?
   Expr subs(Eq equation, List<int> generic, W<int> index) {
     // Try to map to this expression.
     final mapping = matchSuperset(equation.left, generic);
@@ -208,7 +197,7 @@ class Expr {
   }
 
   /// Compute numeric expressions.
-  num eval(ExprCanCompute canCompute, ExprCompute computer) {
+  num eval(ExprCanCompute canCompute, ExprCompute compute) {
     // Check if this expression is numeric, in this case, return the numeric
     // value.
     if (isNumeric) {
@@ -222,7 +211,7 @@ class Expr {
       // Collect all arguments as numeric values.
       for (var i = 0; i < args.length; i++) {
         // Try to resolve argument to a number.
-        num value = args[i].eval(canCompute, computer);
+        num value = args[i].eval(canCompute, compute);
         if (value == null) {
           numArgs = null;
         } else {
@@ -239,7 +228,7 @@ class Expr {
       // Return numeric expression with the numeric value, or null if it is not
       // possible to compute a numeric value.
       if (numArgs != null) {
-        return computer(value, numArgs);
+        return compute(value, numArgs);
       } else {
         return null;
       }
@@ -251,17 +240,17 @@ class Expr {
   }
 
   /// Global string printer function.
-  static ExprPrinter stringPrinter = standalonePrinter;
+  static ExprPrint stringPrinter = dfltExprEngine.print;
 
   /// Generate string representation.
-  String toString() => stringPrinter(value, isNumeric, args);
+  String toString() => stringPrinter(this);
 
   // Standard operator IDs used by built-in operators.
-  static int opAddId = standaloneResolver('add');
-  static int opSubId = standaloneResolver('sub');
-  static int opMulId = standaloneResolver('mul');
-  static int opDivId = standaloneResolver('div');
-  static int opPowId = standaloneResolver('pow');
+  static int opAddId = dfltExprEngine.resolve('add');
+  static int opSubId = dfltExprEngine.resolve('sub');
+  static int opMulId = dfltExprEngine.resolve('mul');
+  static int opDivId = dfltExprEngine.resolve('div');
+  static int opPowId = dfltExprEngine.resolve('pow');
 
   /// Add other expression.
   Expr operator +(other) =>
