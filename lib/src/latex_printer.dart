@@ -18,12 +18,8 @@ class LaTeXPrinter {
   final _dict = new Map<int, LaTeXPrinterEntry>();
 
   /// Dictionary update events.
-  final _onDictUpdate = new StreamController<Null>();
-  Stream<Null> onDictUpdate;
-
-  LaTeXPrinter() {
-    onDictUpdate = _onDictUpdate.stream;
-  }
+  final _onDictUpdate = new StreamController<Null>.broadcast();
+  Stream<Null> get onDictUpdate => _onDictUpdate.stream;
 
   void addDefaultEntries(ExprResolve resolver) {
     _dict[resolver('add')] = const LaTeXPrinterEntry('{a}+{b}', true);
