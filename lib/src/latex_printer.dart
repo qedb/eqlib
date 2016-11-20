@@ -22,11 +22,11 @@ class LaTeXPrinter {
   Stream<Null> get onDictUpdate => _onDictUpdate.stream;
 
   void addDefaultEntries(ExprResolve resolver) {
-    _dict[resolver('add')] = const LaTeXPrinterEntry('{a}+{b}', true);
-    _dict[resolver('sub')] = const LaTeXPrinterEntry('{a}-{b}', true);
-    _dict[resolver('mul')] = const LaTeXPrinterEntry('{(a)}\\cdot{(b)}', true);
-    _dict[resolver('div')] = const LaTeXPrinterEntry('\\frac{{a}}{{b}}', true);
-    _dict[resolver('pow')] = const LaTeXPrinterEntry('{(a)}^{{b}}', false);
+    _dict[resolver('add')] = const LaTeXPrinterEntry(r'$a+$b', true);
+    _dict[resolver('sub')] = const LaTeXPrinterEntry(r'$a-$b', true);
+    _dict[resolver('mul')] = const LaTeXPrinterEntry(r'$(a)\cdot$(b)', true);
+    _dict[resolver('div')] = const LaTeXPrinterEntry(r'\frac{$a}{$b}', true);
+    _dict[resolver('pow')] = const LaTeXPrinterEntry(r'$(a)^{$b}', false);
   }
 
   /// TODO: design more generic methods.
@@ -50,7 +50,7 @@ class LaTeXPrinter {
         final formatted =
             renderTemplate(input, _dict[input.value].template, resolveName);
         if (explicitBlock && _dict[input.value].useParenthesis) {
-          return '{\\left($formatted\\right)}';
+          return '\\left($formatted\\right)';
         } else {
           return formatted;
         }
@@ -61,10 +61,10 @@ class LaTeXPrinter {
           return '{$name}';
         } else {
           return [
-            '{\\text{$name}\\left(',
+            '\\text{$name}\\left(',
             new List<String>.generate(input.args.length,
                 (i) => render(input.args[i], resolveName)).join(', '),
-            '\\right)}'
+            '\\right)'
           ].join();
         }
       }
@@ -75,10 +75,10 @@ class LaTeXPrinter {
   String renderTemplate(
       Expr input, String template, ExprResolveName resolveName) {
     // Never surround with parenthesis.
-    final openArg = new RegExp(r'{(\w+)}');
+    final openArg = new RegExp(r'\$(\w+)');
 
     // Surround with parenthesis when argument has useParenthesis set.
-    final closedArg = new RegExp(r'{\((\w+)\)}');
+    final closedArg = new RegExp(r'\$\((\w+)\)');
 
     // Replace all open args.
     template = template.replaceAllMapped(openArg, (match) {
