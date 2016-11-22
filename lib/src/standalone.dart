@@ -87,16 +87,15 @@ class StandaloneExprEngine {
 
   /// Implementation of [ExprPrinter].
   String print(Expr expr) {
-    if (expr.isNumeric) {
+    if (expr is ExprNum) {
       return expr.value.toString();
-    } else {
-      assert(expr.value is int);
-
-      final value = expr.value;
+    } else if (expr is ExprSym) {
+      return resolveName(expr.id);
+    } else if (expr is ExprFun) {
+      final id = expr.id;
       final args = expr.args;
-
-      if (value - 1 < ComputableExpr.values.length) {
-        switch (ComputableExpr.values[value - 1]) {
+      if (id - 1 < ComputableExpr.values.length) {
+        switch (ComputableExpr.values[id - 1]) {
           case ComputableExpr.add:
             assert(args.length == 2);
             return printerOpChars
@@ -125,11 +124,12 @@ class StandaloneExprEngine {
           default:
             throw new Exception('this is 100% impossible');
         }
-      } else if (args.isEmpty) {
-        return '${resolveName(value)}';
       } else {
-        return '${resolveName(value)}(${args.join(', ')})';
+        return '${resolveName(id)}(${args.join(', ')})';
       }
+    } else {
+      throw new ArgumentError(
+          'expr type must be one of: ExprNum, ExprSym, ExprFun');
     }
   }
 }

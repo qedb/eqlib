@@ -2,9 +2,6 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
-/// TODO:
-/// - support interpolation expressions
-/// - class based printer
 part of eqlib.latex_printer;
 
 class LaTeXPrinterEntry {
@@ -13,7 +10,8 @@ class LaTeXPrinterEntry {
   const LaTeXPrinterEntry(this.template, [this.useParenthesis = false]);
 }
 
-/// LaTeX Expr printer.
+/// LaTeX Expr printer
+/// TODO: Handle multiple levels of operator precedence better.
 class LaTeXPrinter {
   final _dict = new Map<int, LaTeXPrinterEntry>();
 
@@ -38,42 +36,44 @@ class LaTeXPrinter {
     _onDictUpdate.add(null);
   }
 
-  String render(Expr input, ExprResolveName resolveName,
+  String render(Expr expr, ExprResolveName resolveName,
       [bool explicitBlock = false]) {
-    if (input.isNumeric) {
-      return input.value.toString();
-    } else {
-      assert(input.value is int);
-
+    if (expr is ExprNum) {
+      return expr.value.toString();
+    } else if (expr is ExprSym) {
+      return _dict.containsKey(expr.id)
+          ? _dict[expr.id].template
+          : '{${resolveName(expr.id)}}';
+    } else if (expr is ExprFun) {
       // Check if there is an entry in the dictionary.
-      if (_dict.containsKey(input.value)) {
+      if (_dict.containsKey(expr.id)) {
         final formatted =
-            renderTemplate(input, _dict[input.value].template, resolveName);
-        if (explicitBlock && _dict[input.value].useParenthesis) {
+            renderTemplate(expr, _dict[expr.id].template, resolveName);
+        if (explicitBlock && _dict[expr.id].useParenthesis) {
           return '\\left($formatted\\right)';
         } else {
           return formatted;
         }
       } else {
         // Resolve function name using the name resolver.
-        final name = resolveName(input.value);
-        if (input.args.isEmpty) {
-          return '{$name}';
-        } else {
-          return [
-            '\\text{$name}\\left(',
-            new List<String>.generate(input.args.length,
-                (i) => render(input.args[i], resolveName)).join(', '),
-            '\\right)'
-          ].join();
-        }
+        final name = resolveName(expr.id);
+        return [
+          '\\text{$name}\\left(',
+          new List<String>.generate(
+                  expr.args.length, (i) => render(expr.args[i], resolveName))
+              .join(', '),
+          '\\right)'
+        ].join();
       }
+    } else {
+      throw new ArgumentError(
+          'expr type must be one of: ExprNum, ExprSym, ExprFun');
     }
   }
 
   /// Render template
   String renderTemplate(
-      Expr input, String template, ExprResolveName resolveName) {
+      ExprFun expr, String template, ExprResolveName resolveName) {
     // Never surround with parenthesis.
     final openArg = new RegExp(r'\$(\w+)');
 
@@ -84,8 +84,8 @@ class LaTeXPrinter {
     template = template.replaceAllMapped(openArg, (match) {
       // Compute argument index.
       final idx = match.group(1).codeUnitAt(0) - 'a'.codeUnitAt(0);
-      if (idx < input.args.length) {
-        return render(input.args[idx], resolveName);
+      if (idx < expr.args.length) {
+        return render(expr.args[idx], resolveName);
       } else {
         return match.group(1);
       }
@@ -95,8 +95,8 @@ class LaTeXPrinter {
     template = template.replaceAllMapped(closedArg, (match) {
       // Compute argument index.
       final idx = match.group(1).codeUnitAt(0) - 'a'.codeUnitAt(0);
-      if (idx < input.args.length) {
-        return render(input.args[idx], resolveName, true);
+      if (idx < expr.args.length) {
+        return render(expr.args[idx], resolveName, true);
       } else {
         return match.group(1);
       }

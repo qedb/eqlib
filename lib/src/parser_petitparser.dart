@@ -62,7 +62,7 @@ class EqExParserDefinition extends EqExGrammarDefinition {
   const EqExParserDefinition(this.resolver);
 
   Parser number() =>
-      super.number().map((value) => new Expr.numeric(num.parse(value)));
+      super.number().map((value) => new ExprNum(num.parse(value)));
 
   Parser add() => super.add().map((values) => values[0] + values[2]);
   Parser sub() => super.sub().map((values) => values[0] - values[2]);
@@ -71,13 +71,13 @@ class EqExParserDefinition extends EqExGrammarDefinition {
   Parser power() => super.power().map((values) => values[0] ^ values[2]);
 
   Parser fn() => super.fn().map((values) {
-        final code = resolver(values.first);
+        final id = resolver(values.first);
         if (values[1] is List && values[1][1] is List) {
           final List args = values[1][1];
-          return new Expr.function(
-              code, new List<Expr>.generate(args.length, (i) => args[i]));
+          return new ExprFun(
+              id, new List<Expr>.generate(args.length, (i) => args[i]));
         } else {
-          return new Expr.function(code, []);
+          return new ExprSym(id);
         }
       });
 

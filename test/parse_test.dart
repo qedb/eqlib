@@ -14,7 +14,7 @@ void main() {
     var result = new EqExParser().parse('3 * fn(a, b, 3 - 2 * 5) ^ (10 + -5)');
     expect(
         result.value,
-        equals(new Expr.parse(
+        equals(parseExpr(
             'mul(3, pow(fn(a, b, sub(3, mul(2, 5))), add(10, -5)))')));
   });
 
@@ -38,9 +38,9 @@ void main() {
 
   test('Solve a simple equation', () {
     var eq = new Eq.parse('add(mul(x, 2), 5) = 9');
-    eq.wrap(new Expr.parse('add(a, b)'), [a, b], new Expr.parse('sub({}, b)'));
+    eq.wrap(parseExpr('add(a, b)'), [a, b], parseExpr('sub({}, b)'));
     eq.subs(new Eq.parse('sub(add(a, b), b) = a'), [a, b]);
-    eq.wrap(new Expr.parse('mul(a, b)'), [a, b], new Expr.parse('div({}, b)'));
+    eq.wrap(parseExpr('mul(a, b)'), [a, b], parseExpr('div({}, b)'));
     eq.subs(new Eq.parse('div(mul(a, b), b) = a'), [a, b]);
     eq.eval();
 

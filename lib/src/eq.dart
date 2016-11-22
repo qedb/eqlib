@@ -14,12 +14,7 @@ class Eq {
   /// Parse an equation string representation.
   factory Eq.parse(String str) {
     final sides = str.split('=');
-    if (sides.length == 2) {
-      return new Eq(new Expr.parse(sides.first), new Expr.parse(sides.last));
-    } else {
-      throw new FormatException(
-          "the equation should be of the format 'Expr=Expr'");
-    }
+    return new Eq(parseExpr(sides.first), parseExpr(sides.last));
   }
 
   /// Create deep copy.
@@ -40,12 +35,12 @@ class Eq {
   /// Wrap both sides of the equation using the given condition.
   void wrap(Expr condition, List<int> generic, Expr wrapping) {
     final lmap = left.matchSuperset(condition, generic);
-    if (lmap != null) {
-      _wrap(wrapping, lmap);
+    if (lmap.match) {
+      _wrap(wrapping, lmap.mapping);
     } else {
       final rmap = right.matchSuperset(condition, generic);
-      if (rmap != null) {
-        _wrap(wrapping, rmap);
+      if (rmap.match) {
+        _wrap(wrapping, rmap.mapping);
       } else {
         throw new Exception('the condition does not match left or right');
       }
@@ -66,13 +61,13 @@ class Eq {
   void eval(
       [ExprCanCompute canCompute = standaloneCanCompute,
       ExprCompute computer = standaloneCompute]) {
-    num lvalue = left.eval(canCompute, computer);
+    final lvalue = left.eval(canCompute, computer);
     if (lvalue != null) {
-      left = new Expr.numeric(lvalue);
+      left = new ExprNum(lvalue);
     }
-    num rvalue = right.eval(canCompute, computer);
+    final rvalue = right.eval(canCompute, computer);
     if (rvalue != null) {
-      right = new Expr.numeric(rvalue);
+      right = new ExprNum(rvalue);
     }
   }
 

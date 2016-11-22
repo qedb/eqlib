@@ -5,245 +5,64 @@
 part of eqlib;
 
 /// Expression of a variable or function
-class Expr {
-  /// Expression value
-  ///
-  /// The expression value can either be interpreted as expression ID, or as
-  /// numeric value, [isNumeric] indicates if the latter is the case.
-  final num value;
+abstract class Expr {
+  Expr();
 
-  /// Indicates if [value] is numeric.
-  final bool isNumeric;
-
-  /// Function arguments (should not be null!).
-  final List<Expr> args;
-
-  Expr(this.value, this.isNumeric, this.args) {
-    // No field may be null.
-    assert(value != null && isNumeric != null && args != null);
-
-    // If isNumeric is true, args must be empty.
-    assert(!isNumeric || args.isEmpty);
-
-    // If value has type double, isNumeric must be true.
-    assert(!(value is double) || isNumeric);
-  }
-
-  /// Wrap the given dynamic variable into an expression.
+  /// Transform the given value into an expression if it is not an expression
+  /// already.
   factory Expr.wrap(dynamic value) {
     if (value is Expr) {
       return value;
     } else if (value is num) {
-      return new Expr.numeric(value);
+      return new ExprNum(value);
     } else {
-      throw new ArgumentError('value must be of type Expr or num');
+      throw new ArgumentError('value type must be one of: Expr, num, String');
     }
-  }
-
-  /// Construct function expression.
-  factory Expr.function(int id, List<Expr> args) => new Expr(id, false, args);
-
-  /// Construct numeric expression.
-  factory Expr.numeric(num value) => new Expr(value, true, []);
-
-  /// Construct by parsing the given expression.
-  factory Expr.parse(String str, [ExprResolve resolver = standaloneResolve]) {
-    return parseExpressionUnsafe(
-        new W<String>(str.replaceAll(new RegExp(r'\s'), '')), resolver);
   }
 
   /// Create deep copy.
-  Expr clone() {
-    return new Expr(value, isNumeric,
-        new List<Expr>.generate(args.length, (i) => args[i].clone()));
-  }
+  Expr clone();
 
-  /// Compare to another expression.
-  bool operator ==(other) {
-    if (other is Expr && args.length == other.args.length) {
-      for (var i = 0; i < args.length; i++) {
-        if (args[i] != other.args[i]) {
-          return false;
-        }
-      }
-      return other.value == value && other.isNumeric == isNumeric;
-    } else {
-      return false;
-    }
-  }
+  static Expr staticClone(Expr input) => input.clone();
 
-  /// Get unique hash code for this expression.
-  int get hashCode => hash3(value, isNumeric, hashObjects(args));
+  /// Compare to other expression.
+  bool equals(Expr other);
+  bool operator ==(other) => other is Expr && equals(other);
 
-  /// Match another [superset] expression against this expression. All labels
-  /// in [generic] are considered generic variables, meaning that these
-  /// variables (provided there are 0 arguments), can be mapped to any
-  /// expression.
-  Map<int, Expr> matchSuperset(Expr superset, List<int> generic) {
-    // Store if the superset is generic.
-    final isGeneric = generic.contains(superset.value);
+  /// Get expression hash (used by [hashCode])
+  int get expressionHash;
+  int get hashCode => expressionHash;
 
-    // If this is numeric, the superset must be generic or match this value.
-    if (isNumeric) {
-      if (isGeneric || superset.isNumeric && superset.value == value) {
-        final mapping = new Map<int, Expr>();
-        mapping[superset.value] = this;
-        return mapping;
-      } else {
-        return null;
-      }
-    }
+  /// Superset pattern matching
+  ///
+  /// Match another [superset] expression against this expression. All labels in
+  /// [generic] are considered generic variables, meaning that these variables
+  /// (provided there are 0 arguments), can be mapped to any expression.
+  ExprMatchResult matchSuperset(Expr superset, List<int> generic);
 
-    // If this is not numeric but the superset is, there is no match either.
-    else if (!superset.isNumeric) {
-      // If the superset is generic, it maps to this.
-      if (isGeneric) {
-        assert(superset.args.length == 0); // Generics should not have args.
-        final mapping = new Map<int, Expr>();
-        mapping[superset.value] = this;
-        return mapping;
-      }
-
-      // If the superset expression ID is equal to this, and the number of
-      // arguments is equal, both expressions could be compatible.
-      else if (superset.value == value && superset.args.length == args.length) {
-        final mapping = new Map<int, Expr>();
-        for (var i = 0; i < args.length; i++) {
-          // Check for each argument if it matches with the complementary
-          // superset argument.
-          final argMapping = args[i].matchSuperset(superset.args[i], generic);
-          if (argMapping == null) {
-            // If one argument mismatches, the superset is incompatible.
-            return null;
-          } else {
-            // Check if any existing mappings would be violated by merging with
-            // the mapping resulting from the argument match.
-            for (final key in argMapping.keys) {
-              if (mapping.containsKey(key) && mapping[key] != argMapping[key]) {
-                // Violation: immediate termination
-                return null;
-              }
-            }
-            mapping.addAll(argMapping);
-          }
-        }
-        return mapping;
-      } else {
-        return null;
-      }
-    } else {
-      return null;
-    }
-  }
-
+  /// Expression remapping
+  ///
   /// If this expression is in the [mapping] table, this will return the new
   /// expression. Else this will remap all arguments.
-  /// This method creates a new expression instance.
-  Expr remap(Map<int, Expr> mapping) {
-    if (mapping.containsKey(value)) {
-      return mapping[value].clone();
-    } else {
-      return new Expr(value, isNumeric,
-          new List<Expr>.generate(args.length, (i) => args[i].remap(mapping)));
-    }
-  }
-
-  /// Substitute the given [expression] and remap it using the provided
-  /// [mapping] table. Returns an instance of [Expr] where the equation is
-  /// substituted.
-  Expr _subs(Expr expression, Map<int, Expr> mapping) {
-    // If the equation replacement is in the mapping table, use it and return.
-    if (mapping.containsKey(expression.value)) {
-      return mapping[expression.value];
-    } else {
-      return new Expr(
-          expression.value,
-          expression.isNumeric,
-          new List<Expr>.generate(expression.args.length,
-              (i) => expression.args[i].remap(mapping)));
-    }
-  }
-
-  /// Substitute the given [equation] at the given superset [index].
-  /// Returns an instance of [Expr] where the equation is substituted.
-  /// Never returns null, instead returns itself if nothing is substituted.
   ///
-  /// TODO: use Set<int> for generic?
+  /// This method always returns a new expression instance (deep cody).
+  Expr remap(Map<int, Expr> mapping);
+
+  /// Substitute the given [equation] at the given pattern [index].
+  /// Returns a new instance of [Expr] where the equation is substituted.
+  /// Never returns null, instead returns itself if nothing is substituted.
   Expr subs(Eq equation, List<int> generic, W<int> index) {
-    // Try to map to this expression.
-    final mapping = matchSuperset(equation.left, generic);
-    if (mapping != null) {
-      // Decrement index.
-      index.v--;
-
-      // If the index was 0, it is now -1 due to the prevous decrement. In that
-      // case we have to execute the substitution on this expression.
-      if (index.v == -1) {
-        return _subs(equation.right, mapping);
-      }
-    }
-
-    // Iterate through arguments, and try to substitute the equation there.
-    for (var i = 0; i < args.length; i++) {
-      args[i] = args[i].subs(equation, generic, index);
-      if (index.v == -1) {
-        // This indicates the substitution position has been found, which means
-        // we can break this loop.
-        break;
-      }
-    }
-
-    return this;
+    final result = matchSuperset(equation.left, generic);
+    return result.match && index.v-- == 0
+        ? equation.right.remap(result.mapping)
+        : this;
   }
 
-  /// Compute numeric expressions.
-  num eval(ExprCanCompute canCompute, ExprCompute compute) {
-    // Check if this expression is numeric, in this case, return the numeric
-    // value.
-    if (isNumeric) {
-      return value;
-    }
-
-    // Check if there is a resolver for this expression.
-    else if (canCompute(value)) {
-      var numArgs = new List<num>(args.length);
-
-      // Collect all arguments as numeric values.
-      for (var i = 0; i < args.length; i++) {
-        // Try to resolve argument to a number.
-        num value = args[i].eval(canCompute, compute);
-        if (value == null) {
-          numArgs = null;
-        } else {
-          if (numArgs != null) {
-            numArgs[i] = value;
-          }
-
-          // Replace argument with numeric value.
-          // TODO: this is a violation of the all fields final principle.
-          args[i] = new Expr.numeric(value);
-        }
-      }
-
-      // Return numeric expression with the numeric value, or null if it is not
-      // possible to compute a numeric value.
-      if (numArgs != null) {
-        return compute(value, numArgs);
-      } else {
-        return null;
-      }
-    } else {
-      // Return null, indicating that this expression cannot be resolved to a
-      // numeric value.
-      return null;
-    }
-  }
-
-  /// Global string printer function.
-  static ExprPrint stringPrinter = dfltExprEngine.print;
-
-  /// Generate string representation.
-  String toString() => stringPrinter(this);
+  /// Appemts to evaluate this expression to a number using the given compute
+  /// functions. Returns null if this is unsuccessful.
+  ///
+  /// TODO: find a way to avoid `null` as return value.
+  num eval(ExprCanCompute canCompute, ExprCompute compute);
 
   // Standard operator IDs used by built-in operators.
   static int opAddId = dfltExprEngine.resolve('add');
@@ -253,22 +72,73 @@ class Expr {
   static int opPowId = dfltExprEngine.resolve('pow');
 
   /// Add other expression.
-  Expr operator +(other) =>
-      new Expr.function(opAddId, [this, new Expr.wrap(other)]);
+  Expr operator +(other) => new ExprFun(opAddId, [this, new Expr.wrap(other)]);
 
   /// Subtract other expression.
-  Expr operator -(other) =>
-      new Expr.function(opSubId, [this, new Expr.wrap(other)]);
+  Expr operator -(other) => new ExprFun(opSubId, [this, new Expr.wrap(other)]);
 
-  /// Multiply with other expression.
-  Expr operator *(other) =>
-      new Expr.function(opMulId, [this, new Expr.wrap(other)]);
+  /// Multiply by other expression.
+  Expr operator *(other) => new ExprFun(opMulId, [this, new Expr.wrap(other)]);
 
   /// Divide by other expression.
-  Expr operator /(other) =>
-      new Expr.function(opDivId, [this, new Expr.wrap(other)]);
+  Expr operator /(other) => new ExprFun(opDivId, [this, new Expr.wrap(other)]);
 
   /// Power by other expression.
-  Expr operator ^(other) =>
-      new Expr.function(opPowId, [this, new Expr.wrap(other)]);
+  Expr operator ^(other) => new ExprFun(opPowId, [this, new Expr.wrap(other)]);
+
+  /// Global string printer function.
+  static ExprPrint stringPrinter = dfltExprEngine.print;
+
+  /// Generate string representation.
+  String toString() => stringPrinter(this);
+}
+
+/// Return data of [Expr.matchSuperset].
+class ExprMatchResult {
+  bool match;
+
+  final mapping = new Map<int, Expr>();
+
+  ExprMatchResult.exactMatch() : match = true;
+
+  ExprMatchResult.noMatch() : match = false;
+
+  ExprMatchResult.genericMatch(int generic, Expr ref) : match = true {
+    mapping[generic] = ref;
+  }
+
+  ExprMatchResult.processGenericFunction(
+      int id, Expr fnref, int argsLength, ExprMatchResult matchArg(int i)) {
+    mapping[id] = fnref;
+    match = _processFunction(argsLength, matchArg);
+  }
+
+  ExprMatchResult.processFunction(
+      int argsLength, ExprMatchResult matchArg(int i)) {
+    match = _processFunction(argsLength, matchArg);
+  }
+
+  bool _processFunction(int argsLength, ExprMatchResult matchArg(int i)) {
+    for (var i = 0; i < argsLength; i++) {
+      final result = matchArg(i);
+
+      // If this argument does not match, terminate.
+      if (!result.match) {
+        return false;
+      }
+
+      // Check if any existing mappings would be violated by merging with
+      // the mapping resulting from the argument match.
+      for (final key in result.mapping.keys) {
+        if (mapping.containsKey(key) && mapping[key] != result.mapping[key]) {
+          // Violation: terminate.
+          return false;
+        }
+      }
+
+      // Merge argument mapping into this mapping.
+      mapping.addAll(result.mapping);
+    }
+    return true;
+  }
 }

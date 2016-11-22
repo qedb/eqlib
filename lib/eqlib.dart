@@ -15,6 +15,9 @@ import 'package:petitparser/petitparser.dart';
 
 part 'src/eq.dart';
 part 'src/expr.dart';
+part 'src/expr_num.dart';
+part 'src/expr_sym.dart';
+part 'src/expr_fun.dart';
 part 'src/interface.dart';
 part 'src/standalone.dart';
 part 'src/parser_simple.dart';

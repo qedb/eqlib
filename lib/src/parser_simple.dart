@@ -4,8 +4,14 @@
 
 part of eqlib;
 
+/// Parse an expression string.
+Expr parseExpr(String str, [ExprResolve resolver = standaloneResolve]) {
+  return _parseExprUnsafe(
+      new W<String>(str.replaceAll(new RegExp(r'\s'), '')), resolver);
+}
+
 /// Parse an expression string that does not contain white spaces.
-Expr parseExpressionUnsafe(W<String> str, ExprResolve resolver) {
+Expr _parseExprUnsafe(W<String> str, ExprResolve resolver) {
   // Get expression label.
   final lblre = new RegExp(r'([-.{}a-z\d]+)');
   final match = lblre.matchAsPrefix(str.v);
@@ -16,32 +22,30 @@ Expr parseExpressionUnsafe(W<String> str, ExprResolve resolver) {
   }
   final label = match.group(1);
 
-  // Try to parse the label as numeric value.
-  num value;
-  bool isNumeric;
-  try {
-    value = num.parse(label);
-    isNumeric = true;
-  } on FormatException {
-    // Use expression resolver to get an expression ID.
-    value = resolver(label);
-    isNumeric = false;
-  }
-
   // Remove label from string to continue parsing.
   str.v = str.v.substring(label.length);
+
+  // Try to parse the label as numeric value.
+  try {
+    final value = num.parse(label);
+    return new ExprNum(value);
+  } on FormatException {}
+
+  // Resolve expression ID instead.
+  final id = resolver(label);
+
   if (str.v.startsWith('(')) {
     final args = new List<Expr>();
     str.v = str.v.substring(1);
     while (!str.v.startsWith(')')) {
-      args.add(parseExpressionUnsafe(str, resolver));
+      args.add(_parseExprUnsafe(str, resolver));
       if (str.v.startsWith(',')) {
         str.v = str.v.substring(1);
       }
     }
     str.v = str.v.substring(1);
-    return new Expr(value, isNumeric, args);
+    return new ExprFun(id, args);
   } else {
-    return new Expr(value, isNumeric, []);
+    return new ExprSym(id);
   }
 }

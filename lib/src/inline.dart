@@ -5,18 +5,17 @@
 part of eqlib.inline;
 
 /// Expression used to point out where an equation is substituted when wrapping.
-final innerExpr = new Expr.function(0, []);
+final innerExpr = new ExprSym(0);
 
 /// Create a numeric expression from the given value.
-Expr number(num value) => new Expr.numeric(value);
+Expr number(num value) => new ExprNum(value);
 
 /// Create a symbol expression for the given label.
-Expr symbol(String label) =>
-    new Expr.function(dfltExprEngine.resolve(label), []);
+Expr symbol(String label) => new ExprSym(dfltExprEngine.resolve(label));
 
 /// Expression generator for functions with two arguments.
 Expr _twoArgsExpr(int code, dynamic a, dynamic b) =>
-    new Expr.function(code, [new Expr.wrap(a), new Expr.wrap(b)]);
+    new ExprFun(code, [new Expr.wrap(a), new Expr.wrap(b)]);
 
 /// a + b
 Expr add(dynamic a, dynamic b) =>
@@ -44,18 +43,25 @@ Eq eq(dynamic left, dynamic right) =>
 
 /// Generate a list of expression IDs for the given expressions.
 List<int> exprIds(List<Expr> exprs) =>
-    new List<int>.generate(exprs.length, (i) => exprs[i].value.toInt());
+    new List<int>.generate(exprs.length, (i) {
+      final expr = exprs[i];
+      return expr is ExprSym ? expr.id : expr is ExprFun ? expr.id : 0;
+    });
 
 /// Single argument expression generator
 typedef Expr ExprGenerator1(Expr arg1);
 
 /// Create single argument expression generator.
-ExprGenerator1 fn1(String label) =>
-    (arg1) => new Expr.function(dfltExprEngine.resolve(label), [arg1]);
+ExprGenerator1 fn1(String label) {
+  final id = dfltExprEngine.resolve(label);
+  return (arg1) => new ExprFun(id, [arg1]);
+}
 
 /// Double argument expression generator
 typedef Expr ExprGenerator2(Expr arg1, Expr arg2);
 
 /// Create double argument expression generator.
-ExprGenerator2 fn2(String label) => (arg1, arg2) =>
-    new Expr.function(dfltExprEngine.resolve(label), [arg1, arg2]);
+ExprGenerator2 fn2(String label) {
+  final id = dfltExprEngine.resolve(label);
+  return (arg1, arg2) => new ExprFun(id, [arg1, arg2]);
+}

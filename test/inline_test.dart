@@ -63,15 +63,15 @@ void main() {
     final e = eq(symbol('y'), diff(sin(x ^ 3), x));
     e.subs(eq(diff(fn(a), b), diff(a, b) * diff(fn(a), a)),
         exprIds([a, b, fn(a)]));
-    e.subs(eq(diff(a ^ b, a), b * a ^ (b - 1)), exprIds([a, b]));
+    e.subs(eq(diff(a ^ b, a), b * (a ^ (b - 1))), exprIds([a, b]));
     e.subs(eq(diff(sin(a), a), cos(a)), exprIds([a]));
     e.eval();
-    expect(e, equals(eq(symbol('y'), (x ^ 2) * 3 * cos(x ^ 3))));
-  }, skip: true);
-
-  test('Fibonaci', () {
-    //
+    expect(e, equals(eq(symbol('y'), number(3) * (x ^ 2) * cos(x ^ 3))));
   });
+
+  test('Fibonacci', () {
+    //
+  }, skip: true);
 
   test('Power operator', () {
     expect(
