@@ -4,66 +4,98 @@
 
 part of eqlib.latex_printer;
 
+/// Function or symbol entry for the LaTeX printer.
 class LaTeXPrinterEntry {
+  /// LaTeX template string
   final String template;
-  final bool useParenthesis;
-  const LaTeXPrinterEntry(this.template, [this.useParenthesis = false]);
+
+  /// Level of precedence for omitting parentheses (higher is first).
+  final int precedenceLvl;
+
+  const LaTeXPrinterEntry(this.template, [this.precedenceLvl = 0]);
 }
 
 /// LaTeX Expr printer
-/// TODO: Handle multiple levels of operator precedence better.
 class LaTeXPrinter {
   final _dict = new Map<int, LaTeXPrinterEntry>();
+
+  /// Default precedence level for function notation.
+  static const functionPrecedence = 3;
 
   /// Dictionary update events.
   final _onDictUpdate = new StreamController<Null>.broadcast();
   Stream<Null> get onDictUpdate => _onDictUpdate.stream;
 
   void addDefaultEntries(ExprResolve resolver) {
-    _dict[resolver('add')] = const LaTeXPrinterEntry(r'$a+$b', true);
-    _dict[resolver('sub')] = const LaTeXPrinterEntry(r'$a-$b', true);
-    _dict[resolver('mul')] = const LaTeXPrinterEntry(r'$(a)\cdot$(b)', true);
-    _dict[resolver('div')] = const LaTeXPrinterEntry(r'\frac{$a}{$b}', true);
-    _dict[resolver('pow')] = const LaTeXPrinterEntry(r'$(a)^{$b}', false);
+    _dict[resolver('add')] = const LaTeXPrinterEntry(r'$(a)+$(b)', 0);
+    _dict[resolver('sub')] = const LaTeXPrinterEntry(r'$(a)-$(b)', 0);
+    _dict[resolver('mul')] = const LaTeXPrinterEntry(r'$(a)\cdot$(b)', 1);
+    _dict[resolver('div')] = const LaTeXPrinterEntry(r'\frac{$a}{$b}', 1);
+    _dict[resolver('pow')] = const LaTeXPrinterEntry(r'$(a)^{$b}', 2);
   }
 
-  /// TODO: design more generic methods.
-  void dictReplace(int oldId, int newId, String template) {
-    if (oldId != newId && _dict.containsKey(oldId)) {
-      _dict.remove(oldId);
-    }
-    _dict[newId] = new LaTeXPrinterEntry(template);
+  // Add or replace entry in printer dictionary.
+  void dictUpdate(int id, LaTeXPrinterEntry entry) {
+    _dict[id] = entry;
     _onDictUpdate.add(null);
   }
 
+  /// Remove and add entry in printer dictionary at once.
+  /// (e.g. triggers [onDictUpdate] only once)
+  void dictReplace(int oldId, int newId, LaTeXPrinterEntry entry) {
+    if (oldId != newId && _dict.containsKey(oldId)) {
+      _dict.remove(oldId);
+    }
+    _dict[newId] = entry;
+    _onDictUpdate.add(null);
+  }
+
+  /// Render LaTeX string from the given expression. Expressions that are not in
+  /// the printer dictionary use [resolveName] and a generic function notation.
+  ///
+  /// + [parentPrecedence] is the precedence index of the parent.
+  /// + [useParentheses] sets if parenteses should be used if the precedence
+  ///   level is smaller than the parent.
+  /// + [explicitNotation] sets if parenteses should also be used when the
+  ///   parent precedence index is equal to the current one.
   String render(Expr expr, ExprResolveName resolveName,
-      [bool explicitBlock = false]) {
+      [int parentPrecedence = 0,
+      bool useParentheses = false,
+      bool explicitNotation = false]) {
+    // Numbers
     if (expr is ExprNum) {
       return expr.value.toString();
-    } else if (expr is ExprSym) {
+    }
+
+    // Symbols
+    else if (expr is ExprSym) {
       return _dict.containsKey(expr.id)
           ? _dict[expr.id].template
           : '{${resolveName(expr.id)}}';
-    } else if (expr is ExprFun) {
-      // Check if there is an entry in the dictionary.
-      if (_dict.containsKey(expr.id)) {
-        final formatted =
-            renderTemplate(expr, _dict[expr.id].template, resolveName);
-        if (explicitBlock && _dict[expr.id].useParenthesis) {
-          return '\\left($formatted\\right)';
-        } else {
-          return formatted;
-        }
+    }
+
+    // Functions
+    else if (expr is ExprFun) {
+      // Render expression.
+      final rendered = _dict.containsKey(expr.id)
+          ? renderTemplate(expr, _dict[expr.id], resolveName, explicitNotation)
+          : [
+              r'\text{',
+              resolveName(expr.id),
+              r'}\left(',
+              new List<String>.generate(expr.args.length,
+                  (i) => render(expr.args[i], resolveName)).join(', '),
+              r'\right)'
+            ].join();
+
+      // Surround with parentesis if the parent precedence index is higher and
+      // the parent does require parentheses, or if explicitNotation is set.
+      if ((explicitNotation &&
+              _dict[expr.id].precedenceLvl == parentPrecedence) ||
+          (useParentheses && _dict[expr.id].precedenceLvl < parentPrecedence)) {
+        return '\\left($rendered\\right)';
       } else {
-        // Resolve function name using the name resolver.
-        final name = resolveName(expr.id);
-        return [
-          '\\text{$name}\\left(',
-          new List<String>.generate(
-                  expr.args.length, (i) => render(expr.args[i], resolveName))
-              .join(', '),
-          '\\right)'
-        ].join();
+        return rendered;
       }
     } else {
       throw new ArgumentError(
@@ -72,36 +104,36 @@ class LaTeXPrinter {
   }
 
   /// Render template
-  String renderTemplate(
-      ExprFun expr, String template, ExprResolveName resolveName) {
+  String renderTemplate(ExprFun expr, LaTeXPrinterEntry entry,
+      ExprResolveName resolveName, bool explicitNotation) {
+    // Generic argument processing function.
+    final processArg = (Match match, bool useParentheses) {
+      // Compute argument index.
+      final idx = match.group(1).codeUnitAt(0) - 'a'.codeUnitAt(0);
+
+      // If the index is out of bounds with the expression arguments, throw an
+      // error.
+      if (idx < expr.args.length) {
+        return render(expr.args[idx], resolveName, entry.precedenceLvl,
+            useParentheses, explicitNotation);
+      } else {
+        throw new ArgumentError('template arguments do not match the function');
+      }
+    };
+
+    // Copy output string from entry template.
+    var output = entry.template;
+
     // Never surround with parenthesis.
-    final openArg = new RegExp(r'\$(\w+)');
-
-    // Surround with parenthesis when argument has useParenthesis set.
-    final closedArg = new RegExp(r'\$\((\w+)\)');
-
-    // Replace all open args.
-    template = template.replaceAllMapped(openArg, (match) {
-      // Compute argument index.
-      final idx = match.group(1).codeUnitAt(0) - 'a'.codeUnitAt(0);
-      if (idx < expr.args.length) {
-        return render(expr.args[idx], resolveName);
-      } else {
-        return match.group(1);
-      }
+    output = output.replaceAllMapped(new RegExp(r'\$(\w+)'), (match) {
+      return processArg(match, false);
     });
 
-    // Replace all closed args.
-    template = template.replaceAllMapped(closedArg, (match) {
-      // Compute argument index.
-      final idx = match.group(1).codeUnitAt(0) - 'a'.codeUnitAt(0);
-      if (idx < expr.args.length) {
-        return render(expr.args[idx], resolveName, true);
-      } else {
-        return match.group(1);
-      }
+    // Surround with parenthesis when applicable.
+    output = output.replaceAllMapped(new RegExp(r'\$\((\w+)\)'), (match) {
+      return processArg(match, true);
     });
 
-    return template;
+    return output;
   }
 }

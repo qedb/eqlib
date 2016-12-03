@@ -16,7 +16,7 @@ abstract class Expr {
     } else if (value is num) {
       return new ExprNum(value);
     } else {
-      throw new ArgumentError('value type must be one of: Expr, num, String');
+      throw new ArgumentError('value type must be one of: Expr, num');
     }
   }
 
@@ -65,11 +65,11 @@ abstract class Expr {
   num eval(ExprCanCompute canCompute, ExprCompute compute);
 
   // Standard operator IDs used by built-in operators.
-  static int opAddId = dfltExprEngine.resolve('add');
-  static int opSubId = dfltExprEngine.resolve('sub');
-  static int opMulId = dfltExprEngine.resolve('mul');
-  static int opDivId = dfltExprEngine.resolve('div');
-  static int opPowId = dfltExprEngine.resolve('pow');
+  static int opAddId = standaloneResolve('add');
+  static int opSubId = standaloneResolve('sub');
+  static int opMulId = standaloneResolve('mul');
+  static int opDivId = standaloneResolve('div');
+  static int opPowId = standaloneResolve('pow');
 
   /// Add other expression.
   Expr operator +(other) => new ExprFun(opAddId, [this, new Expr.wrap(other)]);

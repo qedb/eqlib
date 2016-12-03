@@ -6,9 +6,9 @@ import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
 
 void main() {
-  final a = dfltExprEngine.resolve('a');
-  final b = dfltExprEngine.resolve('b');
-  final c = dfltExprEngine.resolve('c');
+  final a = standaloneResolve('a');
+  final b = standaloneResolve('b');
+  final c = standaloneResolve('c');
 
   test('Parse using EqExParser', () {
     var result = new EqExParser().parse('3 * fn(a, b, 3 - 2 * 5) ^ (10 + -5)');

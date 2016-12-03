@@ -137,7 +137,7 @@ class StandaloneExprEngine {
 final dfltExprEngine = new StandaloneExprEngine();
 
 int standaloneResolve(String name) => dfltExprEngine.resolve(name);
-String standaloneNameResolve(int id) => dfltExprEngine.resolveName(id);
+String standaloneResolveName(int id) => dfltExprEngine.resolveName(id);
 num standaloneCompute(int id, List<num> args) =>
     dfltExprEngine.compute(id, args);
 bool standaloneCanCompute(int id) => dfltExprEngine.canCompute(id);

@@ -3,8 +3,7 @@
 // that can be found in the LICENSE file.
 
 /// TODO:
-/// - Implement optimized classes for numeric expressions.
-/// - Implement generic function mapping.
+/// - Recursive/conditional substitution
 library eqlib;
 
 import 'dart:math';
