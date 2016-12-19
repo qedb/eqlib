@@ -21,3 +21,4 @@ part 'src/interface.dart';
 part 'src/standalone.dart';
 part 'src/parser_simple.dart';
 part 'src/parser_petitparser.dart';
+part 'src/tree_diff.dart';

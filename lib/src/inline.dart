@@ -60,3 +60,6 @@ ExprGenerator2 fn2(String label) {
   final id = standaloneResolve(label);
   return (arg1, arg2) => new ExprFun(id, [arg1, arg2]);
 }
+
+/// We don't want to pollute the global namespace with this in the main library.
+TreeDiffResult difference(Expr a, Expr b) => computeTreeDiff(a, b);
