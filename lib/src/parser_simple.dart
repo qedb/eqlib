@@ -13,14 +13,14 @@ Expr parseExpr(String str, [ExprResolve resolver = standaloneResolve]) {
 /// Parse an expression string that does not contain white spaces.
 Expr _parseExprUnsafe(W<String> str, ExprResolve resolver) {
   // Get expression label.
-  final lblre = new RegExp(r'([-.{}a-z\d]+)');
+  final lblre = new RegExp(r'([-?.{}a-z\d]+)');
   final match = lblre.matchAsPrefix(str.v);
 
   // If the label could not be parsed, throw an error.
   if (match == null) {
     throw new FormatException('wrong expression format: ${str.v}');
   }
-  final label = match.group(1);
+  var label = match.group(1);
 
   // Remove label from string to continue parsing.
   str.v = str.v.substring(label.length);
@@ -30,6 +30,13 @@ Expr _parseExprUnsafe(W<String> str, ExprResolve resolver) {
     final value = num.parse(label);
     return new ExprNum(value);
   } on FormatException {}
+
+  // Check if this is a generic expression.
+  bool generic = false;
+  if (label.startsWith('?')) {
+    generic = true;
+    label = label.substring(1);
+  }
 
   // Resolve expression ID instead.
   final id = resolver(label);
@@ -44,8 +51,8 @@ Expr _parseExprUnsafe(W<String> str, ExprResolve resolver) {
       }
     }
     str.v = str.v.substring(1);
-    return new ExprFun(id, args);
+    return new ExprFun(id, args, generic);
   } else {
-    return new ExprSym(id);
+    return new ExprSym(id, generic);
   }
 }

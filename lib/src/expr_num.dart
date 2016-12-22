@@ -17,9 +17,9 @@ class ExprNum extends Expr {
   bool equals(other) => other is ExprNum && other.value == value;
   int get expressionHash => hash2(0, value.hashCode);
 
-  ExprMatchResult matchSuperset(superset, generic) => equals(superset)
+  ExprMatchResult matchSuperset(superset) => equals(superset)
       ? new ExprMatchResult.exactMatch()
-      : (superset is ExprSym && generic.contains(superset.id)
+      : (superset is ExprSym && superset.isGeneric
           ? new ExprMatchResult.genericMatch(superset.id, this)
           : new ExprMatchResult.noMatch());
 

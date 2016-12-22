@@ -33,7 +33,9 @@ class EqExGrammarDefinition extends GrammarDefinition {
           .seq(ref(token, char(')')))
           .optional());
   Parser fnName() => ref(
-      token, letter().seq((word() | char('_') | char('{') | char('}')).star()));
+      token,
+      char('?').optional().seq(
+          letter().seq((word() | char('_') | char('{') | char('}')).star())));
   Parser fnArgs() =>
       ref(lvl1).separatedBy(ref(token, char(',')), includeSeparators: false);
 
@@ -71,13 +73,22 @@ class EqExParserDefinition extends EqExGrammarDefinition {
   Parser power() => super.power().map((values) => values[0] ^ values[2]);
 
   Parser fn() => super.fn().map((values) {
-        final id = resolver(values.first);
+        String fnName = values.first;
+        var generic = false;
+
+        // If the function name starts with '?', it is a generic expression.
+        if (fnName.startsWith('?')) {
+          generic = true;
+          fnName = fnName.substring(1);
+        }
+
+        final id = resolver(fnName);
         if (values[1] is List && values[1][1] is List) {
           final List args = values[1][1];
-          return new ExprFun(
-              id, new List<Expr>.generate(args.length, (i) => args[i]));
+          return new ExprFun(id,
+              new List<Expr>.generate(args.length, (i) => args[i]), generic);
         } else {
-          return new ExprSym(id);
+          return new ExprSym(id, generic);
         }
       });
 

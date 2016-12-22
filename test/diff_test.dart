@@ -6,28 +6,27 @@ import 'package:test/test.dart';
 import 'package:eqlib/inline.dart';
 
 void main() {
-  final a = symbol('a');
-  final b = symbol('b');
+  final a = symbol('a', generic: true);
+  final b = symbol('b', generic: true);
 
   test('Chain rule: tree diff', () {
     final sin = fn1('sin');
     final cos = fn1('cos');
     final diff = fn2('diff');
-    final fn = fn1('fn');
+    final fn = fn1('fn', generic: true);
     final x = symbol('x');
 
     /// Use chain rule to find derivative of sin(x^3)
     final e = eq(symbol('y'), diff(sin(x ^ 3), x));
     final e1 = e.clone();
 
-    e.subs(eq(diff(fn(a), b), diff(a, b) * diff(fn(a), a)),
-        exprIds([a, b, fn(a)]));
+    e.subs(eq(diff(fn(a), b), diff(a, b) * diff(fn(a), a)));
     final e2 = e.clone();
 
-    e.subs(eq(diff(a ^ b, a), b * (a ^ (b - 1))), exprIds([a, b]));
+    e.subs(eq(diff(a ^ b, a), b * (a ^ (b - 1))));
     final e3 = e.clone();
 
-    e.subs(eq(diff(sin(a), a), cos(a)), exprIds([a]));
+    e.subs(eq(diff(sin(a), a), cos(a)));
     final e4 = e.clone();
 
     // First step difference

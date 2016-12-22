@@ -87,10 +87,11 @@ class StandaloneExprEngine {
 
   /// Implementation of [ExprPrinter].
   String print(Expr expr) {
+    final generic = expr.isGeneric ? '?' : '';
     if (expr is ExprNum) {
       return expr.value.toString();
     } else if (expr is ExprSym) {
-      return resolveName(expr.id);
+      return '$generic${resolveName(expr.id)}';
     } else if (expr is ExprFun) {
       final id = expr.id;
       final args = expr.args;
@@ -125,7 +126,7 @@ class StandaloneExprEngine {
             throw new Exception('this is 100% impossible');
         }
       } else {
-        return '${resolveName(id)}(${args.join(', ')})';
+        return '$generic${resolveName(id)}(${args.join(', ')})';
       }
     } else {
       throw new ArgumentError(

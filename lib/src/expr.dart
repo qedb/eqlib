@@ -20,6 +20,19 @@ abstract class Expr {
     }
   }
 
+  /// Construct from binary data.
+  factory Expr.fromBinary(ByteBuffer buffer) => exprCodecDecode(buffer);
+
+  /// Construct from Base64 string.
+  factory Expr.fromBase64(String base64) =>
+      new Expr.fromBinary(new Uint8List.fromList(BASE64.decode(base64)).buffer);
+
+  /// Write binary data.
+  ByteBuffer toBinary() => exprCodecEncode(this);
+
+  /// Write Base64 string.
+  String toBase64() => BASE64.encode(toBinary().asUint8List());
+
   /// Create deep copy.
   Expr clone();
 
@@ -33,12 +46,13 @@ abstract class Expr {
   int get expressionHash;
   int get hashCode => expressionHash;
 
+  /// Returns if this is a generic expression.
+  bool get isGeneric => false;
+
   /// Superset pattern matching
   ///
-  /// Match another [superset] expression against this expression. All labels in
-  /// [generic] are considered generic variables, meaning that these variables
-  /// (provided there are 0 arguments), can be mapped to any expression.
-  ExprMatchResult matchSuperset(Expr superset, List<int> generic);
+  /// Match another [superset] expression against this expression.
+  ExprMatchResult matchSuperset(Expr superset);
 
   /// Expression remapping
   ///
@@ -51,8 +65,8 @@ abstract class Expr {
   /// Substitute the given [equation] at the given pattern [index].
   /// Returns a new instance of [Expr] where the equation is substituted.
   /// Never returns null, instead returns itself if nothing is substituted.
-  Expr subs(Eq equation, List<int> generic, W<int> index) {
-    final result = matchSuperset(equation.left, generic);
+  Expr subs(Eq equation, W<int> index) {
+    final result = matchSuperset(equation.left);
     return result.match && index.v-- == 0
         ? equation.right.remap(result.mapping)
         : this;

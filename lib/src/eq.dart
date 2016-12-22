@@ -21,11 +21,11 @@ class Eq {
   Eq clone() => new Eq(left.clone(), right.clone());
 
   /// Substitute the given equation.
-  bool subs(Eq eq, [List<int> generic = const [], int idx = 0]) {
+  bool subs(Eq eq, [int idx = 0]) {
     final index = new W<int>(idx);
-    left = left.subs(eq, generic, index);
+    left = left.subs(eq, index);
     if (index.v != -1) {
-      right = right.subs(eq, generic, index);
+      right = right.subs(eq, index);
       return index.v == -1;
     } else {
       return true;
@@ -33,12 +33,12 @@ class Eq {
   }
 
   /// Wrap both sides of the equation using the given condition.
-  void wrap(Expr condition, List<int> generic, Expr wrapping) {
-    final lmap = left.matchSuperset(condition, generic);
+  void wrap(Expr condition, Expr wrapping) {
+    final lmap = left.matchSuperset(condition);
     if (lmap.match) {
       _wrap(wrapping, lmap.mapping);
     } else {
-      final rmap = right.matchSuperset(condition, generic);
+      final rmap = right.matchSuperset(condition);
       if (rmap.match) {
         _wrap(wrapping, rmap.mapping);
       } else {

@@ -11,7 +11,8 @@ final innerExpr = new ExprSym(0);
 Expr number(num value) => new ExprNum(value);
 
 /// Create a symbol expression for the given label.
-Expr symbol(String label) => new ExprSym(standaloneResolve(label));
+Expr symbol(String label, {bool generic: false}) =>
+    new ExprSym(standaloneResolve(label), generic);
 
 /// Expression generator for functions with two arguments.
 Expr _twoArgsExpr(int code, dynamic a, dynamic b) =>
@@ -36,29 +37,32 @@ Expr pow(dynamic a, dynamic b) => _twoArgsExpr(Expr.opPowId, a, b);
 Eq eq(dynamic left, dynamic right) =>
     new Eq(new Expr.wrap(left), new Expr.wrap(right));
 
-/// Generate a list of expression IDs for the given expressions.
-List<int> exprIds(List<Expr> exprs) =>
-    new List<int>.generate(exprs.length, (i) {
-      final expr = exprs[i];
-      return expr is ExprSym ? expr.id : expr is ExprFun ? expr.id : 0;
-    });
-
 /// Single argument expression generator
 typedef Expr ExprGenerator1(Expr arg1);
 
 /// Create single argument expression generator.
-ExprGenerator1 fn1(String label) {
+ExprGenerator1 fn1(String label, {bool generic: false}) {
   final id = standaloneResolve(label);
-  return (arg1) => new ExprFun(id, [arg1]);
+  return (arg1) => new ExprFun(id, [arg1], generic);
 }
 
 /// Double argument expression generator
 typedef Expr ExprGenerator2(Expr arg1, Expr arg2);
 
 /// Create double argument expression generator.
-ExprGenerator2 fn2(String label) {
+ExprGenerator2 fn2(String label, {bool generic: false}) {
   final id = standaloneResolve(label);
-  return (arg1, arg2) => new ExprFun(id, [arg1, arg2]);
+  return (arg1, arg2) => new ExprFun(id, [arg1, arg2], generic);
+}
+
+/// Parse expression using EqExParser.
+Expr parseEqEx(String input) {
+  final result = new EqExParser().parse(input);
+  if (result.value != null) {
+    return result.value;
+  } else {
+    throw new ArgumentError('failed to parse input');
+  }
 }
 
 /// We don't want to pollute the global namespace with this in the main library.

@@ -7,19 +7,21 @@ part of eqlib;
 /// Symbolic expression
 class ExprSym extends Expr {
   final int id;
+  final bool generic;
 
-  ExprSym(this.id) {
+  ExprSym(this.id, [this.generic = false]) {
     assert(id != null); // Do not accept null as input.
   }
 
-  ExprSym clone() => new ExprSym(id);
+  ExprSym clone() => new ExprSym(id, generic);
 
   bool equals(other) => other is ExprSym && other.id == id;
   int get expressionHash => hash2(1, id);
+  bool get isGeneric => generic;
 
-  ExprMatchResult matchSuperset(superset, generic) => equals(superset)
+  ExprMatchResult matchSuperset(superset) => equals(superset)
       ? new ExprMatchResult.exactMatch()
-      : (superset is ExprSym && generic.contains(superset.id)
+      : (superset is ExprSym && superset.isGeneric
           ? new ExprMatchResult.genericMatch(superset.id, this)
           : new ExprMatchResult.noMatch());
 

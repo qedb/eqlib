@@ -7,15 +7,16 @@ part of eqlib;
 /// Function expression
 class ExprFun extends Expr {
   final int id;
+  final bool generic;
   final List<Expr> args;
 
-  ExprFun(this.id, this.args) {
+  ExprFun(this.id, this.args, [this.generic = false]) {
     assert(id != null && args != null); // Do not accept null as input.
     assert(args.isNotEmpty); // If there are no args, a ExprSym should be used.
   }
 
-  ExprFun clone([Expr argCopy(Expr expr) = Expr.staticClone]) => new ExprFun(
-      id, new List<Expr>.generate(args.length, (i) => argCopy(args[i])));
+  ExprFun clone([Expr argCopy(Expr expr) = Expr.staticClone]) => new ExprFun(id,
+      new List<Expr>.generate(args.length, (i) => argCopy(args[i])), generic);
 
   bool equals(other) =>
       other is ExprFun &&
@@ -23,26 +24,24 @@ class ExprFun extends Expr {
       other.args.length == args.length &&
       ifEvery(other.args, args, (a, b) => a == b);
   int get expressionHash => hash2(id, hashObjects(args));
+  bool get isGeneric => generic;
 
-  ExprMatchResult matchSuperset(superset, generic) {
+  ExprMatchResult matchSuperset(superset) {
     if (superset is ExprNum) {
       return new ExprMatchResult.noMatch();
     } else if (superset is ExprSym) {
-      return generic.contains(superset.id)
+      return superset.isGeneric
           ? new ExprMatchResult.genericMatch(superset.id, this)
           : new ExprMatchResult.noMatch();
     } else if (superset is ExprFun) {
-      if (generic.contains(superset.id)) {
+      if (superset.isGeneric) {
         return superset.args.length == args.length
-            ? new ExprMatchResult.processGenericFunction(
-                superset.id,
-                this,
-                args.length,
-                (i) => args[i].matchSuperset(superset.args[i], generic))
+            ? new ExprMatchResult.processGenericFunction(superset.id, this,
+                args.length, (i) => args[i].matchSuperset(superset.args[i]))
             : new ExprMatchResult.noMatch();
       } else if (superset.id == id) {
-        return new ExprMatchResult.processFunction(args.length,
-            (i) => args[i].matchSuperset(superset.args[i], generic));
+        return new ExprMatchResult.processFunction(
+            args.length, (i) => args[i].matchSuperset(superset.args[i]));
       } else {
         return new ExprMatchResult.noMatch();
       }
@@ -56,15 +55,15 @@ class ExprFun extends Expr {
       ? mapping[id].clone()
       : clone((arg) => arg.remap(mapping));
 
-  Expr subs(Eq equation, List<int> generic, W<int> index) {
-    final result = matchSuperset(equation.left, generic);
+  Expr subs(Eq equation, W<int> index) {
+    final result = matchSuperset(equation.left);
     if (result.match && index.v-- == 0) {
       return equation.right.remap(result.mapping);
     }
 
     // Iterate through arguments, and try to substitute the equation there.
     for (var i = 0; i < args.length; i++) {
-      args[i] = args[i].subs(equation, generic, index);
+      args[i] = args[i].subs(equation, index);
       if (index.v < 0) {
         // The substitution position has been found: terminate.
         break;

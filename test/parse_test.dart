@@ -6,10 +6,6 @@ import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
 
 void main() {
-  final a = standaloneResolve('a');
-  final b = standaloneResolve('b');
-  final c = standaloneResolve('c');
-
   test('Parse using EqExParser', () {
     var result = new EqExParser().parse('3 * fn(a, b, 3 - 2 * 5) ^ (10 + -5)');
     expect(
@@ -25,10 +21,10 @@ void main() {
     pvec.subs(new Eq.parse('y = py'));
     pvec.subs(new Eq.parse('px = mul(r, sin(theta))'));
     pvec.subs(new Eq.parse('py = mul(r, cos(theta))'));
-    pvec.subs(new Eq.parse('mul(mul(a, b), c) = mul(a, mul(b, c))'), [a, b, c]);
-    pvec.subs(new Eq.parse('mul(mul(a, b), c) = mul(a, mul(b, c))'), [a, b, c]);
-    pvec.subs(new Eq.parse('add(mul(a, b), mul(a, c)) = mul(a, add(b, c))'),
-        [a, b, c]);
+    pvec.subs(new Eq.parse('mul(mul(?a, ?b), ?c) = mul(?a, mul(?b, ?c))'));
+    pvec.subs(new Eq.parse('mul(mul(?a, ?b), ?c) = mul(?a, mul(?b, ?c))'));
+    pvec.subs(
+        new Eq.parse('add(mul(?a, ?b), mul(?a, ?c)) = mul(?a, add(?b, ?c))'));
 
     // Check
     dfltExprEngine.printerOpChars = true;
@@ -38,10 +34,10 @@ void main() {
 
   test('Solve a simple equation', () {
     var eq = new Eq.parse('add(mul(x, 2), 5) = 9');
-    eq.wrap(parseExpr('add(a, b)'), [a, b], parseExpr('sub({}, b)'));
-    eq.subs(new Eq.parse('sub(add(a, b), b) = a'), [a, b]);
-    eq.wrap(parseExpr('mul(a, b)'), [a, b], parseExpr('div({}, b)'));
-    eq.subs(new Eq.parse('div(mul(a, b), b) = a'), [a, b]);
+    eq.wrap(parseExpr('add(?a, ?b)'), parseExpr('sub({}, ?b)'));
+    eq.subs(new Eq.parse('sub(add(?a, ?b), ?b) = ?a'));
+    eq.wrap(parseExpr('mul(?a, ?b)'), parseExpr('div({}, ?b)'));
+    eq.subs(new Eq.parse('div(mul(?a, ?b), ?b) = ?a'));
     eq.eval();
 
     // Check

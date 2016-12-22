@@ -7,6 +7,8 @@
 library eqlib;
 
 import 'dart:math';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:quiver/core.dart';
 import 'package:eqlib/utils.dart';
@@ -17,6 +19,7 @@ part 'src/expr.dart';
 part 'src/expr_num.dart';
 part 'src/expr_sym.dart';
 part 'src/expr_fun.dart';
+part 'src/expr_codec.dart';
 part 'src/interface.dart';
 part 'src/standalone.dart';
 part 'src/parser_simple.dart';
