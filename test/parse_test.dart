@@ -37,7 +37,7 @@ void main() {
   });
 
   test('Derivation of centripetal acceleration (step 1)', () {
-    var pvec = new Eq.parse('pvec = vec2d');
+    final pvec = new Eq.parse('pvec = vec2d');
     pvec.subs(new Eq.parse('vec2d = add(mul(x, ihat), mul(y, jhat))'));
     pvec.subs(new Eq.parse('x = px'));
     pvec.subs(new Eq.parse('y = py'));

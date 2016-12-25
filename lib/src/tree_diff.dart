@@ -8,6 +8,8 @@ class TreeDiff {
   final Eq rule;
   final List<TreeDiff> alt;
   TreeDiff(this.rule, [this.alt = const []]);
+
+  @override
   String toString() =>
       alt.isEmpty ? rule.toString() : '($rule OR ${alt.join(" AND ")})';
 }
@@ -25,6 +27,7 @@ class TreeDiffResult {
   TreeDiffResult(
       {this.hasDiff: true, this.numsNotEqual: false, this.diff: null});
 
+  @override
   String toString() => diff != null
       ? diff.toString()
       : '{hasDiff: $hasDiff, numsNotEqual: $numsNotEqual}';

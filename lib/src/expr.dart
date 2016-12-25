@@ -45,10 +45,14 @@ abstract class Expr {
 
   /// Compare to other expression.
   bool equals(Expr other);
-  bool operator ==(other) => other is Expr && equals(other);
+
+  @override
+  bool operator ==(dynamic other) => other is Expr && equals(other);
 
   /// Get expression hash (used by [hashCode])
   int get expressionHash;
+
+  @override
   int get hashCode => expressionHash;
 
   /// Returns if this is a generic expression.
@@ -92,7 +96,7 @@ abstract class Expr {
     var cycle = 0;
     while (cycle < maxRecursions) {
       // Check if terminator is already reached.
-      var index = new W<int>(0);
+      final index = new W<int>(0);
       expr = expr.subsInternal(terminator, index);
       if (index.v < 0) {
         return expr;
@@ -134,19 +138,24 @@ abstract class Expr {
   static int opNegId = standaloneResolve('neg');
 
   /// Add other expression.
-  Expr operator +(other) => new ExprFun(opAddId, [this, new Expr.wrap(other)]);
+  Expr operator +(dynamic other) =>
+      new ExprFun(opAddId, [this, new Expr.wrap(other)]);
 
   /// Subtract other expression.
-  Expr operator -(other) => new ExprFun(opSubId, [this, new Expr.wrap(other)]);
+  Expr operator -(dynamic other) =>
+      new ExprFun(opSubId, [this, new Expr.wrap(other)]);
 
   /// Multiply by other expression.
-  Expr operator *(other) => new ExprFun(opMulId, [this, new Expr.wrap(other)]);
+  Expr operator *(dynamic other) =>
+      new ExprFun(opMulId, [this, new Expr.wrap(other)]);
 
   /// Divide by other expression.
-  Expr operator /(other) => new ExprFun(opDivId, [this, new Expr.wrap(other)]);
+  Expr operator /(dynamic other) =>
+      new ExprFun(opDivId, [this, new Expr.wrap(other)]);
 
   /// Power by other expression.
-  Expr operator ^(other) => new ExprFun(opPowId, [this, new Expr.wrap(other)]);
+  Expr operator ^(dynamic other) =>
+      new ExprFun(opPowId, [this, new Expr.wrap(other)]);
 
   /// Negate expression.
   Expr operator -() => new ExprFun(opNegId, [this]);
@@ -155,6 +164,7 @@ abstract class Expr {
   static ExprPrint stringPrinter = dfltExprEngine.print;
 
   /// Generate string representation.
+  @override
   String toString() => stringPrinter(this);
 }
 
@@ -162,6 +172,7 @@ abstract class Expr {
 class ExprMatchResult {
   bool match;
 
+  /// Map of function/symbol ID's and their mapped expression
   final mapping = new Map<int, Expr>();
 
   ExprMatchResult.exactMatch() : match = true;

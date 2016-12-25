@@ -73,7 +73,8 @@ class Eq {
   }
 
   /// Compare two equations.
-  bool operator ==(other) {
+  @override
+  bool operator ==(dynamic other) {
     if (other is Eq) {
       return left == other.left && right == other.right;
     } else {
@@ -82,8 +83,10 @@ class Eq {
   }
 
   /// Equation hashcode.
+  @override
   int get hashCode => hash2(left, right);
 
   /// Generate string representation.
+  @override
   String toString() => '$left=$right';
 }

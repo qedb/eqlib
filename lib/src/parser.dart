@@ -28,7 +28,8 @@ Expr parseExpression(String input, [ExprResolve resolver = standaloneResolve]) {
   /// - parentheses
   /// - argument separator
 
-  var opDist = new W<int>(2), leftPDist = 2, count = 0;
+  final opDist = new W<int>(2);
+  var leftPDist = 2, count = 0;
   while (!reader.eof) {
     reader.skipWhitespaces();
 
@@ -371,23 +372,33 @@ class _StringReader {
   bool get eof => ptr == data.length;
 }
 
+/// Element in parsing stack.
 class _StackElement {
   static const leftParenthesisId = -1;
+
   final int id;
   int argc = 0;
-  final bool isGeneric;
-  final bool isOperator;
+  final bool isGeneric, isOperator;
+
   _StackElement(this.id,
       {this.argc: 0, this.isGeneric: false, this.isOperator: false});
+
   factory _StackElement.leftParenthesis() =>
       new _StackElement(leftParenthesisId);
+
   bool get isLeftParenthesis => id == leftParenthesisId;
+
+  @override
+  String toString() => isLeftParenthesis ? ')' : 'fn#$id';
+
+  @override
   int get hashCode => hash4(id, argc, isGeneric, isOperator);
+
+  @override
   bool operator ==(dynamic other) =>
       other is _StackElement &&
       other.id == id &&
       other.argc == argc &&
       other.isGeneric == isGeneric &&
       other.isOperator == isOperator;
-  String toString() => isLeftParenthesis ? ')' : 'fn#$id';
 }

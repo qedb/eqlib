@@ -143,7 +143,7 @@ class _ExprCodecData {
     var idx = (generic ? 0 : genericCount) - 1;
     do {
       // Advance offset to new starting point.
-      var offset = idx + 1;
+      final offset = idx + 1;
       if (idx >= (generic ? genericCount : functionCount) - 1) {
         return -1;
       }
@@ -205,7 +205,7 @@ Expr exprCodecDecode(ByteBuffer buffer) {
 Expr _exprCodecDecode(W<int> ptr, _ExprCodecData data) {
   int value = data.data[ptr.v++];
   if (value < data.functionCount) {
-    bool generic = value < data.genericCount;
+    final generic = value < data.genericCount;
 
     // If there are function arguments, collect those first.
     final argCount = data.functionArgc[value];

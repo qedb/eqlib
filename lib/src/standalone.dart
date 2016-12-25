@@ -25,10 +25,10 @@ class StandaloneExprEngine {
   /// Printer expression dictionary.
   final printerDict = new Map<int, String>();
 
-  /// Flag for [standalonePrinter] to enable the use of operator characters.
+  /// Flag to enable the use of operator characters.
   bool printerOpChars = false;
 
-  /// Implementation of [ExprResolve] that uses [defaultExprLabels] and
+  /// Implementation of [ExprResolve] that uses [_computableExprLabels] and
   /// [String.hashCode].
   int resolve(String name) {
     if (name == dfltInnerExprLbl) {
@@ -48,7 +48,7 @@ class StandaloneExprEngine {
     }
   }
 
-  /// Implementation of [ExprNameResolve].
+  /// Implementation of [ExprResolveName].
   String resolveName(int id) => printerDict[id];
 
   /// Implementation of [ExprCanCompute].
@@ -56,8 +56,7 @@ class StandaloneExprEngine {
     return id > 0 && id - 1 < ComputableExpr.values.length;
   }
 
-  /// Default optimized implementation of [ExprCompute]. This implementation
-  /// assumes you are using the [_standaloneResolver].
+  /// Default optimized implementation of [ExprCompute].
   num compute(int id, List<num> args) {
     assert(id > 0);
     // Note: subtract one because 0 is a reserved expression ID.
@@ -89,7 +88,7 @@ class StandaloneExprEngine {
     }
   }
 
-  /// Implementation of [ExprPrinter].
+  /// Implementation of [ExprPrint].
   String print(Expr expr) {
     final generic = expr.isGeneric ? '?' : '';
     if (expr is ExprNum) {

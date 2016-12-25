@@ -15,17 +15,24 @@ class ExprFun extends Expr {
     assert(args.isNotEmpty); // If there are no args, a ExprSym should be used.
   }
 
+  @override
   ExprFun clone([Expr argCopy(Expr expr) = Expr.staticClone]) => new ExprFun(id,
       new List<Expr>.generate(args.length, (i) => argCopy(args[i])), generic);
 
+  @override
   bool equals(other) =>
       other is ExprFun &&
       other.id == id &&
       other.args.length == args.length &&
       ifEvery(other.args, args, (a, b) => a == b);
+
+  @override
   int get expressionHash => hash2(id, hashObjects(args));
+
+  @override
   bool get isGeneric => generic;
 
+  @override
   ExprMatchResult matchSuperset(superset) {
     if (superset is ExprNum) {
       return new ExprMatchResult.noMatch();
@@ -51,10 +58,12 @@ class ExprFun extends Expr {
     }
   }
 
+  @override
   Expr remap(mapping) => mapping.containsKey(id)
       ? mapping[id].clone()
       : clone((arg) => arg.remap(mapping));
 
+  @override
   Expr subsInternal(Eq equation, W<int> index) {
     final result = matchSuperset(equation.left);
     if (result.match && index.v-- == 0) {
@@ -73,6 +82,7 @@ class ExprFun extends Expr {
     return this;
   }
 
+  @override
   num _eval(canCompute, compute) {
     final numArgs = new List<num>(args.length);
     var allEval = true;
