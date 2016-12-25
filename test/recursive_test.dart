@@ -7,7 +7,6 @@ import 'package:eqlib/eqlib.dart';
 
 void main() {
   test('Fibonacci', () {
-    new Expr.parse('ffib(?n - 1, ?a + ?b, ?a)');
     final fib = new Eq.parse('fib(?n) = ffib(?n, 1, 0)');
     final ffib = new Eq.parse('ffib(?n, ?a, ?b) = ffib(?n - 1, ?a + ?b, ?a)');
     final ffib0 = new Eq.parse('ffib(0, ?a, ?b) = ?b');
@@ -16,5 +15,14 @@ void main() {
     e = e.subs(fib);
     e = e.subsRecursive(ffib, ffib0);
     expect(e.eval(), equals(55));
+  });
+
+  test('Factorial', () {
+    final fac = new Eq.parse('fac(?n) = ?n * fac(?n - 1)');
+    final fac1 = new Eq.parse('fac(1) = 1');
+
+    var e = new Expr.parse('fac(10)');
+    e = e.subsRecursive(fac, fac1);
+    expect(e.eval(), equals(3628800));
   });
 }
