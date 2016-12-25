@@ -14,6 +14,9 @@ Expr number(num value) => new ExprNum(value);
 Expr symbol(String label, {bool generic: false}) =>
     new ExprSym(standaloneResolve(label), generic);
 
+/// Alias for creating generic symbols.
+Expr generic(String label) => symbol(label, generic: true);
+
 /// Expression generator for functions with two arguments.
 Expr _twoArgsExpr(int code, dynamic a, dynamic b) =>
     new ExprFun(code, [new Expr.wrap(a), new Expr.wrap(b)]);
@@ -53,16 +56,6 @@ typedef Expr ExprGenerator2(Expr arg1, Expr arg2);
 ExprGenerator2 fn2(String label, {bool generic: false}) {
   final id = standaloneResolve(label);
   return (arg1, arg2) => new ExprFun(id, [arg1, arg2], generic);
-}
-
-/// Parse expression using EqExParser.
-Expr parseEqEx(String input) {
-  final result = new EqExParser().parse(input);
-  if (result.value != null) {
-    return result.value;
-  } else {
-    throw new ArgumentError('failed to parse input');
-  }
 }
 
 /// We don't want to pollute the global namespace with this in the main library.

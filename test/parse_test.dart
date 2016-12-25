@@ -4,14 +4,36 @@
 
 import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
+import 'package:eqlib/inline.dart';
+
+/// Even shorter alias for convenience.
+Expr n(num val) => number(val);
 
 void main() {
-  test('Parse using EqExParser', () {
-    var result = new EqExParser().parse('3 * fn(a, b, 3 - 2 * 5) ^ (10 + -5)');
-    expect(
-        result.value,
-        equals(parseExpr(
-            'mul(3, pow(fn(a, b, sub(3, mul(2, 5))), add(10, -5)))')));
+  test('Fundamental checks for the parser', () {
+    final a = generic('a'), b = generic('b'), c = generic('c');
+
+    // Precedence and whitespaces.
+    expect(new Expr.parse(' ( 1 + 2 ) * 3 ^ sin( a + ?b ) '),
+        equals((n(1) + 2) * (n(3) ^ fn1('sin')(symbol('a') + b))));
+
+    // Nested functions and whitespaces.
+    expect(new Eq.parse(' mul  ( mul(  ?a, ?b), ?c)=  mul(?a,mul(?b,   ?c))  '),
+        equals(eq((a * b) * c, a * (b * c))));
+
+    // Parsing numeric values.
+    expect(new Expr.parse('-1.23 - 4 + .567 ^ -.89'),
+        equals((n(-1.23) - 4) + (n(.567) ^ -.89)));
+    expect((new Expr.parse('-1.23 - 4 + .567 ^ -.89').eval() * 1000).toInt(),
+        equals(-3573));
+
+    // Implicit multiplication.
+    expect(new Expr.parse('-  - -1').eval(), equals(-1));
+    expect(new Expr.parse('?a ?b ?c'), equals(a * (b * c)));
+    expect(new Expr.parse('?a sin(?b)'), equals(a * fn1('sin')(b)));
+    expect(new Expr.parse('-1 2 ^ -3 4'), equals(n(-1) * (n(2) ^ (n(-3) * 4))));
+    expect(new Expr.parse('-3sin(2 ^3 (4+5)?b)'),
+        equals(n(-3) * fn1('sin')(n(2) ^ (n(3) * ((n(4) + 5) * b)))));
   });
 
   test('Derivation of centripetal acceleration (step 1)', () {
@@ -33,14 +55,15 @@ void main() {
   });
 
   test('Solve a simple equation', () {
-    var eq = new Eq.parse('add(mul(x, 2), 5) = 9');
-    eq.wrap(parseExpr('add(?a, ?b)'), parseExpr('sub({}, ?b)'));
+    final eq = new Eq.parse('add(mul(x, 2), 5) = 9');
+    eq.wrap(new Expr.parse('add(?a, ?b)'), new Expr.parse('sub({}, ?b)'));
     eq.subs(new Eq.parse('sub(add(?a, ?b), ?b) = ?a'));
-    eq.wrap(parseExpr('mul(?a, ?b)'), parseExpr('div({}, ?b)'));
+    eq.wrap(new Expr.parse('mul(?a, ?b)'), new Expr.parse('div({}, ?b)'));
     eq.subs(new Eq.parse('div(mul(?a, ?b), ?b) = ?a'));
     eq.eval();
 
     // Check
-    expect(eq.toString(), equals('x=2.0'));
+    expect(eq.left, equals(symbol('x')));
+    expect(eq.right.eval(), equals(2.0));
   });
 }

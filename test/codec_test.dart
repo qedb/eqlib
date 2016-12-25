@@ -7,8 +7,8 @@ import 'package:eqlib/eqlib.dart';
 
 void main() {
   test('Codec test', () {
-    final expr =
-        parseExpr('mul(2, pow(a(?a, ?b, sub(3.45, mul(6, 7))), add(a, b)))');
+    final expr = new Expr.parse(
+        'mul(2, pow(a(?a, ?b, sub(3.45, mul(6, 7))), add(a, b)))');
 
     // Check encoder.
     expect(

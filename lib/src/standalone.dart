@@ -5,7 +5,7 @@
 part of eqlib;
 
 /// All computable functions that are implemented by [StandaloneExprEngine].
-enum ComputableExpr { add, subtract, multiply, divide, power }
+enum ComputableExpr { add, subtract, multiply, divide, power, negate }
 
 /// A standalone engine for handling expressions.
 class StandaloneExprEngine {
@@ -18,7 +18,8 @@ class StandaloneExprEngine {
     'sub': ComputableExpr.subtract,
     'mul': ComputableExpr.multiply,
     'div': ComputableExpr.divide,
-    'pow': ComputableExpr.power
+    'pow': ComputableExpr.power,
+    'neg': ComputableExpr.negate
   };
 
   /// Printer expression dictionary.
@@ -31,8 +32,8 @@ class StandaloneExprEngine {
   /// [String.hashCode].
   int resolve(String name) {
     if (name == dfltInnerExprLbl) {
-      // This expression label is reserved to represent expression ID 0, which is
-      // used to reference the inner expression in substitutions.
+      // This expression label is reserved to represent expression ID 0, which
+      // is used to reference the inner expression in substitutions.
       return 0;
     } else if (_computableExprLabels.containsKey(name)) {
       // Add 1 because 0 is a reserved expression ID.
@@ -77,6 +78,9 @@ class StandaloneExprEngine {
         case ComputableExpr.power:
           assert(args.length == 2);
           return pow(args[0], args[1]);
+        case ComputableExpr.negate:
+          assert(args.length == 1);
+          return -args[0];
         default:
           throw new Exception('this is 100% impossible');
       }
@@ -122,6 +126,9 @@ class StandaloneExprEngine {
             return printerOpChars
                 ? '{${args[0]}}^{${args[1]}}'
                 : 'pow(${args[0]}, ${args[1]})';
+          case ComputableExpr.negate:
+            assert(args.length == 1);
+            return printerOpChars ? '-{${args[0]}}' : 'neg(${args[0]})';
           default:
             throw new Exception('this is 100% impossible');
         }

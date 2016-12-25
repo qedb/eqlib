@@ -12,7 +12,6 @@ import 'dart:typed_data';
 
 import 'package:quiver/core.dart';
 import 'package:eqlib/utils.dart';
-import 'package:petitparser/petitparser.dart';
 
 part 'src/eq.dart';
 part 'src/expr.dart';
@@ -22,6 +21,5 @@ part 'src/expr_fun.dart';
 part 'src/expr_codec.dart';
 part 'src/interface.dart';
 part 'src/standalone.dart';
-part 'src/parser_simple.dart';
-part 'src/parser_petitparser.dart';
+part 'src/parser.dart';
 part 'src/tree_diff.dart';

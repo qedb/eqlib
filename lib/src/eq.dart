@@ -12,9 +12,10 @@ class Eq {
   Eq(this.left, this.right);
 
   /// Parse an equation string representation.
-  factory Eq.parse(String str) {
+  factory Eq.parse(String str, [ExprResolve resolver = standaloneResolve]) {
     final sides = str.split('=');
-    return new Eq(parseExpr(sides.first), parseExpr(sides.last));
+    return new Eq(new Expr.parse(sides.first, resolver),
+        new Expr.parse(sides.last, resolver));
   }
 
   /// Create deep copy.
@@ -23,9 +24,9 @@ class Eq {
   /// Substitute the given equation.
   bool subs(Eq eq, [int idx = 0]) {
     final index = new W<int>(idx);
-    left = left.subs(eq, index);
+    left = left.subsInternal(eq, index);
     if (index.v != -1) {
-      right = right.subs(eq, index);
+      right = right.subsInternal(eq, index);
       return index.v == -1;
     } else {
       return true;

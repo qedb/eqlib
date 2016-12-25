@@ -8,6 +8,18 @@ part of eqlib;
 abstract class Expr {
   Expr();
 
+  /// Construct from binary data.
+  factory Expr.fromBinary(ByteBuffer buffer) => exprCodecDecode(buffer);
+
+  /// Construct from Base64 string.
+  factory Expr.fromBase64(String base64) =>
+      new Expr.fromBinary(new Uint8List.fromList(BASE64.decode(base64)).buffer);
+
+  /// Parse string expression using EqExParser.
+  factory Expr.parse(String str, [ExprResolve resolver = standaloneResolve]) {
+    return parseExpression(str);
+  }
+
   /// Transform the given value into an expression if it is not an expression
   /// already.
   factory Expr.wrap(dynamic value) {
@@ -19,13 +31,6 @@ abstract class Expr {
       throw new ArgumentError('value type must be one of: Expr, num');
     }
   }
-
-  /// Construct from binary data.
-  factory Expr.fromBinary(ByteBuffer buffer) => exprCodecDecode(buffer);
-
-  /// Construct from Base64 string.
-  factory Expr.fromBase64(String base64) =>
-      new Expr.fromBinary(new Uint8List.fromList(BASE64.decode(base64)).buffer);
 
   /// Write binary data.
   ByteBuffer toBinary() => exprCodecEncode(this);
@@ -65,18 +70,60 @@ abstract class Expr {
   /// Substitute the given [equation] at the given pattern [index].
   /// Returns a new instance of [Expr] where the equation is substituted.
   /// Never returns null, instead returns itself if nothing is substituted.
-  Expr subs(Eq equation, W<int> index) {
+  Expr subsInternal(Eq equation, W<int> index) {
     final result = matchSuperset(equation.left);
     return result.match && index.v-- == 0
         ? equation.right.remap(result.mapping)
         : this;
   }
 
+  Expr subs(Eq equation, [int index = 0]) =>
+      subsInternal(equation, new W<int>(index));
+
+  /// Recursive substitution.
+  Expr subsRecursive(Eq equation, Eq terminator, [int maxRecursions = 100]) {
+    if (maxRecursions <= 0) {
+      throw new ArgumentError.value(
+          maxRecursions, 'maxRecursions', 'must be larger than 0');
+    }
+
+    var expr = clone();
+
+    var cycle = 0;
+    while (cycle < maxRecursions) {
+      // Check if terminator is already reached.
+      var index = new W<int>(0);
+      expr = expr.subsInternal(terminator, index);
+      if (index.v < 0) {
+        return expr;
+      }
+
+      expr = expr.subsInternal(equation, index);
+      if (index.v == 0) {
+        // Substitution failed, but condition is not yet met.
+        throw new Exception('recursion ended before terminator was reached');
+      }
+
+      // Evaluate new substitution.
+      expr.eval();
+
+      cycle++;
+    }
+
+    throw new Exception('reached maximum number of recursions');
+  }
+
   /// Appemts to evaluate this expression to a number using the given compute
   /// functions. Returns null if this is unsuccessful.
   ///
   /// TODO: find a way to avoid `null` as return value.
-  num eval(ExprCanCompute canCompute, ExprCompute compute);
+  num _eval(ExprCanCompute canCompute, ExprCompute compute);
+
+  /// Wrapper of [_eval] to provide default arguments.
+  num eval(
+          [ExprCanCompute canCompute = standaloneCanCompute,
+          ExprCompute computer = standaloneCompute]) =>
+      _eval(canCompute, computer);
 
   // Standard operator IDs used by built-in operators.
   static int opAddId = standaloneResolve('add');
@@ -84,6 +131,7 @@ abstract class Expr {
   static int opMulId = standaloneResolve('mul');
   static int opDivId = standaloneResolve('div');
   static int opPowId = standaloneResolve('pow');
+  static int opNegId = standaloneResolve('neg');
 
   /// Add other expression.
   Expr operator +(other) => new ExprFun(opAddId, [this, new Expr.wrap(other)]);
@@ -99,6 +147,9 @@ abstract class Expr {
 
   /// Power by other expression.
   Expr operator ^(other) => new ExprFun(opPowId, [this, new Expr.wrap(other)]);
+
+  /// Negate expression.
+  Expr operator -() => new ExprFun(opNegId, [this]);
 
   /// Global string printer function.
   static ExprPrint stringPrinter = dfltExprEngine.print;

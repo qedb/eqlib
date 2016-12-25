@@ -12,17 +12,17 @@ void main() {
     final printer = new LaTeXPrinter();
     printer.addDefaultEntries(standaloneResolve);
 
-    // (a + 5)^(b * c)
+    // (a + -5)^(b * c)
     expect(
-        printer.render(pow(symbol('a') + number(5), symbol('b') * symbol('c')),
+        printer.render(pow(symbol('a') + -number(5), symbol('b') * symbol('c')),
             standaloneResolveName),
-        equals(r'\left({a}+5\right)^{{b}\cdot{c}}'));
+        equals(r'\left({a}+-{5}\right)^{{b}\cdot{c}}'));
 
-    // (a / 5) ^ (b * c)
+    // (a / -5) ^ (b * c)
     expect(
-        printer.render(pow(symbol('a') / number(5), symbol('b') * symbol('c')),
+        printer.render(pow(symbol('a') / -number(5), symbol('b') * symbol('c')),
             standaloneResolveName),
-        equals(r'\left(\frac{{a}}{5}\right)^{{b}\cdot{c}}'));
+        equals(r'\left(\frac{{a}}{-{5}}\right)^{{b}\cdot{c}}'));
   });
 
   test('LaTeX dictionary', () {
@@ -33,12 +33,14 @@ void main() {
 
     // lim(x->0, x^2)
     expect(
-        printer.render(parseExpr('lim(x,0,pow(x,2))'), standaloneResolveName),
+        printer.render(
+            new Expr.parse('lim(x,0,pow(x,2))'), standaloneResolveName),
         equals(r'\lim_{{x}\to0}{x}^{2}'));
 
     // lim(x->0, x+1)
     expect(
-        printer.render(parseExpr('lim(x,0,add(x,1))'), standaloneResolveName),
+        printer.render(
+            new Expr.parse('lim(x,0,add(x,1))'), standaloneResolveName),
         equals(r'\lim_{{x}\to0}\left({x}+1\right)'));
   });
 }

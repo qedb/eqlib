@@ -6,9 +6,7 @@ import 'package:test/test.dart';
 import 'package:eqlib/inline.dart';
 
 void main() {
-  final a = symbol('a', generic: true);
-  final b = symbol('b', generic: true);
-  final c = symbol('c', generic: true);
+  final a = generic('a'), b = generic('b'), c = generic('c');
 
   test('Derivation of centripetal acceleration (step 1)', () {
     final vec2d = symbol('vec2d');
@@ -67,10 +65,6 @@ void main() {
     e.eval();
     expect(e, equals(eq(symbol('y'), number(3) * (x ^ 2) * cos(x ^ 3))));
   });
-
-  test('Fibonacci', () {
-    // TODO: implement recursive substitutions.
-  }, skip: true);
 
   test('Power operator', () {
     expect(

@@ -28,5 +28,5 @@ class ExprSym extends Expr {
   Expr remap(mapping) =>
       mapping.containsKey(id) ? mapping[id].clone() : clone();
 
-  num eval(canCompute, compute) => null; // Symbols cannot be evaluated.
+  num _eval(canCompute, compute) => null; // Symbols cannot be evaluated.
 }

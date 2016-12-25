@@ -32,6 +32,7 @@ class LaTeXPrinter {
     _dict[resolver('mul')] = const LaTeXPrinterEntry(r'$(a)\cdot$(b)', 1);
     _dict[resolver('div')] = const LaTeXPrinterEntry(r'\frac{$a}{$b}', 1);
     _dict[resolver('pow')] = const LaTeXPrinterEntry(r'$(a)^{$b}', 2);
+    _dict[resolver('neg')] = const LaTeXPrinterEntry(r'-{$a}', 2);
   }
 
   // Add or replace entry in printer dictionary.

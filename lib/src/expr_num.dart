@@ -25,5 +25,5 @@ class ExprNum extends Expr {
 
   ExprNum remap(mapping) => clone();
 
-  num eval(canCompute, compute) => value;
+  num _eval(canCompute, compute) => value;
 }
