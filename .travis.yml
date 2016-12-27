@@ -1,0 +1,8 @@
+language: dart
+dart:
+- stable
+- dev
+script:
+- ./tool/check.sh
+- export DART_TESTS_MAIN=./test/all.dart
+- bash <(curl -s https://raw.githubusercontent.com/hermanbergwerf/codecov-dart/master/upload.sh)

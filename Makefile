@@ -3,4 +3,4 @@ init:
 	ln -sf ../../tool/pre-commit.sh .git/hooks/pre-commit
 
 check:
-	pub run test
+	./tool/check.sh
