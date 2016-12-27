@@ -25,7 +25,7 @@ class LaTeXPrinter {
   /// Dictionary update events.
   final _onDictUpdate = new StreamController<Null>.broadcast();
   Stream<Null> get onDictUpdate => _onDictUpdate.stream;
-  
+
   /// Stream destructor.
   Future destruct() => _onDictUpdate.close();
 
