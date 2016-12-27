@@ -23,6 +23,8 @@ void main() {
         printer.render(pow(symbol('a') / -number(5), symbol('b') * symbol('c')),
             standaloneResolveName),
         equals(r'\left(\frac{{a}}{-{5}}\right)^{{b}\cdot{c}}'));
+
+    printer.destruct();
   });
 
   test('LaTeX dictionary', () {
@@ -42,5 +44,7 @@ void main() {
         printer.render(
             new Expr.parse('lim(x,0,add(x,1))'), standaloneResolveName),
         equals(r'\lim_{{x}\to0}\left({x}+1\right)'));
+
+    printer.destruct();
   });
 }
