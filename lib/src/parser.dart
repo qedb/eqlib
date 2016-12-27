@@ -217,8 +217,7 @@ Expr parseExpression(String input, [ExprResolve resolver = standaloneResolve]) {
   }
 
   if (output.length > 1) {
-    print(output.join(', '));
-    throw new FormatException('stack mismatch');
+    throw new FormatException('stack mismatch: ${output.join(', ')}');
   }
   return output.last;
 }
@@ -390,15 +389,4 @@ class _StackElement {
 
   @override
   String toString() => isLeftParenthesis ? ')' : 'fn#$id';
-
-  @override
-  int get hashCode => hash4(id, argc, isGeneric, isOperator);
-
-  @override
-  bool operator ==(dynamic other) =>
-      other is _StackElement &&
-      other.id == id &&
-      other.argc == argc &&
-      other.isGeneric == isGeneric &&
-      other.isOperator == isOperator;
 }
