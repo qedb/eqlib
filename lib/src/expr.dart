@@ -22,11 +22,11 @@ abstract class Expr {
 
   /// Transform the given value into an expression if it is not an expression
   /// already.
-  factory Expr.wrap(dynamic value) {
+  factory Expr.from(dynamic value) {
     if (value is Expr) {
       return value;
     } else if (value is num) {
-      return new ExprNum(value);
+      return new NumberExpr(value);
     } else {
       throw new ArgumentError('value type must be one of: Expr, num');
     }
@@ -139,26 +139,26 @@ abstract class Expr {
 
   /// Add other expression.
   Expr operator +(dynamic other) =>
-      new ExprFun(opAddId, [this, new Expr.wrap(other)]);
+      new FunctionExpr(opAddId, [this, new Expr.from(other)]);
 
   /// Subtract other expression.
   Expr operator -(dynamic other) =>
-      new ExprFun(opSubId, [this, new Expr.wrap(other)]);
+      new FunctionExpr(opSubId, [this, new Expr.from(other)]);
 
   /// Multiply by other expression.
   Expr operator *(dynamic other) =>
-      new ExprFun(opMulId, [this, new Expr.wrap(other)]);
+      new FunctionExpr(opMulId, [this, new Expr.from(other)]);
 
   /// Divide by other expression.
   Expr operator /(dynamic other) =>
-      new ExprFun(opDivId, [this, new Expr.wrap(other)]);
+      new FunctionExpr(opDivId, [this, new Expr.from(other)]);
 
   /// Power by other expression.
   Expr operator ^(dynamic other) =>
-      new ExprFun(opPowId, [this, new Expr.wrap(other)]);
+      new FunctionExpr(opPowId, [this, new Expr.from(other)]);
 
   /// Negate expression.
-  Expr operator -() => new ExprFun(opNegId, [this]);
+  Expr operator -() => new FunctionExpr(opNegId, [this]);
 
   /// Global string printer function.
   static ExprPrint stringPrinter = dfltExprEngine.print;

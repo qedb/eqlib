@@ -10,6 +10,7 @@ import 'recursive_test.dart' as recursive_test;
 import 'codec_test.dart' as codec_test;
 import 'latex_test.dart' as latex_test;
 import 'diff_test.dart' as diff_test;
+import 'misc_test.dart' as misc_test;
 
 void main() {
   group('Expression parsing', parse_test.main);
@@ -18,4 +19,5 @@ void main() {
   group('Binary codec', codec_test.main);
   group('LaTeX printer', latex_test.main);
   group('Tree-Diff', diff_test.main);
+  group('Miscellaneous', misc_test.main);
 }

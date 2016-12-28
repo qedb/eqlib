@@ -5,18 +5,18 @@
 part of eqlib;
 
 /// Numeric expression
-class ExprNum extends Expr {
+class NumberExpr extends Expr {
   final num value;
 
-  ExprNum(this.value) {
+  NumberExpr(this.value) {
     assert(value != null); // Do not accept null as input.
   }
 
   @override
-  ExprNum clone() => new ExprNum(value);
+  NumberExpr clone() => new NumberExpr(value);
 
   @override
-  bool equals(other) => other is ExprNum && other.value == value;
+  bool equals(other) => other is NumberExpr && other.value == value;
 
   @override
   int get expressionHash => hash2(0, value.hashCode);
@@ -24,12 +24,12 @@ class ExprNum extends Expr {
   @override
   ExprMatchResult matchSuperset(superset) => equals(superset)
       ? new ExprMatchResult.exactMatch()
-      : (superset is ExprSym && superset.isGeneric
+      : (superset is SymbolExpr && superset.isGeneric
           ? new ExprMatchResult.genericMatch(superset.id, this)
           : new ExprMatchResult.noMatch());
 
   @override
-  ExprNum remap(mapping) => clone();
+  NumberExpr remap(mapping) => clone();
 
   @override
   num _eval(canCompute, compute) => value;

@@ -3,6 +3,7 @@
 // that can be found in the LICENSE file.
 
 import 'package:test/test.dart';
+import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/inline.dart';
 
 void main() {
@@ -33,21 +34,25 @@ void main() {
     e.subs(eq((a * b) * c, a * (b * c)));
     e.subs(eq(a * b + a * c, a * (b + c)));
 
-    // Check
     expect(e, equals(eq(pvec, r * (sin(theta) * ihat + cos(theta) * jhat))));
   });
 
-  test('Solve a simple equation', () {
+  test('Solve simple equations', () {
     final x = symbol('x');
-    final e = eq(x * 2 + 5, 9);
-    e.wrap(a + b, innerExpr - b);
-    e.subs(eq((a + b) - b, a));
-    e.wrap(a * b, innerExpr / b);
-    e.subs(eq((a * b) / b, a));
-    e.eval();
 
-    // Check
-    expect(e, equals(eq(x, 2)));
+    final steps = new Stepper([
+      new Step.wrap(a + b, innerExpr - b),
+      new Step.subs((a + b) - b, a),
+      new Step.wrap(a * b, innerExpr / b),
+      new Step.subs((a * b) / b, a),
+      new Step.eval()
+    ]);
+
+    expect(steps.run(eq(x * 2 + 5, 9)), equals(eq(x, 2)));
+    expect(steps.run(eq(9, x * 2 + 5)), equals(eq(2, x)));
+
+    // Fail on purpose.
+    expect(() => steps.run(eq(x * 5, 9)), throwsException);
   });
 
   test('Chain rule', () {

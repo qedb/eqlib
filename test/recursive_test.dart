@@ -15,6 +15,10 @@ void main() {
     e = e.subs(fib);
     e = e.subsRecursive(ffib, ffib0);
     expect(e.eval(), equals(55));
+
+    // Test max recursions.
+    expect(() => e.subsRecursive(ffib, ffib0, 0), throwsArgumentError);
+    expect(() => e.subsRecursive(ffib, ffib0, 9), throwsException);
   });
 
   test('Factorial', () {

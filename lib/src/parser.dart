@@ -143,7 +143,7 @@ Expr parseExpression(String input, [ExprResolve resolver = standaloneResolve]) {
             reader.data.sublist(startPtr, reader.ptr)));
 
         // Push to output queue.
-        output.add(new ExprNum(number));
+        output.add(new NumberExpr(number));
 
         // Note that we do NOT have to move the pointer here. This is because
         // by skipping digits, we have already moved past this token.
@@ -187,7 +187,7 @@ Expr parseExpression(String input, [ExprResolve resolver = standaloneResolve]) {
         // Process token.
         final id = resolver(fnName);
         if (isSymbol) {
-          output.add(new ExprSym(id, isGeneric));
+          output.add(new SymbolExpr(id, isGeneric));
         } else {
           // We initially expect one argument, this will be incremented when we
           // find argument separators.
@@ -304,13 +304,13 @@ void _popStack(List<_StackElement> stack, List<Expr> output) {
   // If this is a negate function, and the argument is a number, we directly
   // apply it.
   final first = args.first;
-  if (fn.id == Expr.opNegId && first is ExprNum) {
-    output.add(new ExprNum(-first.value));
+  if (fn.id == Expr.opNegId && first is NumberExpr) {
+    output.add(new NumberExpr(-first.value));
   } else {
     final id = fn.id == _opImplMulId ? Expr.opMulId : fn.id;
     // Note: the argument list is reversed because they have been added to the
     // stack in first in last out order (because of List.removeLast()).
-    output.add(new ExprFun(id, args.reversed.toList(), fn.isGeneric));
+    output.add(new FunctionExpr(id, args.reversed.toList(), fn.isGeneric));
   }
 }
 

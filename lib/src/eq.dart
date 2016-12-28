@@ -64,11 +64,11 @@ class Eq {
       ExprCompute computer = standaloneCompute]) {
     final lvalue = left.eval(canCompute, computer);
     if (lvalue != null) {
-      left = new ExprNum(lvalue);
+      left = new NumberExpr(lvalue);
     }
     final rvalue = right.eval(canCompute, computer);
     if (rvalue != null) {
-      right = new ExprNum(rvalue);
+      right = new NumberExpr(rvalue);
     }
   }
 

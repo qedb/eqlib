@@ -13,10 +13,11 @@ import 'package:eqlib/utils.dart';
 
 part 'src/eq.dart';
 part 'src/expr.dart';
-part 'src/expr_num.dart';
-part 'src/expr_sym.dart';
-part 'src/expr_fun.dart';
-part 'src/expr_codec.dart';
+part 'src/number.dart';
+part 'src/symbol.dart';
+part 'src/function.dart';
+part 'src/codec.dart';
+part 'src/stepper.dart';
 part 'src/interface.dart';
 part 'src/standalone.dart';
 part 'src/parser.dart';

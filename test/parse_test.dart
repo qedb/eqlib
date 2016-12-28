@@ -48,7 +48,6 @@ void main() {
     pvec.subs(
         new Eq.parse('add(mul(?a, ?b), mul(?a, ?c)) = mul(?a, add(?b, ?c))'));
 
-    // Check
     dfltExprEngine.printerOpChars = true;
     expect(pvec.toString(),
         equals('pvec={r}*{{sin(theta)}*{ihat} + {cos(theta)}*{jhat}}'));
@@ -62,7 +61,6 @@ void main() {
     eq.subs(new Eq.parse('div(mul(?a, ?b), ?b) = ?a'));
     eq.eval();
 
-    // Check
     expect(eq.left, equals(symbol('x')));
     expect(eq.right.eval(), equals(2.0));
   });

@@ -91,11 +91,11 @@ class StandaloneExprEngine {
   /// Implementation of [ExprPrint].
   String print(Expr expr) {
     final generic = expr.isGeneric ? '?' : '';
-    if (expr is ExprNum) {
+    if (expr is NumberExpr) {
       return expr.value.toString();
-    } else if (expr is ExprSym) {
+    } else if (expr is SymbolExpr) {
       return '$generic${resolveName(expr.id)}';
-    } else if (expr is ExprFun) {
+    } else if (expr is FunctionExpr) {
       final id = expr.id;
       final args = expr.args;
       if (id - 1 < ComputableExpr.values.length) {
@@ -136,7 +136,7 @@ class StandaloneExprEngine {
       }
     } else {
       throw new ArgumentError(
-          'expr type must be one of: ExprNum, ExprSym, ExprFun');
+          'expr type must be one of: NumberExpr, SymbolExpr, FunctionExpr');
     }
   }
 }

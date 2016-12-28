@@ -5,19 +5,19 @@
 part of eqlib;
 
 /// Symbolic expression
-class ExprSym extends Expr {
+class SymbolExpr extends Expr {
   final int id;
   final bool generic;
 
-  ExprSym(this.id, [this.generic = false]) {
+  SymbolExpr(this.id, [this.generic = false]) {
     assert(id != null); // Do not accept null as input.
   }
 
   @override
-  ExprSym clone() => new ExprSym(id, generic);
+  SymbolExpr clone() => new SymbolExpr(id, generic);
 
   @override
-  bool equals(other) => other is ExprSym && other.id == id;
+  bool equals(other) => other is SymbolExpr && other.id == id;
 
   @override
   int get expressionHash => hash2(1, id);
@@ -28,7 +28,7 @@ class ExprSym extends Expr {
   @override
   ExprMatchResult matchSuperset(superset) => equals(superset)
       ? new ExprMatchResult.exactMatch()
-      : (superset is ExprSym && superset.isGeneric
+      : (superset is SymbolExpr && superset.isGeneric
           ? new ExprMatchResult.genericMatch(superset.id, this)
           : new ExprMatchResult.noMatch());
 

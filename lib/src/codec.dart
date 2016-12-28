@@ -169,11 +169,11 @@ ByteBuffer exprCodecEncode(Expr expr) {
 }
 
 void _exprCodecEncodePass1(_ExprCodecData data, Expr expr) {
-  if (expr is ExprNum) {
+  if (expr is NumberExpr) {
     data.storeNumber(expr.value);
-  } else if (expr is ExprSym) {
+  } else if (expr is SymbolExpr) {
     data.storeFunction(expr.id, 0, expr.generic);
-  } else if (expr is ExprFun) {
+  } else if (expr is FunctionExpr) {
     data.storeFunction(expr.id, expr.args.length, expr.generic);
     for (final arg in expr.args) {
       _exprCodecEncodePass1(data, arg);
@@ -182,11 +182,11 @@ void _exprCodecEncodePass1(_ExprCodecData data, Expr expr) {
 }
 
 void _exprCodecEncodePass2(_ExprCodecData data, Expr expr) {
-  if (expr is ExprNum) {
+  if (expr is NumberExpr) {
     data.add(data.getNumberRef(expr.value));
-  } else if (expr is ExprSym) {
+  } else if (expr is SymbolExpr) {
     data.add(data.getFunctionRef(expr.id, 0, expr.generic));
-  } else if (expr is ExprFun) {
+  } else if (expr is FunctionExpr) {
     data.add(data.getFunctionRef(expr.id, expr.args.length, expr.generic));
     for (final arg in expr.args) {
       _exprCodecEncodePass2(data, arg);
@@ -212,18 +212,18 @@ Expr _exprCodecDecode(W<int> ptr, _ExprCodecData data) {
     if (argCount > 0) {
       final args =
           new List<Expr>.generate(argCount, (i) => _exprCodecDecode(ptr, data));
-      return new ExprFun(data.functionId[value], args, generic);
+      return new FunctionExpr(data.functionId[value], args, generic);
     } else {
-      return new ExprSym(data.functionId[value], generic);
+      return new SymbolExpr(data.functionId[value], generic);
     }
   }
   value -= data.functionCount;
   if (value < data.int8Count) {
-    return new ExprNum(data.int8List[value]);
+    return new NumberExpr(data.int8List[value]);
   }
   value -= data.int8Count;
   if (value < data.float64Count) {
-    return new ExprNum(data.float64List[value]);
+    return new NumberExpr(data.float64List[value]);
   }
   // Illegal value: it is not within the frame of the given input tables.
   throw new ArgumentError('data is corruptted');

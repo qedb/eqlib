@@ -67,19 +67,19 @@ class LaTeXPrinter {
       bool useParentheses = false,
       bool explicitNotation = false]) {
     // Numbers
-    if (expr is ExprNum) {
+    if (expr is NumberExpr) {
       return expr.value.toString();
     }
 
     // Symbols
-    else if (expr is ExprSym) {
+    else if (expr is SymbolExpr) {
       return _dict.containsKey(expr.id)
           ? _dict[expr.id].template
           : '{${resolveName(expr.id)}}';
     }
 
     // Functions
-    else if (expr is ExprFun) {
+    else if (expr is FunctionExpr) {
       // Render expression.
       final rendered = _dict.containsKey(expr.id)
           ? renderTemplate(expr, _dict[expr.id], resolveName, explicitNotation)
@@ -103,12 +103,12 @@ class LaTeXPrinter {
       }
     } else {
       throw new ArgumentError(
-          'expr type must be one of: ExprNum, ExprSym, ExprFun');
+          'expr type must be one of: NumberExpr, SymbolExpr, FunctionExpr');
     }
   }
 
   /// Render template
-  String renderTemplate(ExprFun expr, LaTeXPrinterEntry entry,
+  String renderTemplate(FunctionExpr expr, LaTeXPrinterEntry entry,
       ExprResolveName resolveName, bool explicitNotation) {
     // Generic argument processing function.
     final processArg = (Match match, bool useParentheses) {

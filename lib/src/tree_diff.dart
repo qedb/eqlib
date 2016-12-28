@@ -41,7 +41,7 @@ TreeDiffResult computeTreeDiff(Expr a, Expr b) {
   }
 
   // If a and b are numeric, this branch can be discarded.
-  else if (a is ExprNum && b is ExprNum) {
+  else if (a is NumberExpr && b is NumberExpr) {
     // If a and b were equal, they would pass the first if statement, therefore
     // it can be concluded that this difference is invalid.
     return new TreeDiffResult(numsNotEqual: true);
@@ -51,8 +51,8 @@ TreeDiffResult computeTreeDiff(Expr a, Expr b) {
   final rule = new Eq(a, b);
 
   // If a and b are equal functions, their arguments can be compared.
-  if (a is ExprFun &&
-      b is ExprFun &&
+  if (a is FunctionExpr &&
+      b is FunctionExpr &&
       a.id == b.id &&
       a.args.length == b.args.length) {
     // Create alternate rules for each argument.

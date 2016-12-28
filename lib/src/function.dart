@@ -5,23 +5,27 @@
 part of eqlib;
 
 /// Function expression
-class ExprFun extends Expr {
+class FunctionExpr extends Expr {
   final int id;
   final bool generic;
   final List<Expr> args;
 
-  ExprFun(this.id, this.args, [this.generic = false]) {
+  FunctionExpr(this.id, this.args, [this.generic = false]) {
     assert(id != null && args != null); // Do not accept null as input.
-    assert(args.isNotEmpty); // If there are no args, a ExprSym should be used.
+    assert(
+        args.isNotEmpty); // If there are no args, a SymbolExpr should be used.
   }
 
   @override
-  ExprFun clone([Expr argCopy(Expr expr) = Expr.staticClone]) => new ExprFun(id,
-      new List<Expr>.generate(args.length, (i) => argCopy(args[i])), generic);
+  FunctionExpr clone([Expr argCopy(Expr expr) = Expr.staticClone]) =>
+      new FunctionExpr(
+          id,
+          new List<Expr>.generate(args.length, (i) => argCopy(args[i])),
+          generic);
 
   @override
   bool equals(other) =>
-      other is ExprFun &&
+      other is FunctionExpr &&
       other.id == id &&
       other.args.length == args.length &&
       ifEvery(other.args, args, (a, b) => a == b);
@@ -34,13 +38,13 @@ class ExprFun extends Expr {
 
   @override
   ExprMatchResult matchSuperset(superset) {
-    if (superset is ExprNum) {
+    if (superset is NumberExpr) {
       return new ExprMatchResult.noMatch();
-    } else if (superset is ExprSym) {
+    } else if (superset is SymbolExpr) {
       return superset.isGeneric
           ? new ExprMatchResult.genericMatch(superset.id, this)
           : new ExprMatchResult.noMatch();
-    } else if (superset is ExprFun) {
+    } else if (superset is FunctionExpr) {
       if (superset.isGeneric) {
         return superset.args.length == args.length
             ? new ExprMatchResult.processGenericFunction(superset.id, this,
@@ -54,7 +58,7 @@ class ExprFun extends Expr {
       }
     } else {
       throw new ArgumentError(
-          'superset type must be one of: ExprNum, ExprSym, ExprFun');
+          'superset type must be one of: NumberExpr, SymbolExpr, FunctionExpr');
     }
   }
 
@@ -90,7 +94,7 @@ class ExprFun extends Expr {
       final value = args[i].eval(canCompute, compute);
       if (value != null) {
         numArgs[i] = value;
-        args[i] = new ExprNum(value);
+        args[i] = new NumberExpr(value);
       } else {
         allEval = false;
       }
