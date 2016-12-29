@@ -91,7 +91,8 @@ abstract class Expr {
           maxRecursions, 'maxRecursions', 'must be larger than 0');
     }
 
-    var expr = clone();
+    // Note: no need to clone: subsInternal will return a new instance.
+    var expr = this;
 
     var cycle = 0;
     while (cycle < maxRecursions) {
@@ -105,7 +106,8 @@ abstract class Expr {
       expr = expr.subsInternal(equation, index);
       if (index.v == 0) {
         // Substitution failed, but condition is not yet met.
-        throw new Exception('recursion ended before terminator was reached');
+        throw new EqLibException(
+            'recursion ended before terminator was reached');
       }
 
       // Evaluate new substitution.
@@ -114,7 +116,7 @@ abstract class Expr {
       cycle++;
     }
 
-    throw new Exception('reached maximum number of recursions');
+    throw new EqLibException('reached maximum number of recursions');
   }
 
   /// Appemts to evaluate this expression to a number using the given compute

@@ -81,7 +81,7 @@ class StandaloneExprEngine {
           assert(args.length == 1);
           return -args[0];
         default:
-          throw new Exception('this is 100% impossible');
+          throw new UnimplementedError();
       }
     } else {
       return null;
@@ -129,7 +129,7 @@ class StandaloneExprEngine {
             assert(args.length == 1);
             return printerOpChars ? '-{${args[0]}}' : 'neg(${args[0]})';
           default:
-            throw new Exception('this is 100% impossible');
+            throw new UnimplementedError();
         }
       } else {
         return '$generic${resolveName(id)}(${args.join(', ')})';

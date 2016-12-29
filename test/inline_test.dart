@@ -5,6 +5,7 @@
 import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/inline.dart';
+import 'package:eqlib/exceptions.dart';
 
 void main() {
   final a = generic('a'), b = generic('b'), c = generic('c');
@@ -52,7 +53,8 @@ void main() {
     expect(steps.run(eq(9, x * 2 + 5)), equals(eq(2, x)));
 
     // Fail on purpose.
-    expect(() => steps.run(eq(x * 5, 9)), throwsException);
+    expect(() => steps.run(eq(x * 5, 9)),
+        eqlibThrows('the condition does not match left or right'));
   });
 
   test('Chain rule', () {

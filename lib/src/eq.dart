@@ -43,7 +43,7 @@ class Eq {
       if (rmap.match) {
         _wrap(wrapping, rmap.mapping);
       } else {
-        throw new Exception('the condition does not match left or right');
+        throw new EqLibException('the condition does not match left or right');
       }
     }
   }

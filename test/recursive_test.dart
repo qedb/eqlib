@@ -4,6 +4,7 @@
 
 import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
+import 'package:eqlib/exceptions.dart';
 
 void main() {
   test('Fibonacci', () {
@@ -13,12 +14,16 @@ void main() {
 
     var e = new Expr.parse('fib(10)');
     e = e.subs(fib);
-    e = e.subsRecursive(ffib, ffib0);
-    expect(e.eval(), equals(55));
+    expect(e.subsRecursive(ffib, ffib0).eval(), equals(55));
 
     // Test max recursions.
     expect(() => e.subsRecursive(ffib, ffib0, 0), throwsArgumentError);
-    expect(() => e.subsRecursive(ffib, ffib0, 9), throwsException);
+    expect(() => e.subsRecursive(ffib, ffib0, 9),
+        eqlibThrows('reached maximum number of recursions'));
+
+    // Test incorrect recursion.
+    expect(() => e.subsRecursive(new Eq.parse('fffib(?n, ?a, ?b) = 0'), ffib0),
+        eqlibThrows('recursion ended before terminator was reached'));
   });
 
   test('Factorial', () {

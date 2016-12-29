@@ -12,8 +12,8 @@ dartfmt --dry-run --set-exit-if-changed ./
 
 # Run analyzer checks.
 dartanalyzer \
-  --options .analysis_options \
-  --fatal-hints --fatal-warnings --fatal-lints ./
+--options .analysis_options \
+--fatal-hints --fatal-warnings --fatal-lints ./
 
 # Run the tests.
 pub run test

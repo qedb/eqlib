@@ -10,6 +10,7 @@ import 'dart:typed_data';
 
 import 'package:quiver/core.dart';
 import 'package:eqlib/utils.dart';
+import 'package:eqlib/exceptions.dart';
 
 part 'src/eq.dart';
 part 'src/expr.dart';
