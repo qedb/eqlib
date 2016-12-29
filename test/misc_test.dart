@@ -25,7 +25,8 @@ void main() {
   });
 
   test('EqLibException', () {
-    expect(() => eq(1, 1).wrap(number(2), number(2)),
-        eqlibThrows('the condition does not match left or right'));
+    expect(new EqLibException('abc').toString(), equals('abc'));
+    expect(eqlibThrows('abc').describe(new StringDescription()).toString(),
+        equals('throws EqLibException:<abc>'));
   });
 }
