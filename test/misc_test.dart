@@ -6,6 +6,7 @@ import 'package:test/test.dart';
 import 'package:quiver/core.dart';
 import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/inline.dart';
+import 'package:eqlib/exceptions.dart';
 
 void main() {
   final a = symbol('a'), b = symbol('b');
@@ -21,5 +22,10 @@ void main() {
     expect(new Expr.from(new SymbolExpr(100)), equals(new SymbolExpr(100)));
     expect(new Expr.from(100), equals(new NumberExpr(100)));
     expect(() => new Expr.from('a'), throwsArgumentError);
+  });
+
+  test('EqLibException', () {
+    expect(() => eq(1, 1).wrap(number(2), number(2)),
+        eqlibThrows('the condition does not match left or right'));
   });
 }
