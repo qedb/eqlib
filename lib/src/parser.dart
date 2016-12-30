@@ -372,9 +372,6 @@ class _StringReader {
     return ++ptr;
   }
 
-  /// Move to next character if the given condition is true.
-  int nextIf(bool condition) => condition ? next() : ptr;
-
   /// Check if the reader is at the end of the input string.
   bool get eof => ptr == data.length;
 }

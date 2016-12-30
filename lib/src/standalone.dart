@@ -49,7 +49,8 @@ class SABackend {
   }
 
   /// Implementation of [ExprResolveName].
-  String resolveName(int id) => printerDict[id];
+  String resolveName(int id) =>
+      printerDict.containsKey(id) ? printerDict[id] : id.toString();
 
   /// Implementation of [ExprCanCompute].
   bool canCompute(int id) {

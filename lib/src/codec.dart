@@ -5,6 +5,7 @@
 part of eqlib;
 
 /// Codec data
+/// Note: function argument lists are limited to uint8 storage.
 class _ExprCodecData {
   int genericCount;
   final List<double> float64List;
@@ -217,6 +218,7 @@ Expr _exprCodecDecode(W<int> ptr, _ExprCodecData data) {
       return new SymbolExpr(data.functionId[value], generic);
     }
   }
+
   value -= data.functionCount;
   if (value < data.int8Count) {
     return new NumberExpr(data.int8List[value]);
@@ -225,6 +227,8 @@ Expr _exprCodecDecode(W<int> ptr, _ExprCodecData data) {
   if (value < data.float64Count) {
     return new NumberExpr(data.float64List[value]);
   }
+
   // Illegal value: it is not within the frame of the given input tables.
-  throw new ArgumentError('data is corruptted');
+  // TODO: it would be nicer to use ArgumentError, but that is not comparable.
+  throw new EqLibException('codec input buffer data is corrupted');
 }
