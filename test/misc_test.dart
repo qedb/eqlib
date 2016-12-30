@@ -38,10 +38,10 @@ void main() {
 
     // Standlone printer.
     final allIn = new Expr.parse('1 + a - 3 * b / 5 ^-c');
+    eqlibSABackend.printerOpChars = true;
+    expect(allIn.toString(), equals('1 + a - {{3}*{b}}/{{5}^{-{c}}}'));
     eqlibSABackend.printerOpChars = false;
     expect(allIn.toString(),
         equals('sub(add(1, a), div(mul(3, b), pow(5, neg(c))))'));
-    eqlibSABackend.printerOpChars = true;
-    expect(allIn.toString(), equals('1 + a - {{3}*{b}}/{{5}^{-{c}}}'));
   });
 }

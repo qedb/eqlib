@@ -3,13 +3,14 @@
 // that can be found in the LICENSE file.
 
 import 'package:test/test.dart';
+import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/inline.dart';
 
 void main() {
   final a = symbol('a', generic: true);
   final b = symbol('b', generic: true);
 
-  test('Chain rule: tree diff', () {
+  test('Chain rule', () {
     final sin = fn1('sin');
     final cos = fn1('cos');
     final diff = fn2('diff');
@@ -54,5 +55,13 @@ void main() {
           eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)).toString(),
           ')'
         ].join()));
+  });
+
+  test('numsNotEqual', () {
+    expect(difference(number(1), number(2)).toString(),
+        '{hasDiff: true, numsNotEqual: true}');
+    expect(
+        difference(new Expr.parse('1 + a'), new Expr.parse('2 + a')).toString(),
+        equals('add(1, a)=add(2, a)'));
   });
 }

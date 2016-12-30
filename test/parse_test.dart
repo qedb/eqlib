@@ -58,6 +58,7 @@ void main() {
     eqlibSABackend.printerOpChars = true;
     expect(pvec.toString(),
         equals('pvec={r}*{{sin(theta)}*{ihat} + {cos(theta)}*{jhat}}'));
+    eqlibSABackend.printerOpChars = false;
   });
 
   test('Solve a simple equation', () {
