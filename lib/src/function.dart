@@ -87,7 +87,7 @@ class FunctionExpr extends Expr {
   }
 
   @override
-  num _eval(canCompute, compute) {
+  num evalInternal(canCompute, compute) {
     final numArgs = new List<num>(args.length);
     var allEval = true;
     for (var i = 0; i < args.length; i++) {

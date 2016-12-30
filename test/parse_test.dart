@@ -13,22 +13,29 @@ void main() {
   test('Fundamental checks for the parser', () {
     final a = generic('a'), b = generic('b'), c = generic('c');
 
-    // Precedence and whitespaces.
+    // Extra parentheses
+    expect(new Expr.parse('(((a + b)))'), equals(a + b));
+
+    // Precedence and whitespaces
     expect(new Expr.parse(' ( 1 + 2 ) * 3 ^ sin( a + ?b ) '),
         equals((n(1) + 2) * (n(3) ^ fn1('sin')(symbol('a') + b))));
 
-    // Nested functions and whitespaces.
+    // Nested functions and whitespaces
     expect(new Eq.parse(' mul  ( mul(  ?a, ?b), ?c)=  mul(?a,mul(?b,   ?c))  '),
         equals(eq((a * b) * c, a * (b * c))));
 
-    // Parsing numeric values.
+    // Numeric values
     expect(new Expr.parse('-1.23 - 4 + .567 ^ -.89'),
         equals((n(-1.23) - 4) + (n(.567) ^ -.89)));
     expect((new Expr.parse('-1.23 - 4 + .567 ^ -.89').eval() * 1000).toInt(),
         equals(-3573));
 
-    // Implicit multiplication.
+    // Unary minus
     expect(new Expr.parse('-  - -1').eval(), equals(-1));
+    expect(new Expr.parse('---a'), equals(-(-(-a))));
+    expect(new Expr.parse('-a ^ b'), equals((-a) ^ b));
+
+    // Implicit multiplication
     expect(new Expr.parse('?a ?b ?c'), equals(a * (b * c)));
     expect(new Expr.parse('?a sin(?b)'), equals(a * fn1('sin')(b)));
     expect(new Expr.parse('-1 2 ^ -3 4'), equals(n(-1) * (n(2) ^ (n(-3) * 4))));

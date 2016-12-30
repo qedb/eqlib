@@ -123,13 +123,13 @@ abstract class Expr {
   /// functions. Returns null if this is unsuccessful.
   ///
   /// TODO: find a way to avoid `null` as return value.
-  num _eval(ExprCanCompute canCompute, ExprCompute compute);
+  num evalInternal(ExprCanCompute canCompute, ExprCompute compute);
 
-  /// Wrapper of [_eval] to provide default arguments.
+  /// Wrapper of [evalInternal] to provide default arguments.
   num eval(
           [ExprCanCompute canCompute = standaloneCanCompute,
           ExprCompute computer = standaloneCompute]) =>
-      _eval(canCompute, computer);
+      evalInternal(canCompute, computer);
 
   // Standard operator IDs used by built-in operators.
   static int opAddId = standaloneResolve('add');

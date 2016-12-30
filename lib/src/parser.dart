@@ -48,10 +48,16 @@ Expr parseExpression(String input, [ExprResolve resolver = standaloneResolve]) {
 
     // Try right parenthesis.
     else if (reader.currentIs(')')) {
+      if (stack.isEmpty) {
+        // The stack already ran out without finding a parentheses.
+        throw new FormatException('mismatched parentheses');
+      }
+
       // Pop all remaining stack elements.
       while (!stack.last.isLeftParenthesis) {
         _popStack(stack, output);
         if (stack.isEmpty) {
+          // If the stack runs out without finding a left parentheses...
           throw new FormatException('mismatched parentheses');
         }
       }
@@ -60,7 +66,7 @@ Expr parseExpression(String input, [ExprResolve resolver = standaloneResolve]) {
       stack.removeLast();
 
       // If the last element in the stack is a function, pop it.
-      if (stack.isNotEmpty && !stack.last.isOperator) {
+      if (stack.isNotEmpty && stack.last.isFunction) {
         _popStack(stack, output);
       }
 
@@ -297,6 +303,8 @@ void _stackAddOp(int op, List<_StackElement> stack, List<Expr> output) {
 }
 
 /// Pop and process element from the [stack].
+/// This function should not be called to remove left parentheses.
+/// (if there are still left parentheses left, there is a mismatch)
 void _popStack(List<_StackElement> stack, List<Expr> output) {
   final fn = stack.removeLast();
   final args = new List<Expr>.generate(fn.argc, (_) => output.removeLast());
@@ -386,6 +394,7 @@ class _StackElement {
       new _StackElement(leftParenthesisId);
 
   bool get isLeftParenthesis => id == leftParenthesisId;
+  bool get isFunction => !isOperator && !isLeftParenthesis;
 
   @override
   String toString() => isLeftParenthesis ? ')' : 'fn#$id';

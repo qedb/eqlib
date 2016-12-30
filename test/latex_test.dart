@@ -4,47 +4,93 @@
 
 import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
-import 'package:eqlib/inline.dart';
 import 'package:eqlib/latex_printer.dart';
 
 void main() {
-  test('Simple LaTeX printing tests', () {
+  test('Built-in operators', () {
     final printer = new LaTeXPrinter();
-    printer.addDefaultEntries(standaloneResolve);
+    printer.addDefaultEntries();
 
-    // (a + -5)^(b * c)
-    expect(
-        printer.render(pow(symbol('a') + -number(5), symbol('b') * symbol('c')),
-            standaloneResolveName),
-        equals(r'\left({a}+-{5}\right)^{{b}\cdot{c}}'));
+    expect(printer.render(new Expr.parse('(a + -5) ^ (b * c)')),
+        equals(r'\left({a}+-5\right)^{{b}\cdot{c}}'));
 
-    // (a / -5) ^ (b * c)
-    expect(
-        printer.render(pow(symbol('a') / -number(5), symbol('b') * symbol('c')),
-            standaloneResolveName),
-        equals(r'\left(\frac{{a}}{-{5}}\right)^{{b}\cdot{c}}'));
+    expect(printer.render(new Expr.parse('(a / -5) ^ (b * c)')),
+        equals(r'\left(\frac{{a}}{-5}\right)^{{b}\cdot{c}}'));
+
+    // Note: for syntax reasons, the precedence of unary- > power operator.
+    expect(printer.render(new Expr.parse('(-1)^2')), equals(r'-1^{2}'));
+    expect(printer.render(new Expr.parse('-1 ^ 2')), equals(r'-1^{2}'));
+    expect(printer.render(new Expr.parse('-(1 ^ 2)')),
+        equals(r'-\left(1^{2}\right)'));
+
+    expect(printer.render(new Expr.parse('---a')), equals(r'---{a}'));
 
     printer.destruct();
   });
 
-  test('LaTeX dictionary', () {
+  test('LaTeX dictionary', () async {
     final printer = new LaTeXPrinter();
-    printer.addDefaultEntries(standaloneResolve);
+    printer.addDefaultEntries();
     printer.dictUpdate(standaloneResolve('lim'),
-        new LaTeXPrinterEntry(r'\lim_{$a\to$b}$(c)', 2));
+        new LaTeXDictEntry(r'\lim_{$a\to$b}$(c)', false, 1));
 
-    // lim(x->0, x^2)
-    expect(
-        printer.render(
-            new Expr.parse('lim(x,0,pow(x,2))'), standaloneResolveName),
+    expect(printer.render(new Expr.parse('lim(x, 0, x ^ 2)')),
         equals(r'\lim_{{x}\to0}{x}^{2}'));
-
-    // lim(x->0, x+1)
-    expect(
-        printer.render(
-            new Expr.parse('lim(x,0,add(x,1))'), standaloneResolveName),
+    expect(printer.render(new Expr.parse('lim(x, 0, x + 1)')),
         equals(r'\lim_{{x}\to0}\left({x}+1\right)'));
 
-    printer.destruct();
+    // Render function with too few arguments (template cannot be resolved).
+    expect(
+        () => printer.render(new Expr.parse('lim(x, 0)')), throwsArgumentError);
+
+    // Test dictUpdate/dictReplace with onDictUpdate.
+    bool dictUpdated = false;
+    printer.onDictUpdate.listen((_) {
+      dictUpdated = true;
+    });
+
+    printer.dictUpdate(standaloneResolve('pi'), new LaTeXDictEntry(r'\pi'));
+    printer.dictReplace(standaloneResolve('pi'), standaloneResolve('phi'),
+        new LaTeXDictEntry(r'\phi'));
+
+    // Print single symbol.
+    expect(printer.render(new Expr.parse('pi')), equals(r'{pi}'));
+    expect(printer.render(new Expr.parse('phi')), equals(r'{\phi}'));
+
+    // Print function that has not been defined.
+    expect(printer.render(new Expr.parse('3 * fn(x)')),
+        equals(r'3\cdot\text{fn}\left({x}\right)'));
+
+    // Expect argument error for custom expression.
+    expect(() => printer.render(new MyExpr()), throwsArgumentError);
+
+    await printer.destruct();
+    expect(dictUpdated, equals(true));
   });
+}
+
+/// New Expr type for testing
+class MyExpr extends Expr {
+  MyExpr();
+
+  @override
+  MyExpr clone() => new MyExpr();
+
+  @override
+  bool equals(other) => other is MyExpr;
+
+  @override
+  int get expressionHash => 0;
+
+  @override
+  bool get isGeneric => true;
+
+  @override
+  ExprMatchResult matchSuperset(superset) => new ExprMatchResult.exactMatch();
+
+  @override
+  Expr remap(mapping) => clone();
+
+  @override
+  num evalInternal(canCompute, compute) => null;
 }
