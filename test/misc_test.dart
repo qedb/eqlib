@@ -8,6 +8,8 @@ import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/inline.dart';
 import 'package:eqlib/exceptions.dart';
 
+import 'myexpr.dart';
+
 void main() {
   final a = symbol('a'), b = symbol('b');
 
@@ -28,5 +30,18 @@ void main() {
     expect(new EqLibException('abc').toString(), equals('abc'));
     expect(eqlibThrows('abc').describe(new StringDescription()).toString(),
         equals('throws EqLibException:<abc>'));
+  });
+
+  test('Standalone engine', () {
+    expect(new Expr.parse('-(1 + 1)').eval(), equals(-2));
+    expect(() => eqlibSAPrint(new MyExpr()), throwsArgumentError);
+
+    // Standlone printer.
+    final allIn = new Expr.parse('1 + a - 3 * b / 5 ^-c');
+    eqlibSABackend.printerOpChars = false;
+    expect(allIn.toString(),
+        equals('sub(add(1, a), div(mul(3, b), pow(5, neg(c))))'));
+    eqlibSABackend.printerOpChars = true;
+    expect(allIn.toString(), equals('1 + a - {{3}*{b}}/{{5}^{-{c}}}'));
   });
 }

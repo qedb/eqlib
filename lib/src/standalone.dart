@@ -4,11 +4,11 @@
 
 part of eqlib;
 
-/// All computable functions that are implemented by [StandaloneExprEngine].
+/// All computable functions that are implemented by [eqlibSABackend].
 enum ComputableExpr { add, subtract, multiply, divide, power, negate }
 
-/// A standalone engine for handling expressions.
-class StandaloneExprEngine {
+/// A standalone backend for handling expressions.
+class SABackend {
   /// Default substitution character.
   static const dfltInnerExprLbl = '{}';
 
@@ -57,11 +57,13 @@ class StandaloneExprEngine {
   }
 
   /// Default optimized implementation of [ExprCompute].
+  // ignore: missing_return
   num compute(int id, List<num> args) {
     assert(id > 0);
     // Note: subtract one because 0 is a reserved expression ID.
     if (id - 1 < ComputableExpr.values.length) {
-      switch (ComputableExpr.values[id - 1]) {
+      final op = ComputableExpr.values[id - 1];
+      switch (op) {
         case ComputableExpr.add:
           assert(args.length == 2);
           return args[0] + args[1];
@@ -80,8 +82,6 @@ class StandaloneExprEngine {
         case ComputableExpr.negate:
           assert(args.length == 1);
           return -args[0];
-        default:
-          throw new UnimplementedError();
       }
     } else {
       return null;
@@ -89,6 +89,7 @@ class StandaloneExprEngine {
   }
 
   /// Implementation of [ExprPrint].
+  // ignore: missing_return
   String print(Expr expr) {
     final generic = expr.isGeneric ? '?' : '';
     if (expr is NumberExpr) {
@@ -128,8 +129,6 @@ class StandaloneExprEngine {
           case ComputableExpr.negate:
             assert(args.length == 1);
             return printerOpChars ? '-{${args[0]}}' : 'neg(${args[0]})';
-          default:
-            throw new UnimplementedError();
         }
       } else {
         return '$generic${resolveName(id)}(${args.join(', ')})';
@@ -141,10 +140,10 @@ class StandaloneExprEngine {
   }
 }
 
-final dfltExprEngine = new StandaloneExprEngine();
+final eqlibSABackend = new SABackend();
 
-int standaloneResolve(String name) => dfltExprEngine.resolve(name);
-String standaloneResolveName(int id) => dfltExprEngine.resolveName(id);
-num standaloneCompute(int id, List<num> args) =>
-    dfltExprEngine.compute(id, args);
-bool standaloneCanCompute(int id) => dfltExprEngine.canCompute(id);
+int eqlibSAResolve(String name) => eqlibSABackend.resolve(name);
+String eqlibSAResolveName(int id) => eqlibSABackend.resolveName(id);
+bool eqlibSACanCompute(int id) => eqlibSABackend.canCompute(id);
+num eqlibSACompute(int id, List<num> args) => eqlibSABackend.compute(id, args);
+String eqlibSAPrint(Expr expr) => eqlibSABackend.print(expr);

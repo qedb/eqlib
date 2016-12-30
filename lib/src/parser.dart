@@ -6,7 +6,7 @@ part of eqlib;
 
 /// Expression parser that uses the Shunting-yard algorithm.
 /// This is a one-pass, linear-time, linear-space algorithm.
-Expr parseExpression(String input, [ExprResolve resolver = standaloneResolve]) {
+Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
   final output = new List<Expr>();
   final stack = new List<_StackElement>();
   final reader = new _StringReader(input);

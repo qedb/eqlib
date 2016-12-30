@@ -6,6 +6,8 @@ import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/latex_printer.dart';
 
+import 'myexpr.dart';
+
 void main() {
   test('Built-in operators', () {
     final printer = new LaTeXPrinter();
@@ -31,7 +33,7 @@ void main() {
   test('LaTeX dictionary', () async {
     final printer = new LaTeXPrinter();
     printer.addDefaultEntries();
-    printer.dictUpdate(standaloneResolve('lim'),
+    printer.dictUpdate(eqlibSAResolve('lim'),
         new LaTeXDictEntry(r'\lim_{$a\to$b}$(c)', false, 1));
 
     expect(printer.render(new Expr.parse('lim(x, 0, x ^ 2)')),
@@ -49,8 +51,8 @@ void main() {
       dictUpdated = true;
     });
 
-    printer.dictUpdate(standaloneResolve('pi'), new LaTeXDictEntry(r'\pi'));
-    printer.dictReplace(standaloneResolve('pi'), standaloneResolve('phi'),
+    printer.dictUpdate(eqlibSAResolve('pi'), new LaTeXDictEntry(r'\pi'));
+    printer.dictReplace(eqlibSAResolve('pi'), eqlibSAResolve('phi'),
         new LaTeXDictEntry(r'\phi'));
 
     // Print single symbol.
@@ -67,30 +69,4 @@ void main() {
     await printer.destruct();
     expect(dictUpdated, equals(true));
   });
-}
-
-/// New Expr type for testing
-class MyExpr extends Expr {
-  MyExpr();
-
-  @override
-  MyExpr clone() => new MyExpr();
-
-  @override
-  bool equals(other) => other is MyExpr;
-
-  @override
-  int get expressionHash => 0;
-
-  @override
-  bool get isGeneric => true;
-
-  @override
-  ExprMatchResult matchSuperset(superset) => new ExprMatchResult.exactMatch();
-
-  @override
-  Expr remap(mapping) => clone();
-
-  @override
-  num evalInternal(canCompute, compute) => null;
 }

@@ -55,7 +55,7 @@ void main() {
     pvec.subs(
         new Eq.parse('add(mul(?a, ?b), mul(?a, ?c)) = mul(?a, add(?b, ?c))'));
 
-    dfltExprEngine.printerOpChars = true;
+    eqlibSABackend.printerOpChars = true;
     expect(pvec.toString(),
         equals('pvec={r}*{{sin(theta)}*{ihat} + {cos(theta)}*{jhat}}'));
   });

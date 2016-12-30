@@ -12,7 +12,7 @@ class Eq {
   Eq(this.left, this.right);
 
   /// Parse an equation string representation.
-  factory Eq.parse(String str, [ExprResolve resolver = standaloneResolve]) {
+  factory Eq.parse(String str, [ExprResolve resolver = eqlibSAResolve]) {
     final sides = str.split('=');
     return new Eq(new Expr.parse(sides.first, resolver),
         new Expr.parse(sides.last, resolver));
@@ -60,8 +60,8 @@ class Eq {
   /// Compute both sides of the equation as far as possible using the given
   /// resolver.
   void eval(
-      [ExprCanCompute canCompute = standaloneCanCompute,
-      ExprCompute computer = standaloneCompute]) {
+      [ExprCanCompute canCompute = eqlibSACanCompute,
+      ExprCompute computer = eqlibSACompute]) {
     final lvalue = left.eval(canCompute, computer);
     if (lvalue != null) {
       left = new NumberExpr(lvalue);

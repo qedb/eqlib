@@ -16,7 +16,7 @@ abstract class Expr {
       new Expr.fromBinary(new Uint8List.fromList(BASE64.decode(base64)).buffer);
 
   /// Parse string expression using EqExParser.
-  factory Expr.parse(String str, [ExprResolve resolver = standaloneResolve]) {
+  factory Expr.parse(String str, [ExprResolve resolver = eqlibSAResolve]) {
     return parseExpression(str);
   }
 
@@ -127,17 +127,17 @@ abstract class Expr {
 
   /// Wrapper of [evalInternal] to provide default arguments.
   num eval(
-          [ExprCanCompute canCompute = standaloneCanCompute,
-          ExprCompute computer = standaloneCompute]) =>
+          [ExprCanCompute canCompute = eqlibSACanCompute,
+          ExprCompute computer = eqlibSACompute]) =>
       evalInternal(canCompute, computer);
 
   // Standard operator IDs used by built-in operators.
-  static int opAddId = standaloneResolve('add');
-  static int opSubId = standaloneResolve('sub');
-  static int opMulId = standaloneResolve('mul');
-  static int opDivId = standaloneResolve('div');
-  static int opPowId = standaloneResolve('pow');
-  static int opNegId = standaloneResolve('neg');
+  static int opAddId = eqlibSAResolve('add');
+  static int opSubId = eqlibSAResolve('sub');
+  static int opMulId = eqlibSAResolve('mul');
+  static int opDivId = eqlibSAResolve('div');
+  static int opPowId = eqlibSAResolve('pow');
+  static int opNegId = eqlibSAResolve('neg');
 
   /// Add other expression.
   Expr operator +(dynamic other) =>
@@ -163,7 +163,7 @@ abstract class Expr {
   Expr operator -() => new FunctionExpr(opNegId, [this]);
 
   /// Global string printer function.
-  static ExprPrint stringPrinter = dfltExprEngine.print;
+  static ExprPrint stringPrinter = eqlibSAPrint;
 
   /// Generate string representation.
   @override

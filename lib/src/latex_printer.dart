@@ -52,7 +52,7 @@ class LaTeXPrinter {
   /// Stream destructor.
   Future destruct() => _onDictUpdate.close();
 
-  void addDefaultEntries([ExprResolve resolver = standaloneResolve]) {
+  void addDefaultEntries([ExprResolve resolver = eqlibSAResolve]) {
     _dict[resolver('add')] = const LaTeXDictEntry(r'$(a)+$(b)', true, 1, 0);
     _dict[resolver('sub')] = const LaTeXDictEntry(r'$(a)-$(b)', true, 1, 0);
     _dict[resolver('mul')] = const LaTeXDictEntry(r'$(a)\cdot$(b)', true, 2, 0);
@@ -83,8 +83,7 @@ class LaTeXPrinter {
   ///
   /// The render function should make sure the output can not produce any
   /// conflicts with any surrounding TeX.
-  String render(Expr expr,
-      [ExprResolveName resolveName = standaloneResolveName]) {
+  String render(Expr expr, [ExprResolveName resolveName = eqlibSAResolveName]) {
     // Numbers
     if (expr is NumberExpr) {
       return expr.value.toString();
