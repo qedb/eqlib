@@ -23,6 +23,7 @@ bool ifEvery(List a, List b, bool test(dynamic a, dynamic b)) {
 
 /// Jenkins one-at-a-time hash
 
+// ignore: parameter_assignments
 int jCombine(int hash, int value) {
   // ignore: parameter_assignments
   hash = 0x1fffffff & (hash + value);
@@ -31,6 +32,7 @@ int jCombine(int hash, int value) {
   return hash ^ (hash >> 6);
 }
 
+// ignore: parameter_assignments
 int jFinish(int hash) {
   // ignore: parameter_assignments
   hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
