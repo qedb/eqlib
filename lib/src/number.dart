@@ -18,8 +18,10 @@ class NumberExpr extends Expr {
   @override
   bool equals(other) => other is NumberExpr && other.value == value;
 
+  // First mix 0 with 1 to prevent collisions with symbols and functions.
+  // jCombine(0, 1) = 1041
   @override
-  int get expressionHash => hash2(0, value.hashCode);
+  int get expressionHash => jFinish(jCombine(1041, value.hashCode));
 
   @override
   ExprMatchResult matchSuperset(superset) => equals(superset)

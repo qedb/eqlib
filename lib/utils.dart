@@ -20,3 +20,21 @@ bool ifEvery(List a, List b, bool test(dynamic a, dynamic b)) {
   }
   return true;
 }
+
+/// Jenkins one-at-a-time hash
+
+int jCombine(int hash, int value) {
+  // ignore: parameter_assignments
+  hash = 0x1fffffff & (hash + value);
+  // ignore: parameter_assignments
+  hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
+  return hash ^ (hash >> 6);
+}
+
+int jFinish(int hash) {
+  // ignore: parameter_assignments
+  hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
+  // ignore: parameter_assignments
+  hash = hash ^ (hash >> 11);
+  return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
+}

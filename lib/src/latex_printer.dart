@@ -90,7 +90,7 @@ class LaTeXPrinter {
     }
 
     // Symbols
-    // TODO: review brace protection rules.
+    // Note: we could analyze the inner expression to decide if braces are neccesary.
     else if (expr is SymbolExpr) {
       return [
         '{',

@@ -229,6 +229,5 @@ Expr _exprCodecDecode(W<int> ptr, _ExprCodecData data) {
   }
 
   // Illegal value: it is not within the frame of the given input tables.
-  // TODO: it would be nicer to use ArgumentError, but that is not comparable.
-  throw new EqLibException('codec input buffer data is corrupted');
+  throw new ArgumentError('codec input buffer data is corrupted');
 }

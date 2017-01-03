@@ -84,7 +84,8 @@ class Eq {
 
   /// Equation hashcode.
   @override
-  int get hashCode => hash2(left, right);
+  int get hashCode =>
+      jFinish(jCombine(jCombine(0, left.hashCode), right.hashCode));
 
   /// Generate string representation.
   @override

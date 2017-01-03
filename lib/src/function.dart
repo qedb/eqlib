@@ -31,7 +31,8 @@ class FunctionExpr extends Expr {
       ifEvery(other.args, args, (a, b) => a == b);
 
   @override
-  int get expressionHash => hash2(id, hashObjects(args));
+  int get expressionHash => jFinish(
+      jCombine(args.fold(0, (hash, arg) => jCombine(hash, arg.hashCode)), id));
 
   @override
   bool get isGeneric => generic;

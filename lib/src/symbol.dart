@@ -20,7 +20,7 @@ class SymbolExpr extends Expr {
   bool equals(other) => other is SymbolExpr && other.id == id;
 
   @override
-  int get expressionHash => hash2(1, id);
+  int get expressionHash => jFinish(jCombine(0, id));
 
   @override
   bool get isGeneric => generic;

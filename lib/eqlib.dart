@@ -8,7 +8,6 @@ import 'dart:math';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:quiver/core.dart';
 import 'package:eqlib/utils.dart';
 import 'package:eqlib/exceptions.dart';
 

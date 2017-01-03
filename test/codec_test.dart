@@ -6,7 +6,6 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
-import 'package:eqlib/exceptions.dart';
 
 void main() {
   test('Codec test', () {
@@ -38,7 +37,6 @@ void main() {
   test('Corrupted data', () {
     final n = 1000;
     final data = new Uint16List.fromList(new List<int>.generate(n, (i) => i));
-    expect(() => new Expr.fromBinary(data.buffer),
-        eqlibThrows('codec input buffer data is corrupted'));
+    expect(() => new Expr.fromBinary(data.buffer), throwsArgumentError);
   });
 }

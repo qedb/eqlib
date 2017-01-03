@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 
 import 'package:test/test.dart';
-import 'package:quiver/core.dart';
+import 'package:eqlib/utils.dart';
 import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/inline.dart';
 import 'package:eqlib/exceptions.dart';
@@ -14,10 +14,15 @@ void main() {
   final a = symbol('a'), b = symbol('b');
 
   test('Eq.hashCode', () {
-    expect(new Eq.parse('100=100').hashCode,
-        equals(hash2(hash2(0, 100), hash2(0, 100))));
+    expect(
+        new Eq.parse('100=100').hashCode,
+        equals(jFinish(jCombine(jCombine(0, jFinish(jCombine(1041, 100))),
+            jFinish(jCombine(1041, 100))))));
     expect(new Eq.parse('a * b = b * a').hashCode,
         equals(eq(a * b, b * a).hashCode));
+
+    // Vaildate hashCodes across different expression types.
+    expect(new NumberExpr(10).hashCode, isNot(new SymbolExpr(10).hashCode));
   });
 
   test('Expr.from', () {
