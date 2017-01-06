@@ -33,7 +33,7 @@ abstract class Expr {
   }
 
   /// Write binary data.
-  ByteBuffer toBinary() => exprCodecEncode(this);
+  ByteBuffer toBinary() => exprCodecEncode(this).writeToBuffer();
 
   /// Write Base64 string.
   String toBase64() => BASE64.encode(toBinary().asUint8List());

@@ -6,7 +6,7 @@ part of eqlib;
 
 /// Codec data
 /// Note: function argument lists are limited to uint8 storage.
-class _ExprCodecData {
+class ExprCodecData {
   int genericCount;
   final List<double> float64List;
   final List<int> functionId;
@@ -14,13 +14,13 @@ class _ExprCodecData {
   final List<int> int8List;
   final List<int> data;
 
-  _ExprCodecData(this.genericCount, this.float64List, this.functionId,
+  ExprCodecData(this.genericCount, this.float64List, this.functionId,
       this.functionArgc, this.int8List, this.data);
 
-  factory _ExprCodecData.empty() => new _ExprCodecData(0, new List<double>(),
+  factory ExprCodecData.empty() => new ExprCodecData(0, new List<double>(),
       new List<int>(), new List<int>(), new List<int>(), new List<int>());
 
-  factory _ExprCodecData.decodeHeader(ByteBuffer buffer) {
+  factory ExprCodecData.decodeHeader(ByteBuffer buffer) {
     final headerView = new Uint16List.view(buffer, 0, 4);
 
     // Header parameters
@@ -52,7 +52,7 @@ class _ExprCodecData {
       dataView = new Uint8List.view(buffer, offset); // Use 8 bit decoding.
     }
 
-    return new _ExprCodecData(genericCount, float64View, functionIdView,
+    return new ExprCodecData(genericCount, float64View, functionIdView,
         functionArgcView, int8View, dataView);
   }
 
@@ -162,14 +162,14 @@ class _ExprCodecData {
   void add(int id) => data.add(id);
 }
 
-ByteBuffer exprCodecEncode(Expr expr) {
-  final data = new _ExprCodecData.empty();
+ExprCodecData exprCodecEncode(Expr expr) {
+  final data = new ExprCodecData.empty();
   _exprCodecEncodePass1(data, expr);
   _exprCodecEncodePass2(data, expr);
-  return data.writeToBuffer();
+  return data;
 }
 
-void _exprCodecEncodePass1(_ExprCodecData data, Expr expr) {
+void _exprCodecEncodePass1(ExprCodecData data, Expr expr) {
   if (expr is NumberExpr) {
     data.storeNumber(expr.value);
   } else if (expr is SymbolExpr) {
@@ -182,7 +182,7 @@ void _exprCodecEncodePass1(_ExprCodecData data, Expr expr) {
   }
 }
 
-void _exprCodecEncodePass2(_ExprCodecData data, Expr expr) {
+void _exprCodecEncodePass2(ExprCodecData data, Expr expr) {
   if (expr is NumberExpr) {
     data.add(data.getNumberRef(expr.value));
   } else if (expr is SymbolExpr) {
@@ -197,13 +197,13 @@ void _exprCodecEncodePass2(_ExprCodecData data, Expr expr) {
 
 /// Decode byte buffer into expression object.
 Expr exprCodecDecode(ByteBuffer buffer) {
-  final data = new _ExprCodecData.decodeHeader(buffer);
+  final data = new ExprCodecData.decodeHeader(buffer);
   return _exprCodecDecode(new W<int>(0), data);
 }
 
 /// Note: this function does not perform sanity checks, and is unsafe on corrupt
 /// data arrays.
-Expr _exprCodecDecode(W<int> ptr, _ExprCodecData data) {
+Expr _exprCodecDecode(W<int> ptr, ExprCodecData data) {
   int value = data.data[ptr.v++];
   if (value < data.functionCount) {
     final generic = value < data.genericCount;
