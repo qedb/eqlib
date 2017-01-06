@@ -1,5 +1,5 @@
 name:         eqlib
-version:      0.2.0+1
+version:      0.2.1
 author:       Herman Bergwerf <hermanbergwerf@gmail.com>
 description:  Equation manipulation library
 homepage:     https://github.com/eqdb/eqlib
