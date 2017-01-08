@@ -195,11 +195,10 @@ void _exprCodecEncodePass2(ExprCodecData data, Expr expr) {
   }
 }
 
-/// Decode byte buffer into expression object.
-Expr exprCodecDecode(ByteBuffer buffer) {
-  final data = new ExprCodecData.decodeHeader(buffer);
-  return _exprCodecDecode(new W<int>(0), data);
-}
+/// Decode byte buffer into expression object. Expects a data object with an
+/// already decoded header.
+Expr exprCodecDecode(ExprCodecData data) =>
+    _exprCodecDecode(new W<int>(0), data);
 
 /// Note: this function does not perform sanity checks, and is unsafe on corrupt
 /// data arrays.

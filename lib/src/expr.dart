@@ -9,7 +9,10 @@ abstract class Expr {
   Expr();
 
   /// Construct from binary data.
-  factory Expr.fromBinary(ByteBuffer buffer) => exprCodecDecode(buffer);
+  factory Expr.fromBinary(ByteBuffer buffer) {
+    final data = new ExprCodecData.decodeHeader(buffer);
+    return exprCodecDecode(data);
+  }
 
   /// Construct from Base64 string.
   factory Expr.fromBase64(String base64) =>
