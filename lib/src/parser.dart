@@ -307,7 +307,8 @@ void _stackAddOp(int op, List<_StackElement> stack, List<Expr> output) {
 /// (if there are still left parentheses left, there is a mismatch)
 void _popStack(List<_StackElement> stack, List<Expr> output) {
   final fn = stack.removeLast();
-  final args = new List<Expr>.generate(fn.argc, (_) => output.removeLast());
+  final args = new List<Expr>.generate(fn.argc, (_) => output.removeLast(),
+      growable: false);
 
   // If this is a negate function, and the argument is a number, we directly
   // apply it.

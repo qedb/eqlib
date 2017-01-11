@@ -20,7 +20,8 @@ class FunctionExpr extends Expr {
   FunctionExpr clone([Expr argCopy(Expr expr) = Expr.staticClone]) =>
       new FunctionExpr(
           id,
-          new List<Expr>.generate(args.length, (i) => argCopy(args[i])),
+          new List<Expr>.generate(args.length, (i) => argCopy(args[i]),
+              growable: false),
           generic);
 
   @override

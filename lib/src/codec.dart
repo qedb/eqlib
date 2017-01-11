@@ -210,8 +210,9 @@ Expr _exprCodecDecode(W<int> ptr, ExprCodecData data) {
     // If there are function arguments, collect those first.
     final argCount = data.functionArgc[value];
     if (argCount > 0) {
-      final args =
-          new List<Expr>.generate(argCount, (i) => _exprCodecDecode(ptr, data));
+      final args = new List<Expr>.generate(
+          argCount, (i) => _exprCodecDecode(ptr, data),
+          growable: false);
       return new FunctionExpr(data.functionId[value], args, generic);
     } else {
       return new SymbolExpr(data.functionId[value], generic);

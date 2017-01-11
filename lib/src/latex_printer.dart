@@ -111,7 +111,9 @@ class LaTeXPrinter {
               resolveName(expr.id),
               r'}\left(',
               new List<String>.generate(expr.args.length,
-                  (i) => render(expr.args[i], resolveName)).join(', '),
+                      (i) => render(expr.args[i], resolveName),
+                      growable: false)
+                  .join(', '),
               r'\right)'
             ].join();
     } else {
