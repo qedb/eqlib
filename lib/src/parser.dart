@@ -7,6 +7,10 @@ part of eqlib;
 /// Expression parser that uses the Shunting-yard algorithm.
 /// This is a one-pass, linear-time, linear-space algorithm.
 Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
+  if (input.isEmpty) {
+    throw new FormatException('input cannot be empty');
+  }
+
   final output = new List<Expr>();
   final stack = new List<_StackElement>();
   final reader = new _StringReader(input);
@@ -76,6 +80,11 @@ Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
 
     // Try argument separator (comma).
     else if (reader.currentIs(',')) {
+      // If stack is already empty, also throw an error.
+      if (stack.isEmpty) {
+        throw new FormatException('argument separator but no parenthesis');
+      }
+
       // Pop operators.
       while (!stack.last.isLeftParenthesis) {
         _popStack(stack, output);
@@ -222,9 +231,10 @@ Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
     _popStack(stack, output);
   }
 
-  if (output.length > 1) {
-    throw new FormatException('stack mismatch: ${output.join(', ')}');
-  }
+  // This should always be true. If there is a formatting error it will be
+  // detected earlier.
+  assert(output.length == 1);
+
   return output.last;
 }
 
@@ -307,6 +317,13 @@ void _stackAddOp(int op, List<_StackElement> stack, List<Expr> output) {
 /// (if there are still left parentheses left, there is a mismatch)
 void _popStack(List<_StackElement> stack, List<Expr> output) {
   final fn = stack.removeLast();
+
+  // Check if arguments are in the stack.
+  if (output.length < fn.argc) {
+    throw new FormatException(
+        'stack function arguments are not in the output queue');
+  }
+
   final args = new List<Expr>.generate(fn.argc, (_) => output.removeLast(),
       growable: false);
 
@@ -394,6 +411,6 @@ class _StackElement {
   bool get isLeftParenthesis => id == leftParenthesisId;
   bool get isFunction => !isOperator && !isLeftParenthesis;
 
-  @override
-  String toString() => isLeftParenthesis ? ')' : 'fn#$id';
+  //@override
+  //String toString() => isLeftParenthesis ? ')' : 'fn#$id';
 }

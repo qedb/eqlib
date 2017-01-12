@@ -43,6 +43,17 @@ void main() {
         equals(n(-3) * fn1('sin')(n(2) ^ (n(3) * ((n(4) + 5) * b)))));
   });
 
+  test('Parentheses mismatch', () {
+    expect(() => new Expr.parse(''), throwsFormatException);
+    expect(() => new Expr.parse(')'), throwsFormatException);
+    expect(() => new Expr.parse('a+b)'), throwsFormatException);
+    expect(() => new Expr.parse('fn(,)'), throwsFormatException);
+    expect(() => new Expr.parse('a,b'), throwsFormatException);
+    expect(() => new Expr.parse('a+b,b'), throwsFormatException);
+    expect(() => new Expr.parse('(a,b)'), throwsFormatException);
+    expect(() => new Expr.parse('a+'), throwsFormatException);
+  });
+
   test('Derivation of centripetal acceleration (step 1)', () {
     final pvec = new Eq.parse('pvec = vec2d');
     pvec.subs(new Eq.parse('vec2d = add(mul(x, ihat), mul(y, jhat))'));
