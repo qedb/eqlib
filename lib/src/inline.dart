@@ -34,20 +34,20 @@ ExprGenerator1 fn1(String label, {bool generic: false}) {
 typedef Expr ExprGenerator2(dynamic arg1, dynamic arg2);
 
 /// Create double argument expression generator.
-ExprGenerator2 fn2(String label, {bool generic: false}) {
-  final id = eqlibSAResolve(label, generic);
+ExprGenerator2 fn2(String label) {
+  final id = eqlibSAResolve(label, false);
   return (arg1, arg2) =>
-      new FunctionExpr(id, [new Expr.from(arg1), new Expr.from(arg2)], generic);
+      new FunctionExpr(id, [new Expr.from(arg1), new Expr.from(arg2)], false);
 }
 
 /// Triple argument expression generator
 typedef Expr ExprGenerator3(dynamic arg1, dynamic arg2, dynamic arg3);
 
 /// Create double argument expression generator.
-ExprGenerator3 fn3(String label, {bool generic: false}) {
-  final id = eqlibSAResolve(label, generic);
+ExprGenerator3 fn3(String label) {
+  final id = eqlibSAResolve(label, false);
   return (arg1, arg2, arg3) => new FunctionExpr(id,
-      [new Expr.from(arg1), new Expr.from(arg2), new Expr.from(arg3)], generic);
+      [new Expr.from(arg1), new Expr.from(arg2), new Expr.from(arg3)], false);
 }
 
 /// We don't want to pollute the global namespace with this in the main library.
