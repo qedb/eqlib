@@ -27,5 +27,5 @@ class MyExpr extends Expr {
   Expr remap(mapping) => clone();
 
   @override
-  num evalInternal(canCompute, compute) => null;
+  num evalInternal(canCompute, compute) => double.NAN;
 }

@@ -123,9 +123,7 @@ abstract class Expr {
   }
 
   /// Appemts to evaluate this expression to a number using the given compute
-  /// functions. Returns null if this is unsuccessful.
-  ///
-  /// TODO: find a way to avoid `null` as return value.
+  /// functions. Returns double.NAN if this is unsuccessful.
   num evalInternal(ExprCanCompute canCompute, ExprCompute compute);
 
   /// Wrapper of [evalInternal] to provide default arguments.

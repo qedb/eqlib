@@ -33,8 +33,10 @@ void main() {
   test('LaTeX dictionary', () async {
     final printer = new LaTeXPrinter();
     printer.addDefaultEntries();
-    printer.dictUpdate(eqlibSAResolve('lim'),
-        new LaTeXDictEntry(r'\lim_{$a\to$b}$(c)', false, 1));
+    printer.dictUpdate(new LaTeXDictUpdate([], [
+      new LaTeXDictUpdateAddition(eqlibSAResolve('lim'),
+          new LaTeXDictEntry(r'\lim_{$a\to$b}$(c)', false, 1))
+    ]));
 
     expect(printer.render(new Expr.parse('lim(x, 0, x ^ 2)')),
         equals(r'\lim_{{x}\to0}{x}^{2}'));
@@ -51,9 +53,16 @@ void main() {
       dictUpdated = true;
     });
 
-    printer.dictUpdate(eqlibSAResolve('pi'), new LaTeXDictEntry(r'\pi'));
-    printer.dictReplace(eqlibSAResolve('pi'), eqlibSAResolve('phi'),
-        new LaTeXDictEntry(r'\phi'));
+    printer.dictUpdate(new LaTeXDictUpdate([], [
+      new LaTeXDictUpdateAddition(
+          eqlibSAResolve('pi'), new LaTeXDictEntry(r'\pi'))
+    ]));
+    printer.dictUpdate(new LaTeXDictUpdate([
+      eqlibSAResolve('pi')
+    ], [
+      new LaTeXDictUpdateAddition(
+          eqlibSAResolve('phi'), new LaTeXDictEntry(r'\phi'))
+    ]));
 
     // Print single symbol.
     expect(printer.render(new Expr.parse('pi')), equals(r'{pi}'));

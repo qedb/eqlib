@@ -37,5 +37,6 @@ class SymbolExpr extends Expr {
       mapping.containsKey(id) ? mapping[id].clone() : clone();
 
   @override
-  num evalInternal(canCompute, compute) => null; // Symbols cannot be evaluated.
+  num evalInternal(canCompute, compute) =>
+      double.NAN; // Symbols cannot be evaluated.
 }

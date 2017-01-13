@@ -33,6 +33,19 @@ class LaTeXDictEntry {
       this.preEvalIndex = -1]);
 }
 
+class LaTeXDictUpdateAddition {
+  final int id;
+  final LaTeXDictEntry entry;
+  LaTeXDictUpdateAddition(this.id, this.entry);
+}
+
+/// [LaTeXPrinter.onDictUpdate] event data
+class LaTeXDictUpdate {
+  final List<int> remove;
+  final List<LaTeXDictUpdateAddition> add;
+  LaTeXDictUpdate(this.remove, this.add);
+}
+
 /// LaTeX Expr printer
 class LaTeXPrinter {
   final _dict = new Map<int, LaTeXDictEntry>();
@@ -46,8 +59,8 @@ class LaTeXPrinter {
   static const functionPrecedence = 5;
 
   /// Dictionary update events.
-  final _onDictUpdate = new StreamController<Null>.broadcast();
-  Stream<Null> get onDictUpdate => _onDictUpdate.stream;
+  final _onDictUpdate = new StreamController<LaTeXDictUpdate>.broadcast();
+  Stream<LaTeXDictUpdate> get onDictUpdate => _onDictUpdate.stream;
 
   /// Stream destructor.
   Future destruct() => _onDictUpdate.close();
@@ -63,19 +76,10 @@ class LaTeXPrinter {
   }
 
   // Add or replace entry in printer dictionary.
-  void dictUpdate(int id, LaTeXDictEntry entry) {
-    _dict[id] = entry;
-    _onDictUpdate.add(null);
-  }
-
-  /// Remove and add entry in printer dictionary at once.
-  /// (e.g. triggers [onDictUpdate] only once)
-  void dictReplace(int oldId, int newId, LaTeXDictEntry entry) {
-    if (oldId != newId && _dict.containsKey(oldId)) {
-      _dict.remove(oldId);
-    }
-    _dict[newId] = entry;
-    _onDictUpdate.add(null);
+  void dictUpdate(LaTeXDictUpdate update) {
+    update.remove.forEach((id) => _dict.remove(id));
+    update.add.forEach((add) => _dict[add.id] = add.entry);
+    _onDictUpdate.add(update);
   }
 
   /// Render LaTeX string from the given expression. Expressions that are not in

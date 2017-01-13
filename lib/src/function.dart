@@ -12,8 +12,7 @@ class FunctionExpr extends Expr {
 
   FunctionExpr(this.id, this.args, [this.generic = false]) {
     assert(id != null && args != null); // Do not accept null as input.
-    assert(
-        args.isNotEmpty); // If there are no args, a SymbolExpr should be used.
+    assert(args.isNotEmpty); // Without args a SymbolExpr should be used.
   }
 
   @override
@@ -94,7 +93,7 @@ class FunctionExpr extends Expr {
     var allEval = true;
     for (var i = 0; i < args.length; i++) {
       final value = args[i].eval(canCompute, compute);
-      if (value != null) {
+      if (!value.isNaN) {
         numArgs[i] = value;
         args[i] = new NumberExpr(value);
       } else {
@@ -105,7 +104,7 @@ class FunctionExpr extends Expr {
     if (allEval && canCompute(id)) {
       return compute(id, numArgs);
     } else {
-      return null;
+      return double.NAN;
     }
   }
 }

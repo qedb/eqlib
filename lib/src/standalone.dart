@@ -85,7 +85,7 @@ class SABackend {
           return -args[0];
       }
     } else {
-      return null;
+      return double.NAN;
     }
   }
 

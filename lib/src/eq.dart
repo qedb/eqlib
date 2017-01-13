@@ -63,11 +63,11 @@ class Eq {
       [ExprCanCompute canCompute = eqlibSACanCompute,
       ExprCompute computer = eqlibSACompute]) {
     final lvalue = left.eval(canCompute, computer);
-    if (lvalue != null) {
+    if (!lvalue.isNaN) {
       left = new NumberExpr(lvalue);
     }
     final rvalue = right.eval(canCompute, computer);
-    if (rvalue != null) {
+    if (!rvalue.isNaN) {
       right = new NumberExpr(rvalue);
     }
   }
