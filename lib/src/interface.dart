@@ -5,7 +5,7 @@
 part of eqlib;
 
 /// Function that resolves an expression string into an expression ID.
-typedef int ExprResolve(String name);
+typedef int ExprResolve(String name, [bool generic]);
 
 /// Function taht returns the expression name for the given expression ID.
 typedef String ExprResolveName(int id);

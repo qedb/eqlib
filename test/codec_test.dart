@@ -16,7 +16,7 @@ void main() {
     expect(
         expr.toBase64(),
         equals(
-            'CQACAAMAAQCamZmZmZkLQEKULgqbgdsAAwAAAAUAAABClC4KAgAAAAEAAABClC4Km4HbAAAAAgIDAgIAAAIGBwIJAwQAAQUMAgoLBgcI'));
+            'CQACAAMAAQCamZmZmZkLQEUIsA13ylQKAwAAAAUAAADlD9QPAgAAAAEAAADlD9QPIg6+DAAAAgIDAgIAAAIGBwIJAwQAAQUMAgoLBgcI'));
 
     // Check encoding and decoding.
     expect(new Expr.fromBinary(expr.toBinary()), equals(expr));

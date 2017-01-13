@@ -72,7 +72,7 @@ abstract class Expr {
   /// expression. Else this will remap all arguments.
   ///
   /// This method always returns a new expression instance (deep cody).
-  Expr remap(Map<int, Expr> mapping);
+  Expr remap(Map<int, Expr> mapping, Map<int, FunctionExpr> genericFunctions);
 
   /// Substitute the given [equation] at the given pattern [index].
   /// Returns a new instance of [Expr] where the equation is substituted.
@@ -80,7 +80,7 @@ abstract class Expr {
   Expr subsInternal(Eq equation, W<int> index) {
     final result = matchSuperset(equation.left);
     return result.match && index.v-- == 0
-        ? equation.right.remap(result.mapping)
+        ? equation.right.remap(result.mapping, result.genericFunctions)
         : this;
   }
 
@@ -175,8 +175,11 @@ abstract class Expr {
 class ExprMatchResult {
   bool match;
 
-  /// Map of function/symbol ID's and their mapped expression
+  /// Map of function/symbol IDs and their mapped expression
   final mapping = new Map<int, Expr>();
+
+  /// Map of generic functions.
+  final genericFunctions = new Map<int, FunctionExpr>();
 
   ExprMatchResult.exactMatch() : match = true;
 
@@ -186,10 +189,31 @@ class ExprMatchResult {
     mapping[generic] = ref;
   }
 
+  /// The generic superset function must contain exactly one argument (less than
+  /// one should be a symbol, more than one cannot guarantee order).
   ExprMatchResult.processGenericFunction(
-      int id, Expr fnref, int argsLength, ExprMatchResult matchArg(int i)) {
-    mapping[id] = fnref;
-    match = _processFunction(argsLength, matchArg);
+      FunctionExpr superset, FunctionExpr fnref) {
+    // Fist establish that the superset has only one argument.
+    if (superset.args.length != 1) {
+      throw new EqLibException(
+          'generic functions can only have a single argument');
+    }
+
+    // Add the function to the generic function list.
+    genericFunctions[superset.id] = superset;
+
+    // If the reference function also has one argument, we can try to map
+    // generics.
+    if (fnref.args.length == 1) {
+      _processFunction(fnref.args.length,
+          (i) => fnref.args[i].matchSuperset(superset.args[i]));
+    }
+
+    // Store mapping from superset function to the reference function.
+    // Note that the mapping is still empty so additional check are not
+    // required.
+    mapping[superset.id] = fnref;
+    match = true;
   }
 
   ExprMatchResult.processFunction(
@@ -217,6 +241,20 @@ class ExprMatchResult {
 
       // Merge argument mapping into this mapping.
       mapping.addAll(result.mapping);
+
+      // Check if any existing genericFunctions are incompatible with generic
+      // functions from this argument.
+      for (final fn in result.genericFunctions.keys) {
+        if (genericFunctions.containsKey(fn) &&
+            genericFunctions[fn] != result.genericFunctions[fn]) {
+          // Violation: illegal superset rule.
+          // Generic functions must be equal to support argument inference.
+          throw new EqLibException('generic functions must all be equal');
+        }
+      }
+
+      // Merge generic functions.
+      genericFunctions.addAll(result.genericFunctions);
     }
     return true;
   }

@@ -25,23 +25,33 @@ void main() {
     expect(new NumberExpr(10).hashCode, isNot(new SymbolExpr(10).hashCode));
   });
 
-  test('Expr.from', () {
-    expect(new Expr.from(new SymbolExpr(100)), equals(new SymbolExpr(100)));
-    expect(new Expr.from(100), equals(new NumberExpr(100)));
-    expect(() => new Expr.from('a'), throwsArgumentError);
-  });
-
   test('EqLibException', () {
     expect(new EqLibException('abc').toString(), equals('abc'));
     expect(eqlibThrows('abc').describe(new StringDescription()).toString(),
         equals('throws EqLibException:<abc>'));
   });
 
+  test('Expr.from', () {
+    expect(new Expr.from(new SymbolExpr(100)), equals(new SymbolExpr(100)));
+    expect(new Expr.from(100), equals(new NumberExpr(100)));
+    expect(() => new Expr.from('a'), throwsArgumentError);
+  });
+
+  test('FunctionExpr.matchSuperset', () {
+    expect(
+        new Expr.parse('a(b)').matchSuperset(number(1)).match, equals(false));
+    expect(() => new Expr.parse('a(b)').matchSuperset(new MyExpr()),
+        throwsArgumentError);
+  });
+
   test('Standalone engine', () {
     expect(new Expr.parse('-(1 + 1)').eval(), equals(-2));
     expect(() => eqlibSAPrint(new MyExpr()), throwsArgumentError);
 
-    // Standlone printer.
+    // Standalone resolve generic/non-generic distinctive.
+    expect(eqlibSAResolve('x'), isNot(equals(eqlibSAResolve('x', true))));
+
+    // Standalone printer.
     final allIn = new Expr.parse('1 + a - 3 * b / 5 ^-c');
     eqlibSABackend.printerOpChars = true;
     expect(allIn.toString(), equals('1 + a - {{3}*{b}}/{{5}^{-{c}}}'));

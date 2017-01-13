@@ -12,7 +12,7 @@ Expr number(num value) => new NumberExpr(value);
 
 /// Create a symbol expression for the given label.
 Expr symbol(String label, {bool generic: false}) =>
-    new SymbolExpr(eqlibSAResolve(label), generic);
+    new SymbolExpr(eqlibSAResolve(label, generic), generic);
 
 /// Alias for creating generic symbols.
 Expr generic(String label) => symbol(label, generic: true);
@@ -22,21 +22,32 @@ Eq eq(dynamic left, dynamic right) =>
     new Eq(new Expr.from(left), new Expr.from(right));
 
 /// Single argument expression generator
-typedef Expr ExprGenerator1(Expr arg1);
+typedef Expr ExprGenerator1(dynamic arg1);
 
 /// Create single argument expression generator.
 ExprGenerator1 fn1(String label, {bool generic: false}) {
-  final id = eqlibSAResolve(label);
-  return (arg1) => new FunctionExpr(id, [arg1], generic);
+  final id = eqlibSAResolve(label, generic);
+  return (arg1) => new FunctionExpr(id, [new Expr.from(arg1)], generic);
 }
 
 /// Double argument expression generator
-typedef Expr ExprGenerator2(Expr arg1, Expr arg2);
+typedef Expr ExprGenerator2(dynamic arg1, dynamic arg2);
 
 /// Create double argument expression generator.
 ExprGenerator2 fn2(String label, {bool generic: false}) {
-  final id = eqlibSAResolve(label);
-  return (arg1, arg2) => new FunctionExpr(id, [arg1, arg2], generic);
+  final id = eqlibSAResolve(label, generic);
+  return (arg1, arg2) =>
+      new FunctionExpr(id, [new Expr.from(arg1), new Expr.from(arg2)], generic);
+}
+
+/// Triple argument expression generator
+typedef Expr ExprGenerator3(dynamic arg1, dynamic arg2, dynamic arg3);
+
+/// Create double argument expression generator.
+ExprGenerator3 fn3(String label, {bool generic: false}) {
+  final id = eqlibSAResolve(label, generic);
+  return (arg1, arg2, arg3) => new FunctionExpr(id,
+      [new Expr.from(arg1), new Expr.from(arg2), new Expr.from(arg3)], generic);
 }
 
 /// We don't want to pollute the global namespace with this in the main library.

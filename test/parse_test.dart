@@ -14,7 +14,7 @@ void main() {
     final a = generic('a'), b = generic('b'), c = generic('c');
 
     // Extra parentheses
-    expect(new Expr.parse('(((a + b)))'), equals(a + b));
+    expect(new Expr.parse('(((?a + ?b)))'), equals(a + b));
 
     // Precedence and whitespaces
     expect(new Expr.parse(' ( 1 + 2 ) * 3 ^ sin( a + ?b ) '),
@@ -32,8 +32,8 @@ void main() {
 
     // Unary minus
     expect(new Expr.parse('-  - -1').eval(), equals(-1));
-    expect(new Expr.parse('---a'), equals(-(-(-a))));
-    expect(new Expr.parse('-a ^ b'), equals((-a) ^ b));
+    expect(new Expr.parse('---?a'), equals(-(-(-a))));
+    expect(new Expr.parse('-?a ^ ?b'), equals((-a) ^ b));
 
     // Implicit multiplication
     expect(new Expr.parse('?a ?b ?c'), equals(a * (b * c)));

@@ -166,9 +166,9 @@ Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
         // Interpret as function.
         // If the current character is a question mark, this is a generic symbol
         // or function. We move the startPtr forward to cut it off the token.
-        var isGeneric = false;
+        var generic = false;
         if (reader.currentIs('?')) {
-          isGeneric = true;
+          generic = true;
           reader.next();
           startPtr++;
         }
@@ -200,13 +200,13 @@ Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
         }
 
         // Process token.
-        final id = resolver(fnName);
+        final id = resolver(fnName, generic);
         if (isSymbol) {
-          output.add(new SymbolExpr(id, isGeneric));
+          output.add(new SymbolExpr(id, generic));
         } else {
           // We initially expect one argument, this will be incremented when we
           // find argument separators.
-          stack.add(new _StackElement(id, isGeneric: isGeneric, argc: 1));
+          stack.add(new _StackElement(id, generic: generic, argc: 1));
 
           // Add the left parenthesis here.
           stack.add(new _StackElement.leftParenthesis());
@@ -336,7 +336,7 @@ void _popStack(List<_StackElement> stack, List<Expr> output) {
     final id = fn.id == _opImplMulId ? Expr.opMulId : fn.id;
     // Note: the argument list is reversed because they have been added to the
     // stack in first in last out order (because of List.removeLast()).
-    output.add(new FunctionExpr(id, args.reversed.toList(), fn.isGeneric));
+    output.add(new FunctionExpr(id, args.reversed.toList(), fn.generic));
   }
 }
 
@@ -400,10 +400,10 @@ class _StackElement {
 
   final int id;
   int argc = 0;
-  final bool isGeneric, isOperator;
+  final bool generic, isOperator;
 
   _StackElement(this.id,
-      {this.argc: 0, this.isGeneric: false, this.isOperator: false});
+      {this.argc: 0, this.generic: false, this.isOperator: false});
 
   factory _StackElement.leftParenthesis() =>
       new _StackElement(leftParenthesisId);

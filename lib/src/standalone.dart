@@ -30,7 +30,7 @@ class SABackend {
 
   /// Implementation of [ExprResolve] that uses [_computableExprLabels] and
   /// [String.hashCode].
-  int resolve(String name) {
+  int resolve(String name, bool generic) {
     if (name == dfltInnerExprLbl) {
       // This expression label is reserved to represent expression ID 0, which
       // is used to reference the inner expression in substitutions.
@@ -39,12 +39,15 @@ class SABackend {
       // Add 1 because 0 is a reserved expression ID.
       return _computableExprLabels[name].index + 1;
     } else {
+      // Note that the string hash code is computed different in dart2js and the
+      // Dart VM. See [NumberExpr.hashCode] for 1041.
+      final id = jFinish(jCombine(generic ? 1041 : 0, name.hashCode));
+
       // In order to work with the default printer, we need to keep a dictionary
       // of all expression strings.
-      printerDict[name.hashCode] = name;
+      printerDict[id] = name;
 
-      // Note that this value is computed different in dart2js and the Dart VM.
-      return name.hashCode;
+      return id;
     }
   }
 
@@ -143,7 +146,8 @@ class SABackend {
 
 final eqlibSABackend = new SABackend();
 
-int eqlibSAResolve(String name) => eqlibSABackend.resolve(name);
+int eqlibSAResolve(String name, [bool generic = false]) =>
+    eqlibSABackend.resolve(name, generic);
 String eqlibSAResolveName(int id) => eqlibSABackend.resolveName(id);
 bool eqlibSACanCompute(int id) => eqlibSABackend.canCompute(id);
 num eqlibSACompute(int id, List<num> args) => eqlibSABackend.compute(id, args);

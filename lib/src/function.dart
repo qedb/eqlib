@@ -4,13 +4,18 @@
 
 part of eqlib;
 
-/// Function expression
-class FunctionExpr extends Expr {
+/// Grouping for both [FunctionExpr] and [SymbolExpr]
+abstract class FunctionSymbolExpr extends Expr {
   final int id;
   final bool generic;
+  FunctionSymbolExpr(this.id, this.generic);
+}
+
+/// Function expression
+class FunctionExpr extends FunctionSymbolExpr {
   final List<Expr> args;
 
-  FunctionExpr(this.id, this.args, [this.generic = false]) {
+  FunctionExpr(int id, this.args, [bool generic = false]) : super(id, generic) {
     assert(id != null && args != null); // Do not accept null as input.
     assert(args.isNotEmpty); // Without args a SymbolExpr should be used.
   }
@@ -47,10 +52,7 @@ class FunctionExpr extends Expr {
           : new ExprMatchResult.noMatch();
     } else if (superset is FunctionExpr) {
       if (superset.isGeneric) {
-        return superset.args.length == args.length
-            ? new ExprMatchResult.processGenericFunction(superset.id, this,
-                args.length, (i) => args[i].matchSuperset(superset.args[i]))
-            : new ExprMatchResult.noMatch();
+        return new ExprMatchResult.processGenericFunction(superset, this);
       } else if (superset.id == id) {
         return new ExprMatchResult.processFunction(
             args.length, (i) => args[i].matchSuperset(superset.args[i]));
@@ -64,15 +66,43 @@ class FunctionExpr extends Expr {
   }
 
   @override
-  Expr remap(mapping) => mapping.containsKey(id)
-      ? mapping[id].clone()
-      : clone((arg) => arg.remap(mapping));
+  Expr remap(mapping, genericFunctions) {
+    if (mapping.containsKey(id)) {
+      if (isGeneric) {
+        if (args.length != 1) {
+          throw new EqLibException(
+              'generic functions can only have a single argument');
+        }
+
+        // + If the first argument of the original function is a generic symbol
+        //   (symbolA)
+        // + If this generic symbol maps to another symbol
+        //   (symbolB)
+        //
+        // Return the provided mapping for this function but first:
+        // + Replace the b symbol with the remapped contents of this function
+        if (genericFunctions.containsKey(id)) {
+          final symbolA = genericFunctions[id].args.first;
+          if (symbolA.isGeneric && symbolA is SymbolExpr) {
+            final symbolB = mapping[symbolA.id];
+            if (symbolB is SymbolExpr) {
+              return mapping[id].remap({symbolB.id: args.first}, {}).remap(
+                  mapping, genericFunctions);
+            }
+          }
+        }
+      }
+      return mapping[id].clone();
+    } else {
+      return clone((arg) => arg.remap(mapping, genericFunctions));
+    }
+  }
 
   @override
   Expr subsInternal(Eq equation, W<int> index) {
     final result = matchSuperset(equation.left);
     if (result.match && index.v-- == 0) {
-      return equation.right.remap(result.mapping);
+      return equation.right.remap(result.mapping, result.genericFunctions);
     }
 
     // Iterate through arguments, and try to substitute the equation there.

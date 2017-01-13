@@ -24,7 +24,7 @@ class MyExpr extends Expr {
   ExprMatchResult matchSuperset(superset) => new ExprMatchResult.exactMatch();
 
   @override
-  Expr remap(mapping) => clone();
+  Expr remap(mapping, genericFunctions) => clone();
 
   @override
   num evalInternal(canCompute, compute) => double.NAN;

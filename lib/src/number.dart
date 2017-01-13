@@ -26,12 +26,12 @@ class NumberExpr extends Expr {
   @override
   ExprMatchResult matchSuperset(superset) => equals(superset)
       ? new ExprMatchResult.exactMatch()
-      : (superset is SymbolExpr && superset.isGeneric
+      : (superset is FunctionSymbolExpr && superset.isGeneric
           ? new ExprMatchResult.genericMatch(superset.id, this)
           : new ExprMatchResult.noMatch());
 
   @override
-  NumberExpr remap(mapping) => clone();
+  NumberExpr remap(mapping, genericFunctions) => clone();
 
   @override
   num evalInternal(canCompute, compute) => value;

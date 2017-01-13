@@ -52,9 +52,9 @@ class Eq {
   /// and expression [mapping].
   void _wrap(Expr wrapping, Map<int, Expr> mapping) {
     mapping[0] = left;
-    left = wrapping.remap(mapping);
+    left = wrapping.remap(mapping, {});
     mapping[0] = right;
-    right = wrapping.remap(mapping);
+    right = wrapping.remap(mapping, {});
   }
 
   /// Compute both sides of the equation as far as possible using the given

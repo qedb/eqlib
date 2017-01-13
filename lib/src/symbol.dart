@@ -5,11 +5,8 @@
 part of eqlib;
 
 /// Symbolic expression
-class SymbolExpr extends Expr {
-  final int id;
-  final bool generic;
-
-  SymbolExpr(this.id, [this.generic = false]) {
+class SymbolExpr extends FunctionSymbolExpr {
+  SymbolExpr(int id, [bool generic = false]) : super(id, generic) {
     assert(id != null); // Do not accept null as input.
   }
 
@@ -28,12 +25,12 @@ class SymbolExpr extends Expr {
   @override
   ExprMatchResult matchSuperset(superset) => equals(superset)
       ? new ExprMatchResult.exactMatch()
-      : (superset is SymbolExpr && superset.isGeneric
+      : (superset is FunctionSymbolExpr && superset.isGeneric
           ? new ExprMatchResult.genericMatch(superset.id, this)
           : new ExprMatchResult.noMatch());
 
   @override
-  Expr remap(mapping) =>
+  Expr remap(mapping, genericFunctions) =>
       mapping.containsKey(id) ? mapping[id].clone() : clone();
 
   @override
