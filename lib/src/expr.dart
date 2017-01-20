@@ -20,7 +20,7 @@ abstract class Expr {
 
   /// Parse string expression using EqExParser.
   factory Expr.parse(String str, [ExprResolve resolver = eqlibSAResolve]) {
-    return parseExpression(str);
+    return parseExpression(str, resolver);
   }
 
   /// Transform the given value into an expression if it is not an expression
