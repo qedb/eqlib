@@ -39,12 +39,12 @@ class SubsStep implements Step {
 }
 
 class WrapStep implements Step {
-  final Expr condition, wrapping;
-  WrapStep(this.condition, this.wrapping);
+  final Expr template, wrapping;
+  WrapStep(this.template, this.wrapping);
 
   @override
   void applyTo(Eq eq) {
-    eq.wrap(condition, wrapping);
+    eq.wrap(template, wrapping);
   }
 }
 

@@ -13,7 +13,7 @@ Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
 
   final output = new List<Expr>();
   final stack = new List<_StackElement>();
-  final reader = new _StringReader(input);
+  final reader = new StringReader(input);
 
   final specialChars = '+-*/^(,)? '.codeUnits;
   final ops = '+-*/^'.codeUnits;
@@ -338,60 +338,6 @@ void _popStack(List<_StackElement> stack, List<Expr> output) {
     // stack in first in last out order (because of List.removeLast()).
     output.add(new FunctionExpr(id, args.reversed.toList(), fn.generic));
   }
-}
-
-/// Utility for [parseExpression].
-class _StringReader {
-  static const zeroAsciiCode = 48;
-  static const nineAsciiCode = 57;
-
-  /// UTF16 string data
-  final List<int> data;
-
-  /// String element pointer
-  int ptr = 0;
-
-  _StringReader(String str) : data = str.codeUnits;
-
-  /// Get current character code.
-  int get current => data[ptr];
-
-  /// Test if current character is equal to the current character in the given
-  /// string.
-  bool currentIs(String char) => !eof && current == char.codeUnitAt(0);
-
-  /// Test if the current character is a decimal digit (0-9).
-  bool currentIsDigit() =>
-      !eof && current >= zeroAsciiCode && current <= nineAsciiCode;
-
-  /// Test if the current character is contained in the given array.
-  bool currentOneOf(List<int> array) => !eof && array.contains(current);
-
-  /// Skip all white spaces.
-  int skipWhitespaces() {
-    var i = 0;
-    while (currentIs(' ')) {
-      next();
-      i++;
-    }
-    return i;
-  }
-
-  /// Proceed while current is a digit.
-  void skipDigits() {
-    while (currentIsDigit()) {
-      next();
-    }
-  }
-
-  /// Move to next character.
-  int next() {
-    assert(!eof);
-    return ++ptr;
-  }
-
-  /// Check if the reader is at the end of the input string.
-  bool get eof => ptr == data.length;
 }
 
 /// Element in parsing stack.

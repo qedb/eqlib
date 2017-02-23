@@ -21,6 +21,21 @@ bool ifEvery(List a, List b, bool test(dynamic a, dynamic b)) {
   return true;
 }
 
+/// Generator function for [generateList].
+typedef T ListItemGenerator<T>(int idx);
+
+/// Helper function for creating lists.
+List<T> generateList<T>(int n, List<ListItemGenerator<T>> generators) {
+  final list = new List<T>(n * generators.length);
+  var i = 0;
+  for (final generator in generators) {
+    for (var j = 0; j < n; j++) {
+      list[i++] = generator(j);
+    }
+  }
+  return list;
+}
+
 /// Jenkins one-at-a-time hash
 
 // ignore: parameter_assignments

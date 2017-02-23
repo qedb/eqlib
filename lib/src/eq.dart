@@ -33,17 +33,17 @@ class Eq {
     }
   }
 
-  /// Wrap both sides of the equation using the given condition.
-  void wrap(Expr condition, Expr wrapping) {
-    final lmap = left.matchSuperset(condition);
+  /// Wrap both sides of the equation using the given [template].
+  void wrap(Expr template, Expr wrapping) {
+    final lmap = left.matchSuperset(template);
     if (lmap.match) {
       _wrap(wrapping, lmap.mapping);
     } else {
-      final rmap = right.matchSuperset(condition);
+      final rmap = right.matchSuperset(template);
       if (rmap.match) {
         _wrap(wrapping, rmap.mapping);
       } else {
-        throw new EqLibException('the condition does not match left or right');
+        throw new EqLibException('the template does not match left or right');
       }
     }
   }

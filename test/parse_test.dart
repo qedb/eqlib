@@ -36,6 +36,8 @@ void main() {
     expect(new Expr.parse('-?a ^ ?b'), equals((-a) ^ b));
 
     // Implicit multiplication
+    expect(new Expr.parse('?a^?b?c'), equals(a ^ (b * c)));
+    expect(new Expr.parse('?a^f(?b)?c'), equals(a ^ (fn1('f')(b)) * c));
     expect(new Expr.parse('?a ?b ?c'), equals(a * (b * c)));
     expect(new Expr.parse('?a sin(?b)'), equals(a * fn1('sin')(b)));
     expect(new Expr.parse('-1 2 ^ -3 4'), equals(n(-1) * (n(2) ^ (n(-3) * 4))));

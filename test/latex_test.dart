@@ -4,7 +4,7 @@
 
 import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
-import 'package:eqlib/latex_printer.dart';
+import 'package:eqlib/latex.dart';
 
 import 'myexpr.dart';
 

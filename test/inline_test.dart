@@ -54,7 +54,7 @@ void main() {
 
     // Fail on purpose.
     expect(() => steps.run(eq(x * 5, 9)),
-        eqlibThrows('the condition does not match left or right'));
+        eqlibThrows('the template does not match left or right'));
   });
 
   test('Chain rule', () {

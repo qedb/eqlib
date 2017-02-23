@@ -5,6 +5,9 @@
 part of eqlib;
 
 /// Expression of a variable or function
+///
+/// Note: in this class we use some excessive OOP in order to obtain a nice
+/// expression API.
 abstract class Expr {
   Expr();
 
@@ -75,7 +78,7 @@ abstract class Expr {
   Expr remap(Map<int, Expr> mapping, Map<int, FunctionExpr> genericFunctions);
 
   /// Substitute the given [equation] at the given pattern [index].
-  /// Returns a new instance of [Expr] where the equation is substituted.
+  /// Returns a new instance of [Expr] if the equation is substituted.
   /// Never returns null, instead returns itself if nothing is substituted.
   Expr subsInternal(Eq equation, W<int> index) {
     final result = matchSuperset(equation.left);
@@ -84,8 +87,19 @@ abstract class Expr {
         : this;
   }
 
+  /// Wrapper around [subsInternal].
   Expr subs(Eq equation, [int index = 0]) =>
       subsInternal(equation, new W<int>(index));
+
+  /// Substitute all occurences of [equation].
+  void subsAll(Eq equation) {
+    var expr = this;
+    final index = new W<int>(1);
+    while (index.v != 0) {
+      index.v = 0;
+      expr = expr.subsInternal(equation, index);
+    }
+  }
 
   /// Recursive substitution.
   Expr subsRecursive(Eq equation, Eq terminator, [int maxRecursions = 100]) {

@@ -11,6 +11,8 @@ import 'dart:typed_data';
 import 'package:eqlib/utils.dart';
 import 'package:eqlib/exceptions.dart';
 
+import 'src/parser_utils.dart';
+
 part 'src/eq.dart';
 part 'src/expr.dart';
 part 'src/number.dart';
