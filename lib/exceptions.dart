@@ -26,5 +26,5 @@ class _EqLibExceptionMatcher extends TypeMatcher {
 }
 
 Matcher eqlibThrows([String message = '']) {
-  return new Throws(new _EqLibExceptionMatcher(message));
+  return throwsA(new _EqLibExceptionMatcher(message));
 }
