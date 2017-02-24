@@ -21,13 +21,14 @@ void main() {
     final rule = eq(diff(fn(genx), genx),
         lim(d(x), 0, (fn(genx + d(genx)) - fn(genx)) / d(genx)));
     final input = diff(a(x) * b(x), x);
-    expect(input.subs(rule),
+    expect(input.substitute(rule),
         equals(lim(d(x), 0, (a(x + d(x)) * b(x + d(x)) - a(x) * b(x)) / d(x))));
   });
 
   test('Various staments related to generic function argument inference', () {
     // Generic functions can only have a single argument.
-    expect(() => new Expr.parse('?a(b,c)').subs(new Eq.parse('?a(b,c)=d')),
+    expect(
+        () => new Expr.parse('?a(b,c)').substitute(new Eq.parse('?a(b,c)=d')),
         eqlibThrows('generic functions can only have a single argument'));
     expect(
         () => new Expr.parse('?a(b,c)')
@@ -35,7 +36,9 @@ void main() {
         eqlibThrows('generic functions can only have a single argument'));
 
     // Generic functions must all be equal.
-    expect(() => new Expr.parse('?a(b(c))').subs(new Eq.parse('?a(?a(b))=d')),
+    expect(
+        () =>
+            new Expr.parse('?a(b(c))').substitute(new Eq.parse('?a(?a(b))=d')),
         eqlibThrows('generic functions must all be equal'));
   });
 }

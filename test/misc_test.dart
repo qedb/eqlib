@@ -45,7 +45,7 @@ void main() {
   });
 
   test('Standalone engine', () {
-    expect(new Expr.parse('-(1 + 1)').eval(), equals(-2));
+    expect(new Expr.parse('-(1 + 1)').evaluate(), equals(-2));
     expect(() => eqlibSAPrint(new MyExpr()), throwsArgumentError);
 
     // Standalone resolve generic/non-generic distinctive.

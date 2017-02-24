@@ -26,14 +26,14 @@ void main() {
 
     // Derive equation for circular motion.
     final e = eq(pvec, vec2d);
-    e.subs(eq(vec2d, x * ihat + y * jhat));
-    e.subs(eq(x, px));
-    e.subs(eq(y, py));
-    e.subs(eq(px, r * sin(theta)));
-    e.subs(eq(py, r * cos(theta)));
-    e.subs(eq((a * b) * c, a * (b * c)));
-    e.subs(eq((a * b) * c, a * (b * c)));
-    e.subs(eq(a * b + a * c, a * (b + c)));
+    e.substitute(eq(vec2d, x * ihat + y * jhat));
+    e.substitute(eq(x, px));
+    e.substitute(eq(y, py));
+    e.substitute(eq(px, r * sin(theta)));
+    e.substitute(eq(py, r * cos(theta)));
+    e.substitute(eq((a * b) * c, a * (b * c)));
+    e.substitute(eq((a * b) * c, a * (b * c)));
+    e.substitute(eq(a * b + a * c, a * (b + c)));
 
     expect(e, equals(eq(pvec, r * (sin(theta) * ihat + cos(theta) * jhat))));
   });
@@ -42,11 +42,11 @@ void main() {
     final x = symbol('x');
 
     final steps = new Stepper([
-      new Step.wrap(a + b, innerExpr - b),
-      new Step.subs((a + b) - b, a),
-      new Step.wrap(a * b, innerExpr / b),
-      new Step.subs((a * b) / b, a),
-      new Step.eval()
+      new Step.envelop(a + b, innerExpr - b),
+      new Step.substitute((a + b) - b, a),
+      new Step.envelop(a * b, innerExpr / b),
+      new Step.substitute((a * b) / b, a),
+      new Step.evaluate()
     ]);
 
     expect(steps.run(eq(x * 2 + 5, 9)), equals(eq(x, 2)));
@@ -66,18 +66,18 @@ void main() {
 
     /// Use chain rule to find derivative of sin(x^3)
     final e = eq(symbol('y'), diff(sin(x ^ 3), x));
-    e.subs(eq(diff(fn(a), b), diff(a, b) * diff(fn(a), a)));
-    e.subs(eq(diff(a ^ b, a), b * (a ^ (b - 1))));
-    e.subs(eq(diff(sin(a), a), cos(a)));
-    e.eval();
+    e.substitute(eq(diff(fn(a), b), diff(a, b) * diff(fn(a), a)));
+    e.substitute(eq(diff(a ^ b, a), b * (a ^ (b - 1))));
+    e.substitute(eq(diff(sin(a), a), cos(a)));
+    e.evaluate();
     expect(e, equals(eq(symbol('y'), number(3) * (x ^ 2) * cos(x ^ 3))));
   });
 
   test('Power operator', () {
     expect(
         eq(symbol('y'), symbol('x') ^ 3)
-          ..subs(eq(symbol('x'), 3))
-          ..eval(),
+          ..substitute(eq(symbol('x'), 3))
+          ..evaluate(),
         equals(eq(symbol('y'), 27)));
   });
 }

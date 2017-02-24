@@ -18,39 +18,39 @@ class Stepper {
 }
 
 abstract class Step {
-  factory Step.subs(dynamic left, dynamic right) =>
-      new SubsStep(new Eq(left, right));
-  factory Step.wrap(Expr condition, Expr wrapping) =>
-      new WrapStep(condition, wrapping);
-  factory Step.eval() => new EvalStep();
+  factory Step.substitute(dynamic left, dynamic right) =>
+      new SubstituteStep(new Eq(left, right));
+  factory Step.envelop(Expr template, Expr wrapping) =>
+      new EnvelopStep(template, wrapping);
+  factory Step.evaluate() => new EvalStep();
 
   /// Apply this step to the given equation.
   void applyTo(Eq eq);
 }
 
-class SubsStep implements Step {
+class SubstituteStep implements Step {
   final Eq rule;
-  SubsStep(this.rule);
+  SubstituteStep(this.rule);
 
   @override
   void applyTo(Eq eq) {
-    eq.subs(rule);
+    eq.substitute(rule);
   }
 }
 
-class WrapStep implements Step {
+class EnvelopStep implements Step {
   final Expr template, wrapping;
-  WrapStep(this.template, this.wrapping);
+  EnvelopStep(this.template, this.wrapping);
 
   @override
   void applyTo(Eq eq) {
-    eq.wrap(template, wrapping);
+    eq.envelop(template, wrapping);
   }
 }
 
 class EvalStep implements Step {
   @override
   void applyTo(Eq eq) {
-    eq.eval();
+    eq.evaluate();
   }
 }

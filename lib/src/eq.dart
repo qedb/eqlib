@@ -22,11 +22,11 @@ class Eq {
   Eq clone() => new Eq(left.clone(), right.clone());
 
   /// Substitute the given equation.
-  bool subs(Eq eq, [int idx = 0]) {
+  bool substitute(Eq eq, [int idx = 0]) {
     final index = new W<int>(idx);
-    left = left.subsInternal(eq, index);
+    left = left.substituteInternal(eq, index);
     if (index.v != -1) {
-      right = right.subsInternal(eq, index);
+      right = right.substituteInternal(eq, index);
       return index.v == -1;
     } else {
       return true;
@@ -34,14 +34,14 @@ class Eq {
   }
 
   /// Wrap both sides of the equation using the given [template].
-  void wrap(Expr template, Expr wrapping) {
+  void envelop(Expr template, Expr wrapping) {
     final lmap = left.matchSuperset(template);
     if (lmap.match) {
-      _wrap(wrapping, lmap.mapping);
+      _envelop(wrapping, lmap.mapping);
     } else {
       final rmap = right.matchSuperset(template);
       if (rmap.match) {
-        _wrap(wrapping, rmap.mapping);
+        _envelop(wrapping, rmap.mapping);
       } else {
         throw new EqLibException('the template does not match left or right');
       }
@@ -50,7 +50,7 @@ class Eq {
 
   /// Wrap both sides of the equation using the provided [wrapping] expression
   /// and expression [mapping].
-  void _wrap(Expr wrapping, Map<int, Expr> mapping) {
+  void _envelop(Expr wrapping, Map<int, Expr> mapping) {
     mapping[0] = left;
     left = wrapping.remap(mapping, {});
     mapping[0] = right;
@@ -59,14 +59,14 @@ class Eq {
 
   /// Compute both sides of the equation as far as possible using the given
   /// resolver.
-  void eval(
+  void evaluate(
       [ExprCanCompute canCompute = eqlibSACanCompute,
       ExprCompute computer = eqlibSACompute]) {
-    final lvalue = left.eval(canCompute, computer);
+    final lvalue = left.evaluate(canCompute, computer);
     if (!lvalue.isNaN) {
       left = new NumberExpr(lvalue);
     }
-    final rvalue = right.eval(canCompute, computer);
+    final rvalue = right.evaluate(canCompute, computer);
     if (!rvalue.isNaN) {
       right = new NumberExpr(rvalue);
     }

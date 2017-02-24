@@ -99,7 +99,7 @@ class FunctionExpr extends FunctionSymbolExpr {
   }
 
   @override
-  Expr subsInternal(Eq equation, W<int> index) {
+  Expr substituteInternal(Eq equation, W<int> index) {
     final result = matchSuperset(equation.left);
     if (result.match && index.v-- == 0) {
       return equation.right.remap(result.mapping, result.genericFunctions);
@@ -107,7 +107,7 @@ class FunctionExpr extends FunctionSymbolExpr {
 
     // Iterate through arguments, and try to substitute the equation there.
     for (var i = 0; i < args.length; i++) {
-      args[i] = args[i].subsInternal(equation, index);
+      args[i] = args[i].substituteInternal(equation, index);
       if (index.v < 0) {
         // The substitution position has been found: terminate.
         break;
@@ -118,11 +118,11 @@ class FunctionExpr extends FunctionSymbolExpr {
   }
 
   @override
-  num evalInternal(canCompute, compute) {
+  num evaluateInternal(canCompute, compute) {
     final numArgs = new List<num>(args.length);
     var allEval = true;
     for (var i = 0; i < args.length; i++) {
-      final value = args[i].eval(canCompute, compute);
+      final value = args[i].evaluate(canCompute, compute);
       if (!value.isNaN) {
         numArgs[i] = value;
         args[i] = new NumberExpr(value);

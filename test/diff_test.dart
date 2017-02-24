@@ -21,13 +21,13 @@ void main() {
     final e = eq(symbol('y'), diff(sin(x ^ 3), x));
     final e1 = e.clone();
 
-    e.subs(eq(diff(fn(a), b), diff(a, b) * diff(fn(a), a)));
+    e.substitute(eq(diff(fn(a), b), diff(a, b) * diff(fn(a), a)));
     final e2 = e.clone();
 
-    e.subs(eq(diff(a ^ b, a), b * (a ^ (b - 1))));
+    e.substitute(eq(diff(a ^ b, a), b * (a ^ (b - 1))));
     final e3 = e.clone();
 
-    e.subs(eq(diff(sin(a), a), cos(a)));
+    e.substitute(eq(diff(sin(a), a), cos(a)));
     final e4 = e.clone();
 
     // First step difference

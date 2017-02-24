@@ -23,7 +23,7 @@ abstract class Expr {
 
   /// Parse string expression using EqExParser.
   factory Expr.parse(String str, [ExprResolve resolver = eqlibSAResolve]) {
-    return parseExpression(str, resolver);
+    return parseExpression(str, resolver: resolver);
   }
 
   /// Transform the given value into an expression if it is not an expression
@@ -80,29 +80,31 @@ abstract class Expr {
   /// Substitute the given [equation] at the given pattern [index].
   /// Returns a new instance of [Expr] if the equation is substituted.
   /// Never returns null, instead returns itself if nothing is substituted.
-  Expr subsInternal(Eq equation, W<int> index) {
+  Expr substituteInternal(Eq equation, W<int> index) {
     final result = matchSuperset(equation.left);
     return result.match && index.v-- == 0
         ? equation.right.remap(result.mapping, result.genericFunctions)
         : this;
   }
 
-  /// Wrapper around [subsInternal].
-  Expr subs(Eq equation, [int index = 0]) =>
-      subsInternal(equation, new W<int>(index));
+  /// Wrapper around [substituteInternal].
+  Expr substitute(Eq equation, [int index = 0]) =>
+      substituteInternal(equation, new W<int>(index));
 
   /// Substitute all occurences of [equation].
-  void subsAll(Eq equation) {
+  Expr substituteAll(Eq equation) {
     var expr = this;
     final index = new W<int>(1);
     while (index.v != 0) {
       index.v = 0;
-      expr = expr.subsInternal(equation, index);
+      expr = expr.substituteInternal(equation, index);
     }
+    return expr;
   }
 
   /// Recursive substitution.
-  Expr subsRecursive(Eq equation, Eq terminator, [int maxRecursions = 100]) {
+  Expr substituteRecursivly(Eq equation, Eq terminator,
+      [int maxRecursions = 100]) {
     if (maxRecursions <= 0) {
       throw new ArgumentError.value(
           maxRecursions, 'maxRecursions', 'must be larger than 0');
@@ -115,12 +117,12 @@ abstract class Expr {
     while (cycle < maxRecursions) {
       // Check if terminator is already reached.
       final index = new W<int>(0);
-      expr = expr.subsInternal(terminator, index);
+      expr = expr.substituteInternal(terminator, index);
       if (index.v < 0) {
         return expr;
       }
 
-      expr = expr.subsInternal(equation, index);
+      expr = expr.substituteInternal(equation, index);
       if (index.v == 0) {
         // Substitution failed, but condition is not yet met.
         throw new EqLibException(
@@ -128,7 +130,7 @@ abstract class Expr {
       }
 
       // Evaluate new substitution.
-      expr.eval();
+      expr.evaluate();
 
       cycle++;
     }
@@ -138,21 +140,24 @@ abstract class Expr {
 
   /// Appemts to evaluate this expression to a number using the given compute
   /// functions. Returns double.NAN if this is unsuccessful.
-  num evalInternal(ExprCanCompute canCompute, ExprCompute compute);
+  num evaluateInternal(ExprCanCompute canCompute, ExprCompute compute);
 
-  /// Wrapper of [evalInternal] to provide default arguments.
-  num eval(
+  /// Wrapper of [evaluateInternal] to provide default arguments.
+  num evaluate(
           [ExprCanCompute canCompute = eqlibSACanCompute,
           ExprCompute computer = eqlibSACompute]) =>
-      evalInternal(canCompute, computer);
+      evaluateInternal(canCompute, computer);
 
   // Standard operator IDs used by built-in operators.
   static int opAddId = eqlibSAResolve('add');
-  static int opSubId = eqlibSAResolve('sub');
-  static int opMulId = eqlibSAResolve('mul');
-  static int opDivId = eqlibSAResolve('div');
-  static int opPowId = eqlibSAResolve('pow');
-  static int opNegId = eqlibSAResolve('neg');
+  static int opSubtractId = eqlibSAResolve('sub');
+  static int opMultiplyId = eqlibSAResolve('mul');
+  static int opDivideId = eqlibSAResolve('div');
+  static int opPowerId = eqlibSAResolve('pow');
+  static int opNegateId = eqlibSAResolve('neg');
+  static int opEqualsId = eqlibSAResolve('equals');
+  static int opFactorialId = eqlibSAResolve('factorial');
+  static int opSubscriptId = eqlibSAResolve('subscript');
 
   /// Add other expression.
   Expr operator +(dynamic other) =>
@@ -160,22 +165,22 @@ abstract class Expr {
 
   /// Subtract other expression.
   Expr operator -(dynamic other) =>
-      new FunctionExpr(opSubId, [this, new Expr.from(other)]);
+      new FunctionExpr(opSubtractId, [this, new Expr.from(other)]);
 
   /// Multiply by other expression.
   Expr operator *(dynamic other) =>
-      new FunctionExpr(opMulId, [this, new Expr.from(other)]);
+      new FunctionExpr(opMultiplyId, [this, new Expr.from(other)]);
 
   /// Divide by other expression.
   Expr operator /(dynamic other) =>
-      new FunctionExpr(opDivId, [this, new Expr.from(other)]);
+      new FunctionExpr(opDivideId, [this, new Expr.from(other)]);
 
   /// Power by other expression.
   Expr operator ^(dynamic other) =>
-      new FunctionExpr(opPowId, [this, new Expr.from(other)]);
+      new FunctionExpr(opPowerId, [this, new Expr.from(other)]);
 
   /// Negate expression.
-  Expr operator -() => new FunctionExpr(opNegId, [this]);
+  Expr operator -() => new FunctionExpr(opNegateId, [this]);
 
   /// Global string printer function.
   static ExprPrint stringPrinter = eqlibSAPrint;

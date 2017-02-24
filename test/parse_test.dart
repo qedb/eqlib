@@ -27,11 +27,12 @@ void main() {
     // Numeric values
     expect(new Expr.parse('-1.23 - 4 + .567 ^ -.89'),
         equals((n(-1.23) - 4) + (n(.567) ^ -.89)));
-    expect((new Expr.parse('-1.23 - 4 + .567 ^ -.89').eval() * 1000).toInt(),
+    expect(
+        (new Expr.parse('-1.23 - 4 + .567 ^ -.89').evaluate() * 1000).toInt(),
         equals(-3573));
 
     // Unary minus
-    expect(new Expr.parse('-  - -1').eval(), equals(-1));
+    expect(new Expr.parse('-  - -1').evaluate(), equals(-1));
     expect(new Expr.parse('---?a'), equals(-(-(-a))));
     expect(new Expr.parse('-?a ^ ?b'), equals((-a) ^ b));
 
@@ -39,6 +40,7 @@ void main() {
     expect(new Expr.parse('?a^?b?c'), equals(a ^ (b * c)));
     expect(new Expr.parse('?a^f(?b)?c'), equals(a ^ (fn1('f')(b)) * c));
     expect(new Expr.parse('?a ?b ?c'), equals(a * (b * c)));
+    expect(new Expr.parse('(?a ?b) ?c'), equals((a * b) * c));
     expect(new Expr.parse('?a sin(?b)'), equals(a * fn1('sin')(b)));
     expect(new Expr.parse('-1 2 ^ -3 4'), equals(n(-1) * (n(2) ^ (n(-3) * 4))));
     expect(new Expr.parse('-3sin(2 ^3 (4+5)?b)'),
@@ -58,14 +60,16 @@ void main() {
 
   test('Derivation of centripetal acceleration (step 1)', () {
     final pvec = new Eq.parse('pvec = vec2d');
-    pvec.subs(new Eq.parse('vec2d = add(mul(x, ihat), mul(y, jhat))'));
-    pvec.subs(new Eq.parse('x = px'));
-    pvec.subs(new Eq.parse('y = py'));
-    pvec.subs(new Eq.parse('px = mul(r, sin(theta))'));
-    pvec.subs(new Eq.parse('py = mul(r, cos(theta))'));
-    pvec.subs(new Eq.parse('mul(mul(?a, ?b), ?c) = mul(?a, mul(?b, ?c))'));
-    pvec.subs(new Eq.parse('mul(mul(?a, ?b), ?c) = mul(?a, mul(?b, ?c))'));
-    pvec.subs(
+    pvec.substitute(new Eq.parse('vec2d = add(mul(x, ihat), mul(y, jhat))'));
+    pvec.substitute(new Eq.parse('x = px'));
+    pvec.substitute(new Eq.parse('y = py'));
+    pvec.substitute(new Eq.parse('px = mul(r, sin(theta))'));
+    pvec.substitute(new Eq.parse('py = mul(r, cos(theta))'));
+    pvec.substitute(
+        new Eq.parse('mul(mul(?a, ?b), ?c) = mul(?a, mul(?b, ?c))'));
+    pvec.substitute(
+        new Eq.parse('mul(mul(?a, ?b), ?c) = mul(?a, mul(?b, ?c))'));
+    pvec.substitute(
         new Eq.parse('add(mul(?a, ?b), mul(?a, ?c)) = mul(?a, add(?b, ?c))'));
 
     eqlibSABackend.printerOpChars = true;
@@ -76,13 +80,13 @@ void main() {
 
   test('Solve a simple equation', () {
     final eq = new Eq.parse('add(mul(x, 2), 5) = 9');
-    eq.wrap(new Expr.parse('add(?a, ?b)'), new Expr.parse('sub({}, ?b)'));
-    eq.subs(new Eq.parse('sub(add(?a, ?b), ?b) = ?a'));
-    eq.wrap(new Expr.parse('mul(?a, ?b)'), new Expr.parse('div({}, ?b)'));
-    eq.subs(new Eq.parse('div(mul(?a, ?b), ?b) = ?a'));
-    eq.eval();
+    eq.envelop(new Expr.parse('add(?a, ?b)'), new Expr.parse('sub({}, ?b)'));
+    eq.substitute(new Eq.parse('sub(add(?a, ?b), ?b) = ?a'));
+    eq.envelop(new Expr.parse('mul(?a, ?b)'), new Expr.parse('div({}, ?b)'));
+    eq.substitute(new Eq.parse('div(mul(?a, ?b), ?b) = ?a'));
+    eq.evaluate();
 
     expect(eq.left, equals(symbol('x')));
-    expect(eq.right.eval(), equals(2.0));
+    expect(eq.right.evaluate(), equals(2.0));
   });
 }

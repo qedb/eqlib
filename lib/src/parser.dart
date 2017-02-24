@@ -4,9 +4,51 @@
 
 part of eqlib;
 
+/// Expression ID for implicit multiplication.
+final opImplMultiplyId = Expr.opNegateId + 1;
+
+enum Associativity { ltr, rtl }
+
+/// Operator configuration
+class OperatorConfig {
+  final charToId = new Map<int, int>();
+  final idToArgc = new Map<int, int>();
+  final idToPrecedence = new Map<int, int>();
+  final idToAssociativity = new Map<int, Associativity>();
+
+  OperatorConfig() {
+    // Load default settings.
+    add(Associativity.ltr, argc: 2, lvl: 1, char: '+', id: Expr.opAddId);
+    add(Associativity.ltr, argc: 2, lvl: 1, char: '-', id: Expr.opSubtractId);
+    add(Associativity.ltr, argc: 2, lvl: 2, char: '*', id: Expr.opMultiplyId);
+    add(Associativity.ltr, argc: 2, lvl: 2, char: '/', id: Expr.opDivideId);
+    add(Associativity.rtl, argc: 2, lvl: 3, char: '^', id: Expr.opPowerId);
+
+    /// Implicit multiplication is set to right associativity by default so that
+    /// expressions like these can be written: `a^2b` (which would otherwise be
+    /// parsed as `(a^2)*b`).
+    /// Increasing the precedence level is not an option, this would result in:
+    /// `2a^b` => `(2*a)^b`.
+    add(Associativity.rtl, argc: 2, lvl: 3, id: opImplMultiplyId);
+
+    add(Associativity.rtl, argc: 1, lvl: 4, id: Expr.opNegateId);
+  }
+
+  void add(Associativity associativity,
+      {String char: '', int argc: 0, int lvl: 0, int id: 0}) {
+    idToArgc[id] = argc;
+    idToPrecedence[id] = lvl;
+    idToAssociativity[id] = associativity;
+    if (char.isNotEmpty) {
+      charToId[char.codeUnitAt(0)] = id;
+    }
+  }
+}
+
 /// Expression parser that uses the Shunting-yard algorithm.
 /// This is a one-pass, linear-time, linear-space algorithm.
-Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
+Expr parseExpression(String input,
+    {OperatorConfig config: null, ExprResolve resolver: eqlibSAResolve}) {
   if (input.isEmpty) {
     throw new FormatException('input cannot be empty');
   }
@@ -15,15 +57,11 @@ Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
   final stack = new List<_StackElement>();
   final reader = new StringReader(input);
 
-  final specialChars = '+-*/^(,)? '.codeUnits;
-  final ops = '+-*/^'.codeUnits;
-  final opIds = {
-    ops[0]: Expr.opAddId,
-    ops[1]: Expr.opSubId,
-    ops[2]: Expr.opMulId,
-    ops[3]: Expr.opDivId,
-    ops[4]: Expr.opPowId
-  };
+  // Process operator config.
+  final ops = config != null ? config : new OperatorConfig();
+  final opChars = ops.charToId.keys.toList();
+  final specialChars = '(,)? '.codeUnits.toList();
+  specialChars.addAll(opChars);
 
   /// Tokens:
   /// - number
@@ -33,18 +71,22 @@ Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
   /// - argument separator
 
   final opDist = new W<int>(2);
-  var leftPDist = 2, count = 0;
+
+  // Distance in tokens between the beginning of the current block + 1
+  // (whole equation, argument list argument, parentheses block)
+  var blockStartDist = 1;
+
   while (!reader.eof) {
     reader.skipWhitespaces();
 
     // Try left parenthesis.
     if (reader.currentIs('(')) {
-      _detectImplMul(count, opDist, stack, output);
+      _detectImplMul(opDist, blockStartDist, stack, output, ops);
 
       stack.add(new _StackElement.leftParenthesis());
 
-      // Reset left parenthesis distance.
-      leftPDist = 0;
+      // Reset left block start distance.
+      blockStartDist = 0;
 
       // Move to next token.
       reader.next();
@@ -101,25 +143,25 @@ Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
         throw new FormatException('argument separators outside function');
       }
 
+      // Rest block start distance.
+      blockStartDist = 0;
+
       // Move to next token.
       reader.next();
     }
 
     // Try math operator.
-    else if (reader.currentOneOf(ops)) {
+    else if (reader.currentOneOf(opChars)) {
       // Handle unary minus operator by checking if:
       // * the previous token is also an operator
-      // * the previous token is a left parenthesis
-      // * this is the first token in the string
-      var op = opIds[reader.current];
-      if (reader.currentIs('-') && opDist.v == 1 ||
-          leftPDist == 1 ||
-          count == 0) {
+      // * this is the first token in the current block
+      var op = ops.charToId[reader.current];
+      if (reader.currentIs('-') && opDist.v == 1 || blockStartDist == 1) {
         // This is an unary minus.
-        op = Expr.opNegId;
+        op = Expr.opNegateId;
       }
 
-      _stackAddOp(op, stack, output);
+      _stackAddOp(op, stack, output, ops);
       opDist.v = 0; // Reset operator distance.
 
       // Move to next token.
@@ -129,7 +171,7 @@ Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
     // Else try to parse as number and fallback to functions.
     // Note that we have to check for reader.eof here.
     else if (!reader.eof) {
-      _detectImplMul(count, opDist, stack, output);
+      _detectImplMul(opDist, blockStartDist, stack, output, ops);
 
       // Find number token.
       var startPtr = reader.ptr;
@@ -211,8 +253,8 @@ Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
           // Add the left parenthesis here.
           stack.add(new _StackElement.leftParenthesis());
 
-          // Reset left parenthesis distance.
-          leftPDist = 0;
+          // Reset block start distance.
+          blockStartDist = 0;
         }
 
         // We do NOT have to move the pointer here. By skipping characters
@@ -221,9 +263,8 @@ Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
       }
     }
 
-    count++;
     opDist.v++;
-    leftPDist++;
+    blockStartDist++;
   }
 
   // Drain stack.
@@ -238,46 +279,14 @@ Expr parseExpression(String input, [ExprResolve resolver = eqlibSAResolve]) {
   return output.last;
 }
 
-final _opImplMulId = Expr.opNegId + 1;
-final _opArgc = {
-  Expr.opAddId: 2,
-  Expr.opSubId: 2,
-  Expr.opMulId: 2,
-  Expr.opDivId: 2,
-  Expr.opPowId: 2,
-  Expr.opNegId: 1,
-  _opImplMulId: 2
-};
-final _opPrecedence = {
-  Expr.opAddId: 1,
-  Expr.opSubId: 1,
-  Expr.opMulId: 2,
-  Expr.opDivId: 2,
-  Expr.opPowId: 3,
-  Expr.opNegId: 4,
-  _opImplMulId: 3
-};
-final _opLeftAssoc = {
-  Expr.opAddId: true,
-  Expr.opSubId: true,
-  Expr.opMulId: true,
-  Expr.opDivId: true,
-  Expr.opPowId: false,
-  Expr.opNegId: false,
-  _opImplMulId: false
-};
-
 /// Detect implicit multiplication.
-void _detectImplMul(
-    int count, W<int> opDist, List<_StackElement> stack, List<Expr> output) {
+void _detectImplMul(W<int> opDist, int blockStartDist,
+    List<_StackElement> stack, List<Expr> output, OperatorConfig ops) {
   // Implicit multiplication if all are true:
-  // * This is not the first token
+  // * This is not the first token in the current block
   // * The previous token is not an operator
-  // * The last element in the stack is not a left parenthesis
-  if (count > 0 &&
-      opDist.v != 1 &&
-      (stack.isEmpty || !stack.last.isLeftParenthesis)) {
-    _stackAddOp(_opImplMulId, stack, output);
+  if (blockStartDist != 1 && opDist.v != 1) {
+    _stackAddOp(opImplMultiplyId, stack, output, ops);
 
     // Note that we do NOT have to set the operator distance here. We
     // can set it to 1: since we have added an operator and are already
@@ -291,7 +300,8 @@ void _detectImplMul(
 }
 
 /// Add operator to the [stack].
-void _stackAddOp(int op, List<_StackElement> stack, List<Expr> output) {
+void _stackAddOp(
+    int op, List<_StackElement> stack, List<Expr> output, OperatorConfig ops) {
   // First drain the stack according the algorithm rules.
   //
   // Note: this boolean statement is partially collapsed into a shorter form:
@@ -299,17 +309,17 @@ void _stackAddOp(int op, List<_StackElement> stack, List<Expr> output) {
   //  (!opLeftAssoc[id] && opPrecedence[id] < opPrecedence[stack.last.id]))
   // Into: opPrecedence[id] < opPrecedence[stack.last.id] +
   //  (opLeftAssoc[id] ? 1 : 0)
-  final myPre = _opPrecedence[op];
-  final assocAdd = _opLeftAssoc[op] ? 1 : 0;
+  final myPre = ops.idToPrecedence[op];
+  final assocAdd = ops.idToAssociativity[op] == Associativity.ltr ? 1 : 0;
   while (stack.isNotEmpty &&
       stack.last.isOperator &&
-      myPre < _opPrecedence[stack.last.id] + assocAdd) {
+      myPre < ops.idToPrecedence[stack.last.id] + assocAdd) {
     // Pop operator (it precedes the current one).
     _popStack(stack, output);
   }
 
   // Add operator to stack.
-  stack.add(new _StackElement(op, isOperator: true, argc: _opArgc[op]));
+  stack.add(new _StackElement(op, isOperator: true, argc: ops.idToArgc[op]));
 }
 
 /// Pop and process element from the [stack].
@@ -330,10 +340,10 @@ void _popStack(List<_StackElement> stack, List<Expr> output) {
   // If this is a negate function, and the argument is a number, we directly
   // apply it.
   final first = args.first;
-  if (fn.id == Expr.opNegId && first is NumberExpr) {
+  if (fn.id == Expr.opNegateId && first is NumberExpr) {
     output.add(new NumberExpr(-first.value));
   } else {
-    final id = fn.id == _opImplMulId ? Expr.opMulId : fn.id;
+    final id = fn.id == opImplMultiplyId ? Expr.opMultiplyId : fn.id;
     // Note: the argument list is reversed because they have been added to the
     // stack in first in last out order (because of List.removeLast()).
     output.add(new FunctionExpr(id, args.reversed.toList(), fn.generic));
