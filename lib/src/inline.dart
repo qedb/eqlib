@@ -4,7 +4,8 @@
 
 part of eqlib.inline;
 
-/// Expression used to point out where an equation is substituted when wrapping.
+/// Expression used to point out where an equation is substituted when
+/// enveloping.
 final innerExpr = new SymbolExpr(0);
 
 /// Create a numeric expression from the given value.

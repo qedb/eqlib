@@ -34,27 +34,27 @@ class Eq {
   }
 
   /// Wrap both sides of the equation using the given [template].
-  void envelop(Expr template, Expr wrapping) {
+  void envelop(Expr template, Expr envelope) {
     final lmap = left.matchSuperset(template);
     if (lmap.match) {
-      _envelop(wrapping, lmap.mapping);
+      _envelop(envelope, lmap.mapping);
     } else {
       final rmap = right.matchSuperset(template);
       if (rmap.match) {
-        _envelop(wrapping, rmap.mapping);
+        _envelop(envelope, rmap.mapping);
       } else {
         throw new EqLibException('the template does not match left or right');
       }
     }
   }
 
-  /// Wrap both sides of the equation using the provided [wrapping] expression
+  /// Wrap both sides of the equation using the provided [envelope] expression
   /// and expression [mapping].
-  void _envelop(Expr wrapping, Map<int, Expr> mapping) {
+  void _envelop(Expr envelope, Map<int, Expr> mapping) {
     mapping[0] = left;
-    left = wrapping.remap(mapping, {});
+    left = envelope.remap(mapping, {});
     mapping[0] = right;
-    right = wrapping.remap(mapping, {});
+    right = envelope.remap(mapping, {});
   }
 
   /// Compute both sides of the equation as far as possible using the given

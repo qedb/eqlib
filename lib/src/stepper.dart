@@ -20,8 +20,8 @@ class Stepper {
 abstract class Step {
   factory Step.substitute(dynamic left, dynamic right) =>
       new SubstituteStep(new Eq(left, right));
-  factory Step.envelop(Expr template, Expr wrapping) =>
-      new EnvelopStep(template, wrapping);
+  factory Step.envelop(Expr template, Expr envelope) =>
+      new EnvelopStep(template, envelope);
   factory Step.evaluate() => new EvalStep();
 
   /// Apply this step to the given equation.
@@ -39,12 +39,12 @@ class SubstituteStep implements Step {
 }
 
 class EnvelopStep implements Step {
-  final Expr template, wrapping;
-  EnvelopStep(this.template, this.wrapping);
+  final Expr template, envelope;
+  EnvelopStep(this.template, this.envelope);
 
   @override
   void applyTo(Eq eq) {
-    eq.envelop(template, wrapping);
+    eq.envelop(template, envelope);
   }
 }
 
