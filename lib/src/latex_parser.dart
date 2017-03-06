@@ -122,11 +122,52 @@ class LaTeXParser {
   }
 
   /// Operator configuration for parsing LaTeX.
-  final latexOperatorConfig = new OperatorConfig()
-    ..add(Associativity.ltr, argc: 2, lvl: 0, id: Expr.opEqualsId, char: '=')
-    ..add(Associativity.ltr, argc: 2, lvl: 5, id: Expr.opSubscriptId, char: '_')
-    ..add(Associativity.rtl, argc: 1, lvl: 4, id: Expr.opFactorialId, char: '!')
-    ..add(Associativity.ltr, argc: 2, lvl: 2, id: opImplMultiplyId);
+  /// Clone [Expr.defaultContext.operators].
+  final latexOperatorConfig = new OperatorConfig(0)
+    // Load default operator configuration.
+    ..add(Associativity.ltr,
+        argc: 2,
+        lvl: 1,
+        char: '+',
+        id: Expr.defaultContext.assignId('+', false))
+    ..add(Associativity.ltr,
+        argc: 2,
+        lvl: 1,
+        char: '-',
+        id: Expr.defaultContext.assignId('-', false))
+    ..add(Associativity.ltr,
+        argc: 2,
+        lvl: 2,
+        char: '*',
+        id: Expr.defaultContext.assignId('*', false))
+    ..add(Associativity.ltr,
+        argc: 2,
+        lvl: 2,
+        char: '/',
+        id: Expr.defaultContext.assignId('/', false))
+    ..add(Associativity.rtl,
+        argc: 2,
+        lvl: 3,
+        char: '^',
+        id: Expr.defaultContext.assignId('^', false))
+    ..add(Associativity.rtl,
+        argc: 1, lvl: 4, id: Expr.defaultContext.assignId('~', false))
+    ..add(Associativity.ltr,
+        argc: 2,
+        lvl: 0,
+        id: Expr.defaultContext.assignId('=', false),
+        char: '=')
+    ..add(Associativity.ltr,
+        argc: 2,
+        lvl: 5,
+        id: Expr.defaultContext.assignId('_', false),
+        char: '_')
+    ..add(Associativity.rtl,
+        argc: 1,
+        lvl: 4,
+        id: Expr.defaultContext.assignId('!', false),
+        char: '!')
+    ..add(Associativity.ltr, argc: 2, lvl: 2, id: 0);
 
   /// Parse a LaTeX string and produce an expression.
   Expr parse(String input, [bool applyRules = true]) {
@@ -138,7 +179,9 @@ class LaTeXParser {
     });
 
     // 2. Parse expression.
-    var expr = parseExpression(processedInput, config: latexOperatorConfig);
+    // TODO: create own context with different ID mechanism and fused printing.
+    var expr = parseExpression(
+        processedInput, latexOperatorConfig, Expr.defaultContext.assignId);
 
     // 3. Apply rules.
     if (applyRules) {

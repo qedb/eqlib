@@ -4,51 +4,9 @@
 
 part of eqlib;
 
-/// Expression ID for implicit multiplication.
-final opImplMultiplyId = Expr.opNegateId + 1;
-
-enum Associativity { ltr, rtl }
-
-/// Operator configuration
-class OperatorConfig {
-  final charToId = new Map<int, int>();
-  final idToArgc = new Map<int, int>();
-  final idToPrecedence = new Map<int, int>();
-  final idToAssociativity = new Map<int, Associativity>();
-
-  OperatorConfig() {
-    // Load default settings.
-    add(Associativity.ltr, argc: 2, lvl: 1, char: '+', id: Expr.opAddId);
-    add(Associativity.ltr, argc: 2, lvl: 1, char: '-', id: Expr.opSubtractId);
-    add(Associativity.ltr, argc: 2, lvl: 2, char: '*', id: Expr.opMultiplyId);
-    add(Associativity.ltr, argc: 2, lvl: 2, char: '/', id: Expr.opDivideId);
-    add(Associativity.rtl, argc: 2, lvl: 3, char: '^', id: Expr.opPowerId);
-
-    /// Implicit multiplication is set to right associativity by default so that
-    /// expressions like these can be written: `a^2b` (which would otherwise be
-    /// parsed as `(a^2)*b`).
-    /// Increasing the precedence level is not an option, this would result in:
-    /// `2a^b` => `(2*a)^b`.
-    add(Associativity.rtl, argc: 2, lvl: 3, id: opImplMultiplyId);
-
-    add(Associativity.rtl, argc: 1, lvl: 4, id: Expr.opNegateId);
-  }
-
-  void add(Associativity associativity,
-      {String char: '', int argc: 0, int lvl: 0, int id: 0}) {
-    idToArgc[id] = argc;
-    idToPrecedence[id] = lvl;
-    idToAssociativity[id] = associativity;
-    if (char.isNotEmpty) {
-      charToId[char.codeUnitAt(0)] = id;
-    }
-  }
-}
-
 /// Expression parser that uses the Shunting-yard algorithm.
 /// This is a one-pass, linear-time, linear-space algorithm.
-Expr parseExpression(String input,
-    {OperatorConfig config: null, ExprResolve resolver: eqlibSAResolve}) {
+Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
   if (input.isEmpty) {
     throw new FormatException('input cannot be empty');
   }
@@ -58,8 +16,7 @@ Expr parseExpression(String input,
   final reader = new StringReader(input);
 
   // Process operator config.
-  final ops = config != null ? config : new OperatorConfig();
-  final opChars = ops.charToId.keys.toList();
+  final opChars = ops.opChars;
   final specialChars = '(,)? '.codeUnits.toList();
   specialChars.addAll(opChars);
 
@@ -101,7 +58,7 @@ Expr parseExpression(String input,
 
       // Pop all remaining stack elements.
       while (!stack.last.isLeftParenthesis) {
-        _popStack(stack, output);
+        _popStack(stack, output, ops);
         if (stack.isEmpty) {
           // If the stack runs out without finding a left parentheses...
           throw new FormatException('mismatched parentheses');
@@ -113,7 +70,7 @@ Expr parseExpression(String input,
 
       // If the last element in the stack is a function, pop it.
       if (stack.isNotEmpty && stack.last.isFunction) {
-        _popStack(stack, output);
+        _popStack(stack, output, ops);
       }
 
       // Move to next token.
@@ -129,7 +86,7 @@ Expr parseExpression(String input,
 
       // Pop operators.
       while (!stack.last.isLeftParenthesis) {
-        _popStack(stack, output);
+        _popStack(stack, output, ops);
         if (stack.isEmpty) {
           throw new FormatException('argument separator but no parenthesis');
         }
@@ -158,7 +115,7 @@ Expr parseExpression(String input,
       var op = ops.charToId[reader.current];
       if (reader.currentIs('-') && opDist.v == 1 || blockStartDist == 1) {
         // This is an unary minus.
-        op = Expr.opNegateId;
+        op = ops.id('~');
       }
 
       _stackAddOp(op, stack, output, ops);
@@ -222,27 +179,17 @@ Expr parseExpression(String input,
         final fnName =
             new String.fromCharCodes(reader.data.sublist(startPtr, reader.ptr));
 
-        // Note: this is not the most efficient route, but an attempt to make it
-        // a bit simpler.
-        var isSymbol = true;
-        if (reader.currentOneOf(' ('.codeUnits)) {
-          reader.skipWhitespaces();
-          if (reader.currentIs('(')) {
-            reader.skipWhitespaces();
-            if (!reader.currentIs(')')) {
-              // This is defenitely a function with arguments.
-              isSymbol = false;
-
-              // Move to next token (we already moved beyond the left
-              // parenthesis token to see if there are function arguments,
-              // therefore we have to handle it here).
-              reader.next();
-            }
-          }
+        // Since we have implicit multiplication at whitespaces or any other
+        // characters, this is only a function if there is an opening
+        // parenthesis directly after the name.
+        final isSymbol = !reader.currentIs('(');
+        if (!isSymbol) {
+          // Move over opening parentheses.
+          reader.next();
         }
 
         // Process token.
-        final id = resolver(fnName, generic);
+        final id = assignId(fnName, generic);
         if (isSymbol) {
           output.add(new SymbolExpr(id, generic));
         } else {
@@ -269,7 +216,7 @@ Expr parseExpression(String input,
 
   // Drain stack.
   while (stack.isNotEmpty) {
-    _popStack(stack, output);
+    _popStack(stack, output, ops);
   }
 
   // This should always be true. If there is a formatting error it will be
@@ -286,7 +233,7 @@ void _detectImplMul(W<int> opDist, int blockStartDist,
   // * This is not the first token in the current block
   // * The previous token is not an operator
   if (blockStartDist != 1 && opDist.v != 1) {
-    _stackAddOp(opImplMultiplyId, stack, output, ops);
+    _stackAddOp(ops.implicitMultiplyId, stack, output, ops);
 
     // Note that we do NOT have to set the operator distance here. We
     // can set it to 1: since we have added an operator and are already
@@ -315,7 +262,7 @@ void _stackAddOp(
       stack.last.isOperator &&
       myPre < ops.idToPrecedence[stack.last.id] + assocAdd) {
     // Pop operator (it precedes the current one).
-    _popStack(stack, output);
+    _popStack(stack, output, ops);
   }
 
   // Add operator to stack.
@@ -325,7 +272,8 @@ void _stackAddOp(
 /// Pop and process element from the [stack].
 /// This function should not be called to remove left parentheses.
 /// (if there are still left parentheses left, there is a mismatch)
-void _popStack(List<_StackElement> stack, List<Expr> output) {
+void _popStack(
+    List<_StackElement> stack, List<Expr> output, OperatorConfig ops) {
   final fn = stack.removeLast();
 
   // Check if arguments are in the stack.
@@ -340,10 +288,10 @@ void _popStack(List<_StackElement> stack, List<Expr> output) {
   // If this is a negate function, and the argument is a number, we directly
   // apply it.
   final first = args.first;
-  if (fn.id == Expr.opNegateId && first is NumberExpr) {
+  if (fn.id == ops.id('~') && first is NumberExpr) {
     output.add(new NumberExpr(-first.value));
   } else {
-    final id = fn.id == opImplMultiplyId ? Expr.opMultiplyId : fn.id;
+    final id = fn.id == ops.implicitMultiplyId ? ops.id('*') : fn.id;
     // Note: the argument list is reversed because they have been added to the
     // stack in first in last out order (because of List.removeLast()).
     output.add(new FunctionExpr(id, args.reversed.toList(), fn.generic));

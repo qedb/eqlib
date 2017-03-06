@@ -13,7 +13,7 @@ Expr number(num value) => new NumberExpr(value);
 
 /// Create a symbol expression for the given label.
 Expr symbol(String label, {bool generic: false}) =>
-    new SymbolExpr(eqlibSAResolve(label, generic), generic);
+    new SymbolExpr(Expr.defaultContext.assignId(label, generic), generic);
 
 /// Alias for creating generic symbols.
 Expr generic(String label) => symbol(label, generic: true);
@@ -27,7 +27,7 @@ typedef Expr ExprGenerator1(dynamic arg1);
 
 /// Create single argument expression generator.
 ExprGenerator1 fn1(String label, {bool generic: false}) {
-  final id = eqlibSAResolve(label, generic);
+  final id = Expr.defaultContext.assignId(label, generic);
   return (arg1) => new FunctionExpr(id, [new Expr.from(arg1)], generic);
 }
 
@@ -36,7 +36,7 @@ typedef Expr ExprGenerator2(dynamic arg1, dynamic arg2);
 
 /// Create double argument expression generator.
 ExprGenerator2 fn2(String label) {
-  final id = eqlibSAResolve(label, false);
+  final id = Expr.defaultContext.assignId(label, false);
   return (arg1, arg2) =>
       new FunctionExpr(id, [new Expr.from(arg1), new Expr.from(arg2)], false);
 }
@@ -46,7 +46,7 @@ typedef Expr ExprGenerator3(dynamic arg1, dynamic arg2, dynamic arg3);
 
 /// Create double argument expression generator.
 ExprGenerator3 fn3(String label) {
-  final id = eqlibSAResolve(label, false);
+  final id = Expr.defaultContext.assignId(label, false);
   return (arg1, arg2, arg3) => new FunctionExpr(id,
       [new Expr.from(arg1), new Expr.from(arg2), new Expr.from(arg3)], false);
 }

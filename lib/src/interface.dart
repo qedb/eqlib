@@ -4,18 +4,15 @@
 
 part of eqlib;
 
-/// Function that resolves an expression string into an expression ID.
-typedef int ExprResolve(String name, [bool generic]);
+/// Function to assign an ID to an expression label.
+typedef int ExprAssignId(String label, bool generic);
 
-/// Function taht returns the expression name for the given expression ID.
-typedef String ExprResolveName(int id);
+/// Function to retrieve the expression label for the given ID.
+typedef String ExprGetLabel(int id);
 
-/// Function that should compute a numeric value for the given expression ID
+/// Function to should compute a numeric value for the given expression ID
 /// and arguments.
 typedef num ExprCompute(int id, List<num> args);
 
-/// Function that can lookup whether a given expression can be computed.
-typedef bool ExprCanCompute(int id);
-
-/// String printing entry function.
-typedef String ExprPrint(Expr expr);
+/// Function to generate a human readable string from the given expression.
+typedef String ExprToString(Expr expr);

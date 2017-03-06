@@ -34,7 +34,7 @@ void main() {
     final printer = new LaTeXPrinter();
     printer.addDefaultEntries();
     printer.dictUpdate(new LaTeXDictUpdate([], [
-      new LaTeXDictUpdateAddition(eqlibSAResolve('lim'),
+      new LaTeXDictUpdateAddition(Expr.defaultContext.assignId('lim', false),
           new LaTeXDictEntry(r'\lim_{$a\to$b}$(c)', false, 1))
     ]));
 
@@ -55,13 +55,13 @@ void main() {
 
     printer.dictUpdate(new LaTeXDictUpdate([], [
       new LaTeXDictUpdateAddition(
-          eqlibSAResolve('pi'), new LaTeXDictEntry(r'\pi'))
+          Expr.defaultContext.assignId('pi', false), new LaTeXDictEntry(r'\pi'))
     ]));
     printer.dictUpdate(new LaTeXDictUpdate([
-      eqlibSAResolve('pi')
+      Expr.defaultContext.assignId('pi', false)
     ], [
-      new LaTeXDictUpdateAddition(
-          eqlibSAResolve('phi'), new LaTeXDictEntry(r'\phi'))
+      new LaTeXDictUpdateAddition(Expr.defaultContext.assignId('phi', false),
+          new LaTeXDictEntry(r'\phi'))
     ]));
 
     // Print single symbol.

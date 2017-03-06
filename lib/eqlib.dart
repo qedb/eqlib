@@ -18,9 +18,11 @@ part 'src/expr.dart';
 part 'src/number.dart';
 part 'src/symbol.dart';
 part 'src/function.dart';
-part 'src/codec.dart';
-part 'src/stepper.dart';
 part 'src/interface.dart';
-part 'src/standalone.dart';
+
+part 'src/codec.dart';
 part 'src/parser.dart';
+part 'src/stepper.dart';
 part 'src/tree_diff.dart';
+part 'src/standalone.dart';
+part 'src/operator_config.dart';

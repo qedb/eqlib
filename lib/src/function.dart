@@ -118,11 +118,11 @@ class FunctionExpr extends FunctionSymbolExpr {
   }
 
   @override
-  num evaluateInternal(canCompute, compute) {
+  num evaluateInternal(compute) {
     final numArgs = new List<num>(args.length);
     var allEval = true;
     for (var i = 0; i < args.length; i++) {
-      final value = args[i].evaluate(canCompute, compute);
+      final value = args[i].evaluate(compute);
       if (!value.isNaN) {
         numArgs[i] = value;
         args[i] = new NumberExpr(value);
@@ -131,7 +131,7 @@ class FunctionExpr extends FunctionSymbolExpr {
       }
     }
 
-    if (allEval && canCompute(id)) {
+    if (allEval) {
       return compute(id, numArgs);
     } else {
       return double.NAN;

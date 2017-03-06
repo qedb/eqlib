@@ -12,10 +12,10 @@ class Eq {
   Eq(this.left, this.right);
 
   /// Parse an equation string representation.
-  factory Eq.parse(String str, [ExprResolve resolver = eqlibSAResolve]) {
+  factory Eq.parse(String str, [ExprAssignId assignId]) {
     final sides = str.split('=');
-    return new Eq(new Expr.parse(sides.first, resolver),
-        new Expr.parse(sides.last, resolver));
+    return new Eq(new Expr.parse(sides.first, assignId),
+        new Expr.parse(sides.last, assignId));
   }
 
   /// Create deep copy.
@@ -59,14 +59,12 @@ class Eq {
 
   /// Compute both sides of the equation as far as possible using the given
   /// resolver.
-  void evaluate(
-      [ExprCanCompute canCompute = eqlibSACanCompute,
-      ExprCompute computer = eqlibSACompute]) {
-    final lvalue = left.evaluate(canCompute, computer);
+  void evaluate([ExprCompute compute]) {
+    final lvalue = left.evaluate(compute);
     if (!lvalue.isNaN) {
       left = new NumberExpr(lvalue);
     }
-    final rvalue = right.evaluate(canCompute, computer);
+    final rvalue = right.evaluate(compute);
     if (!rvalue.isNaN) {
       right = new NumberExpr(rvalue);
     }

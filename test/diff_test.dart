@@ -62,6 +62,6 @@ void main() {
         '{hasDiff: true, numsNotEqual: true}');
     expect(
         difference(new Expr.parse('1 + a'), new Expr.parse('2 + a')).toString(),
-        equals('add(1, a)=add(2, a)'));
+        equals('1+a=2+a'));
   });
 }

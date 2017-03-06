@@ -9,6 +9,9 @@ part of eqlib;
 /// Note: in this class we use some excessive OOP in order to obtain a nice
 /// expression API.
 abstract class Expr {
+  /// Default expression context.
+  static var defaultContext = new DefaultExprContext();
+
   Expr();
 
   /// Construct from binary data.
@@ -22,8 +25,9 @@ abstract class Expr {
       new Expr.fromBinary(new Uint8List.fromList(BASE64.decode(base64)).buffer);
 
   /// Parse string expression using EqExParser.
-  factory Expr.parse(String str, [ExprResolve resolver = eqlibSAResolve]) {
-    return parseExpression(str, resolver: resolver);
+  factory Expr.parse(String str, [ExprAssignId assignId]) {
+    return parseExpression(
+        str, defaultContext.operators, assignId ?? defaultContext.assignId);
   }
 
   /// Transform the given value into an expression if it is not an expression
@@ -140,54 +144,39 @@ abstract class Expr {
 
   /// Appemts to evaluate this expression to a number using the given compute
   /// functions. Returns double.NAN if this is unsuccessful.
-  num evaluateInternal(ExprCanCompute canCompute, ExprCompute compute);
+  num evaluateInternal(ExprCompute compute);
 
   /// Wrapper of [evaluateInternal] to provide default arguments.
-  num evaluate(
-          [ExprCanCompute canCompute = eqlibSACanCompute,
-          ExprCompute computer = eqlibSACompute]) =>
-      evaluateInternal(canCompute, computer);
-
-  // Standard operator IDs used by built-in operators.
-  static int opAddId = eqlibSAResolve('add');
-  static int opSubtractId = eqlibSAResolve('sub');
-  static int opMultiplyId = eqlibSAResolve('mul');
-  static int opDivideId = eqlibSAResolve('div');
-  static int opPowerId = eqlibSAResolve('pow');
-  static int opNegateId = eqlibSAResolve('neg');
-  static int opEqualsId = eqlibSAResolve('equals');
-  static int opFactorialId = eqlibSAResolve('factorial');
-  static int opSubscriptId = eqlibSAResolve('subscript');
+  num evaluate([ExprCompute compute]) =>
+      evaluateInternal(compute ?? defaultContext.compute);
 
   /// Add other expression.
-  Expr operator +(dynamic other) =>
-      new FunctionExpr(opAddId, [this, new Expr.from(other)]);
+  Expr operator +(dynamic other) => new FunctionExpr(
+      defaultContext.operators.id('+'), [this, new Expr.from(other)]);
 
   /// Subtract other expression.
-  Expr operator -(dynamic other) =>
-      new FunctionExpr(opSubtractId, [this, new Expr.from(other)]);
+  Expr operator -(dynamic other) => new FunctionExpr(
+      defaultContext.operators.id('-'), [this, new Expr.from(other)]);
 
   /// Multiply by other expression.
-  Expr operator *(dynamic other) =>
-      new FunctionExpr(opMultiplyId, [this, new Expr.from(other)]);
+  Expr operator *(dynamic other) => new FunctionExpr(
+      defaultContext.operators.id('*'), [this, new Expr.from(other)]);
 
   /// Divide by other expression.
-  Expr operator /(dynamic other) =>
-      new FunctionExpr(opDivideId, [this, new Expr.from(other)]);
+  Expr operator /(dynamic other) => new FunctionExpr(
+      defaultContext.operators.id('/'), [this, new Expr.from(other)]);
 
   /// Power by other expression.
-  Expr operator ^(dynamic other) =>
-      new FunctionExpr(opPowerId, [this, new Expr.from(other)]);
+  Expr operator ^(dynamic other) => new FunctionExpr(
+      defaultContext.operators.id('^'), [this, new Expr.from(other)]);
 
   /// Negate expression.
-  Expr operator -() => new FunctionExpr(opNegateId, [this]);
-
-  /// Global string printer function.
-  static ExprPrint stringPrinter = eqlibSAPrint;
+  Expr operator -() =>
+      new FunctionExpr(defaultContext.operators.id('~'), [this]);
 
   /// Generate string representation.
   @override
-  String toString() => stringPrinter(this);
+  String toString() => defaultContext.print(this);
 }
 
 /// Return data of [Expr.matchSuperset].

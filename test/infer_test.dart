@@ -32,7 +32,7 @@ void main() {
         eqlibThrows('generic functions can only have a single argument'));
     expect(
         () => new Expr.parse('?a(b,c)')
-            .remap({eqlibSAResolve('a', true): symbol('d')}, {}),
+            .remap({Expr.defaultContext.assignId('a', true): symbol('d')}, {}),
         eqlibThrows('generic functions can only have a single argument'));
 
     // Generic functions must all be equal.

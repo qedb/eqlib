@@ -20,10 +20,6 @@ void main() {
     expect(new Expr.parse(' ( 1 + 2 ) * 3 ^ sin( a + ?b ) '),
         equals((n(1) + 2) * (n(3) ^ fn1('sin')(symbol('a') + b))));
 
-    // Nested functions and whitespaces
-    expect(new Eq.parse(' mul  ( mul(  ?a, ?b), ?c)=  mul(?a,mul(?b,   ?c))  '),
-        equals(eq((a * b) * c, a * (b * c))));
-
     // Numeric values
     expect(new Expr.parse('-1.23 - 4 + .567 ^ -.89'),
         equals((n(-1.23) - 4) + (n(.567) ^ -.89)));
@@ -60,30 +56,23 @@ void main() {
 
   test('Derivation of centripetal acceleration (step 1)', () {
     final pvec = new Eq.parse('pvec = vec2d');
-    pvec.substitute(new Eq.parse('vec2d = add(mul(x, ihat), mul(y, jhat))'));
+    pvec.substitute(new Eq.parse('vec2d = x ihat + y jhat'));
     pvec.substitute(new Eq.parse('x = px'));
     pvec.substitute(new Eq.parse('y = py'));
-    pvec.substitute(new Eq.parse('px = mul(r, sin(theta))'));
-    pvec.substitute(new Eq.parse('py = mul(r, cos(theta))'));
-    pvec.substitute(
-        new Eq.parse('mul(mul(?a, ?b), ?c) = mul(?a, mul(?b, ?c))'));
-    pvec.substitute(
-        new Eq.parse('mul(mul(?a, ?b), ?c) = mul(?a, mul(?b, ?c))'));
-    pvec.substitute(
-        new Eq.parse('add(mul(?a, ?b), mul(?a, ?c)) = mul(?a, add(?b, ?c))'));
-
-    eqlibSABackend.printerOpChars = true;
-    expect(pvec.toString(),
-        equals('pvec={r}*{{sin(theta)}*{ihat} + {cos(theta)}*{jhat}}'));
-    eqlibSABackend.printerOpChars = false;
+    pvec.substitute(new Eq.parse('px = r sin(theta)'));
+    pvec.substitute(new Eq.parse('py = r cos(theta)'));
+    pvec.substitute(new Eq.parse('(?a ?b) ?c = ?a (?b ?c)'));
+    pvec.substitute(new Eq.parse('(?a ?b) ?c = ?a (?b ?c)'));
+    pvec.substitute(new Eq.parse('?a ?b + ?a ?c = ?a*(?b+?c)'));
+    expect(pvec.toString(), equals('pvec=r*(sin(theta)*ihat+cos(theta)*jhat)'));
   });
 
   test('Solve a simple equation', () {
-    final eq = new Eq.parse('add(mul(x, 2), 5) = 9');
-    eq.envelop(new Expr.parse('add(?a, ?b)'), new Expr.parse('sub({}, ?b)'));
-    eq.substitute(new Eq.parse('sub(add(?a, ?b), ?b) = ?a'));
-    eq.envelop(new Expr.parse('mul(?a, ?b)'), new Expr.parse('div({}, ?b)'));
-    eq.substitute(new Eq.parse('div(mul(?a, ?b), ?b) = ?a'));
+    final eq = new Eq.parse('x 2 + 5 = 9');
+    eq.envelop(new Expr.parse('?a + ?b'), new Expr.parse('{} - ?b'));
+    eq.substitute(new Eq.parse('?a + ?b - ?b = ?a'));
+    eq.envelop(new Expr.parse('?a*?b'), new Expr.parse('{} / ?b'));
+    eq.substitute(new Eq.parse('(?a * ?b) / ?b = ?a'));
     eq.evaluate();
 
     expect(eq.left, equals(symbol('x')));

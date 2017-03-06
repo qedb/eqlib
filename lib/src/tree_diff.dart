@@ -7,6 +7,7 @@ part of eqlib;
 class TreeDiff {
   final Eq rule;
   final List<TreeDiff> alt;
+
   TreeDiff(this.rule, [this.alt = const []]);
 
   @override

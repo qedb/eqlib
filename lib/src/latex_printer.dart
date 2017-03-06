@@ -47,6 +47,7 @@ class LaTeXDictUpdate {
 }
 
 /// LaTeX Expr printer
+/// TODO: use [LaTeXTemplateLibrary].
 class LaTeXPrinter {
   final _dict = new Map<int, LaTeXDictEntry>();
 
@@ -65,14 +66,19 @@ class LaTeXPrinter {
   /// Stream destructor.
   Future destruct() => _onDictUpdate.close();
 
-  void addDefaultEntries([ExprResolve resolver = eqlibSAResolve]) {
-    _dict[resolver('add')] = const LaTeXDictEntry(r'$(a)+$(b)', true, 1, 0);
-    _dict[resolver('sub')] = const LaTeXDictEntry(r'$(a)-$(b)', true, 1, 0);
-    _dict[resolver('mul')] = const LaTeXDictEntry(r'$(a)\cdot$(b)', true, 2, 0);
-    _dict[resolver('div')] =
+  void addDefaultEntries() {
+    _dict[Expr.defaultContext.operators.id('+')] =
+        const LaTeXDictEntry(r'$(a)+$(b)', true, 1, 0);
+    _dict[Expr.defaultContext.operators.id('-')] =
+        const LaTeXDictEntry(r'$(a)-$(b)', true, 1, 0);
+    _dict[Expr.defaultContext.operators.id('*')] =
+        const LaTeXDictEntry(r'$(a)\cdot$(b)', true, 2, 0);
+    _dict[Expr.defaultContext.operators.id('/')] =
         const LaTeXDictEntry(r'\frac{$a}{$b}', false, 2, 0);
-    _dict[resolver('pow')] = const LaTeXDictEntry(r'$!(a)^{$b}', true, 3, 1);
-    _dict[resolver('neg')] = const LaTeXDictEntry(r'-$(a)', false, 4, 0);
+    _dict[Expr.defaultContext.operators.id('^')] =
+        const LaTeXDictEntry(r'$!(a)^{$b}', true, 3, 1);
+    _dict[Expr.defaultContext.operators.id('~')] =
+        const LaTeXDictEntry(r'-$(a)', false, 4, 0);
   }
 
   // Add or replace entry in printer dictionary.
@@ -83,11 +89,14 @@ class LaTeXPrinter {
   }
 
   /// Render LaTeX string from the given expression. Expressions that are not in
-  /// the printer dictionary use [resolveName] and a generic function notation.
+  /// the printer dictionary use [resolveNameOpt] and a generic function
+  /// notation.
   ///
   /// The render function should make sure the output can not produce any
   /// conflicts with any surrounding TeX.
-  String render(Expr expr, [ExprResolveName resolveName = eqlibSAResolveName]) {
+  String render(Expr expr, [ExprGetLabel resolveNameOpt]) {
+    final resolveName = resolveNameOpt ?? Expr.defaultContext.getLabel;
+
     // Numbers
     if (expr is NumberExpr) {
       return expr.value.toString();
@@ -127,7 +136,7 @@ class LaTeXPrinter {
   }
 
   /// Render template (unsafe).
-  String _renderTemplate(FunctionExpr expr, ExprResolveName resolveName) {
+  String _renderTemplate(FunctionExpr expr, ExprGetLabel resolveName) {
     assert(_dict.containsKey(expr.id));
     final entry = _dict[expr.id];
 
@@ -161,7 +170,7 @@ class LaTeXPrinter {
   /// another way to separate the expression from the surrounding LaTeX (\frac).
   String _processTemplateArg(
       FunctionExpr expr,
-      ExprResolveName resolveName,
+      ExprGetLabel resolveName,
       int parentPrecedence,
       int preEvalIndex,
       Match match,

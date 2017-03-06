@@ -46,17 +46,14 @@ void main() {
 
   test('Standalone engine', () {
     expect(new Expr.parse('-(1 + 1)').evaluate(), equals(-2));
-    expect(() => eqlibSAPrint(new MyExpr()), throwsArgumentError);
+    expect(() => Expr.defaultContext.print(new MyExpr()), throwsArgumentError);
 
     // Standalone resolve generic/non-generic distinctive.
-    expect(eqlibSAResolve('x'), isNot(equals(eqlibSAResolve('x', true))));
+    expect(Expr.defaultContext.assignId('x', false),
+        isNot(equals(Expr.defaultContext.assignId('x', true))));
 
     // Standalone printer.
-    final allIn = new Expr.parse('1 + a - 3 * b / 5 ^-c');
-    eqlibSABackend.printerOpChars = true;
-    expect(allIn.toString(), equals('1 + a - {{3}*{b}}/{{5}^{-{c}}}'));
-    eqlibSABackend.printerOpChars = false;
-    expect(allIn.toString(),
-        equals('sub(add(1, a), div(mul(3, b), pow(5, neg(c))))'));
+    final printTest = new Expr.parse('1 + a - 3 * (b / 5) ^-c');
+    expect(printTest.toString(), equals('1+a-3*(b/5)^-c'));
   });
 }
