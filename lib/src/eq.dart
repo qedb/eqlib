@@ -11,13 +11,6 @@ class Eq {
 
   Eq(this.left, this.right);
 
-  /// Parse an equation string representation.
-  factory Eq.parse(String str, [ExprAssignId assignId]) {
-    final sides = str.split('=');
-    return new Eq(new Expr.parse(sides.first, assignId),
-        new Expr.parse(sides.last, assignId));
-  }
-
   /// Create deep copy.
   Eq clone() => new Eq(left.clone(), right.clone());
 
@@ -59,7 +52,7 @@ class Eq {
 
   /// Compute both sides of the equation as far as possible using the given
   /// resolver.
-  void evaluate([ExprCompute compute]) {
+  void evaluate(ExprCompute compute) {
     final lvalue = left.evaluate(compute);
     if (!lvalue.isNaN) {
       left = new NumberExpr(lvalue);
@@ -84,8 +77,4 @@ class Eq {
   @override
   int get hashCode =>
       jFinish(jCombine(jCombine(0, left.hashCode), right.hashCode));
-
-  /// Generate string representation.
-  @override
-  String toString() => '$left=$right';
 }

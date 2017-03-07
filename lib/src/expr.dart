@@ -9,9 +9,6 @@ part of eqlib;
 /// Note: in this class we use some excessive OOP in order to obtain a nice
 /// expression API.
 abstract class Expr {
-  /// Default expression context.
-  static var defaultContext = new DefaultExprContext();
-
   Expr();
 
   /// Construct from binary data.
@@ -23,12 +20,6 @@ abstract class Expr {
   /// Construct from Base64 string.
   factory Expr.fromBase64(String base64) =>
       new Expr.fromBinary(new Uint8List.fromList(BASE64.decode(base64)).buffer);
-
-  /// Parse string expression using EqExParser.
-  factory Expr.parse(String str, [ExprAssignId assignId]) {
-    return parseExpression(
-        str, defaultContext.operators, assignId ?? defaultContext.assignId);
-  }
 
   /// Transform the given value into an expression if it is not an expression
   /// already.
@@ -107,7 +98,7 @@ abstract class Expr {
   }
 
   /// Recursive substitution.
-  Expr substituteRecursivly(Eq equation, Eq terminator,
+  Expr substituteRecursivly(Eq equation, Eq terminator, ExprCompute compute,
       [int maxRecursions = 100]) {
     if (maxRecursions <= 0) {
       throw new ArgumentError.value(
@@ -134,7 +125,7 @@ abstract class Expr {
       }
 
       // Evaluate new substitution.
-      expr.evaluate();
+      expr.evaluate(compute);
 
       cycle++;
     }
@@ -144,39 +135,7 @@ abstract class Expr {
 
   /// Appemts to evaluate this expression to a number using the given compute
   /// functions. Returns double.NAN if this is unsuccessful.
-  num evaluateInternal(ExprCompute compute);
-
-  /// Wrapper of [evaluateInternal] to provide default arguments.
-  num evaluate([ExprCompute compute]) =>
-      evaluateInternal(compute ?? defaultContext.compute);
-
-  /// Add other expression.
-  Expr operator +(dynamic other) => new FunctionExpr(
-      defaultContext.operators.id('+'), [this, new Expr.from(other)]);
-
-  /// Subtract other expression.
-  Expr operator -(dynamic other) => new FunctionExpr(
-      defaultContext.operators.id('-'), [this, new Expr.from(other)]);
-
-  /// Multiply by other expression.
-  Expr operator *(dynamic other) => new FunctionExpr(
-      defaultContext.operators.id('*'), [this, new Expr.from(other)]);
-
-  /// Divide by other expression.
-  Expr operator /(dynamic other) => new FunctionExpr(
-      defaultContext.operators.id('/'), [this, new Expr.from(other)]);
-
-  /// Power by other expression.
-  Expr operator ^(dynamic other) => new FunctionExpr(
-      defaultContext.operators.id('^'), [this, new Expr.from(other)]);
-
-  /// Negate expression.
-  Expr operator -() =>
-      new FunctionExpr(defaultContext.operators.id('~'), [this]);
-
-  /// Generate string representation.
-  @override
-  String toString() => defaultContext.print(this);
+  num evaluate(ExprCompute compute);
 }
 
 /// Return data of [Expr.matchSuperset].

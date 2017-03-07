@@ -100,7 +100,29 @@ class LaTeXParser {
   /// Parsed [rules]
   final parsedRules = new List<Eq>();
 
-  LaTeXParser() {
+  LaTeXParser(ExprContext ctx) {
+    // Load default operator configuration.
+    operators
+      ..add(Associativity.ltr,
+          argc: 2, lvl: 1, char: '+', id: ctx.assignId('+', false))
+      ..add(Associativity.ltr,
+          argc: 2, lvl: 1, char: '-', id: ctx.assignId('-', false))
+      ..add(Associativity.ltr,
+          argc: 2, lvl: 2, char: '*', id: ctx.assignId('*', false))
+      ..add(Associativity.ltr,
+          argc: 2, lvl: 2, char: '/', id: ctx.assignId('/', false))
+      ..add(Associativity.rtl,
+          argc: 2, lvl: 3, char: '^', id: ctx.assignId('^', false))
+      ..add(Associativity.rtl,
+          argc: 1, lvl: 4, char: '~', id: ctx.assignId('~', false))
+      ..add(Associativity.ltr,
+          argc: 2, lvl: 0, char: '=', id: ctx.assignId('=', false))
+      ..add(Associativity.ltr,
+          argc: 2, lvl: 5, char: '_', id: ctx.assignId('_', false))
+      ..add(Associativity.rtl,
+          argc: 1, lvl: 4, char: '!', id: ctx.assignId('!', false))
+      ..add(Associativity.ltr, argc: 2, lvl: 2, id: 0);
+
     // Add variations of basic trigonometry functions to [allFunctions].
     allFunctions.addAll(generateList<String>(basicTrigFunctions.length, [
       (i) => basicTrigFunctions[i],
@@ -109,68 +131,23 @@ class LaTeXParser {
     ]));
 
     // Parse all specified rules.
-    rules.forEach((left, right) =>
-        parsedRules.add(new Eq(parse(left, false), new Expr.parse(right))));
+    rules.forEach((left, right) => parsedRules
+        .add(new Eq(parse(left, ctx.assignId, false), ctx.parse(right))));
 
     // Generate additional rules for all functions specified in [allFunctions].
     parsedRules.addAll(generateList<Eq>(allFunctions.length, [
-      (i) => new Eq(parse('\\${allFunctions[i]} ?a', false),
-          new Expr.parse('${allFunctions[i]}(?a)')),
-      (i) => new Eq(parse('\\${allFunctions[i]}^?e ?a', false),
-          new Expr.parse('${allFunctions[i]}(?a)^?e'))
+      (i) => new Eq(parse('\\${allFunctions[i]} ?a', ctx.assignId, false),
+          ctx.parse('${allFunctions[i]}(?a)')),
+      (i) => new Eq(parse('\\${allFunctions[i]}^?e ?a', ctx.assignId, false),
+          ctx.parse('${allFunctions[i]}(?a)^?e'))
     ]));
   }
 
   /// Operator configuration for parsing LaTeX.
-  /// Clone [Expr.defaultContext.operators].
-  final latexOperatorConfig = new OperatorConfig(0)
-    // Load default operator configuration.
-    ..add(Associativity.ltr,
-        argc: 2,
-        lvl: 1,
-        char: '+',
-        id: Expr.defaultContext.assignId('+', false))
-    ..add(Associativity.ltr,
-        argc: 2,
-        lvl: 1,
-        char: '-',
-        id: Expr.defaultContext.assignId('-', false))
-    ..add(Associativity.ltr,
-        argc: 2,
-        lvl: 2,
-        char: '*',
-        id: Expr.defaultContext.assignId('*', false))
-    ..add(Associativity.ltr,
-        argc: 2,
-        lvl: 2,
-        char: '/',
-        id: Expr.defaultContext.assignId('/', false))
-    ..add(Associativity.rtl,
-        argc: 2,
-        lvl: 3,
-        char: '^',
-        id: Expr.defaultContext.assignId('^', false))
-    ..add(Associativity.rtl,
-        argc: 1, lvl: 4, id: Expr.defaultContext.assignId('~', false))
-    ..add(Associativity.ltr,
-        argc: 2,
-        lvl: 0,
-        id: Expr.defaultContext.assignId('=', false),
-        char: '=')
-    ..add(Associativity.ltr,
-        argc: 2,
-        lvl: 5,
-        id: Expr.defaultContext.assignId('_', false),
-        char: '_')
-    ..add(Associativity.rtl,
-        argc: 1,
-        lvl: 4,
-        id: Expr.defaultContext.assignId('!', false),
-        char: '!')
-    ..add(Associativity.ltr, argc: 2, lvl: 2, id: 0);
+  final operators = new OperatorConfig(0);
 
   /// Parse a LaTeX string and produce an expression.
-  Expr parse(String input, [bool applyRules = true]) {
+  Expr parse(String input, ExprAssignId assignId, [bool applyRules = true]) {
     // 1. Apply all replacements.
     var processedInput = input;
     replaceMap.forEach((key, value) {
@@ -180,8 +157,7 @@ class LaTeXParser {
 
     // 2. Parse expression.
     // TODO: create own context with different ID mechanism and fused printing.
-    var expr = parseExpression(
-        processedInput, latexOperatorConfig, Expr.defaultContext.assignId);
+    var expr = parseExpression(processedInput, operators, assignId);
 
     // 3. Apply rules.
     if (applyRules) {

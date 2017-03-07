@@ -6,76 +6,27 @@ import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/latex.dart';
 
-import 'myexpr.dart';
-
 void main() {
+  final ctx = new SimpleExprContext();
+
   test('Built-in operators', () {
     final printer = new LaTeXPrinter();
-    printer.addDefaultEntries();
+    printer.addDefaultEntries(ctx.operators);
 
-    expect(printer.render(new Expr.parse('(a + -5) ^ (b * c)')),
+    expect(printer.render(ctx.parse('(a + -5) ^ (b * c)'), ctx.getLabel),
         equals(r'\left({a}+-5\right)^{{b}\cdot{c}}'));
 
-    expect(printer.render(new Expr.parse('(a / -5) ^ (b * c)')),
+    expect(printer.render(ctx.parse('(a / -5) ^ (b * c)'), ctx.getLabel),
         equals(r'\left(\frac{{a}}{-5}\right)^{{b}\cdot{c}}'));
 
     // Note: for syntax reasons, the precedence of unary- > power operator.
-    expect(printer.render(new Expr.parse('(-1)^2')), equals(r'-1^{2}'));
-    expect(printer.render(new Expr.parse('-1 ^ 2')), equals(r'-1^{2}'));
-    expect(printer.render(new Expr.parse('-(1 ^ 2)')),
+    expect(
+        printer.render(ctx.parse('(-1)^2'), ctx.getLabel), equals(r'-1^{2}'));
+    expect(
+        printer.render(ctx.parse('-1 ^ 2'), ctx.getLabel), equals(r'-1^{2}'));
+    expect(printer.render(ctx.parse('-(1 ^ 2)'), ctx.getLabel),
         equals(r'-\left(1^{2}\right)'));
 
-    expect(printer.render(new Expr.parse('---a')), equals(r'---{a}'));
-
-    printer.destruct();
-  });
-
-  test('LaTeX dictionary', () async {
-    final printer = new LaTeXPrinter();
-    printer.addDefaultEntries();
-    printer.dictUpdate(new LaTeXDictUpdate([], [
-      new LaTeXDictUpdateAddition(Expr.defaultContext.assignId('lim', false),
-          new LaTeXDictEntry(r'\lim_{$a\to$b}$(c)', false, 1))
-    ]));
-
-    expect(printer.render(new Expr.parse('lim(x, 0, x ^ 2)')),
-        equals(r'\lim_{{x}\to0}{x}^{2}'));
-    expect(printer.render(new Expr.parse('lim(x, 0, x + 1)')),
-        equals(r'\lim_{{x}\to0}\left({x}+1\right)'));
-
-    // Render function with too few arguments (template cannot be resolved).
-    expect(
-        () => printer.render(new Expr.parse('lim(x, 0)')), throwsArgumentError);
-
-    // Test dictUpdate/dictReplace with onDictUpdate.
-    bool dictUpdated = false;
-    printer.onDictUpdate.listen((_) {
-      dictUpdated = true;
-    });
-
-    printer.dictUpdate(new LaTeXDictUpdate([], [
-      new LaTeXDictUpdateAddition(
-          Expr.defaultContext.assignId('pi', false), new LaTeXDictEntry(r'\pi'))
-    ]));
-    printer.dictUpdate(new LaTeXDictUpdate([
-      Expr.defaultContext.assignId('pi', false)
-    ], [
-      new LaTeXDictUpdateAddition(Expr.defaultContext.assignId('phi', false),
-          new LaTeXDictEntry(r'\phi'))
-    ]));
-
-    // Print single symbol.
-    expect(printer.render(new Expr.parse('pi')), equals(r'{pi}'));
-    expect(printer.render(new Expr.parse('phi')), equals(r'{\phi}'));
-
-    // Print function that has not been defined.
-    expect(printer.render(new Expr.parse('3 * fn(x)')),
-        equals(r'3\cdot\text{fn}\left({x}\right)'));
-
-    // Expect argument error for custom expression.
-    expect(() => printer.render(new MyExpr()), throwsArgumentError);
-
-    await printer.destruct();
-    expect(dictUpdated, equals(true));
+    expect(printer.render(ctx.parse('---a'), ctx.getLabel), equals(r'---{a}'));
   });
 }

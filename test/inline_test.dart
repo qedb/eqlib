@@ -8,6 +8,7 @@ import 'package:eqlib/inline.dart';
 import 'package:eqlib/exceptions.dart';
 
 void main() {
+  final ctx = inlineCtx;
   final a = generic('a'), b = generic('b'), c = generic('c');
 
   test('Derivation of centripetal acceleration (step 1)', () {
@@ -38,15 +39,15 @@ void main() {
     expect(e, equals(eq(pvec, r * (sin(theta) * ihat + cos(theta) * jhat))));
   });
 
-  test('Solve simple equations', () {
+  test('Solve simple equations with Stepper', () {
     final x = symbol('x');
 
     final steps = new Stepper([
-      new Step.envelop(a + b, innerExpr - b),
+      new Step.envelop(a + b, envelopeInner() - b),
       new Step.substitute((a + b) - b, a),
-      new Step.envelop(a * b, innerExpr / b),
+      new Step.envelop(a * b, envelopeInner() / b),
       new Step.substitute((a * b) / b, a),
-      new Step.evaluate()
+      new Step.evaluate(ctx.compute)
     ]);
 
     expect(steps.run(eq(x * 2 + 5, 9)), equals(eq(x, 2)));
@@ -69,7 +70,7 @@ void main() {
     e.substitute(eq(diff(fn(a), b), diff(a, b) * diff(fn(a), a)));
     e.substitute(eq(diff(a ^ b, a), b * (a ^ (b - 1))));
     e.substitute(eq(diff(sin(a), a), cos(a)));
-    e.evaluate();
+    e.evaluate(ctx.compute);
     expect(e, equals(eq(symbol('y'), number(3) * (x ^ 2) * cos(x ^ 3))));
   });
 
@@ -77,7 +78,7 @@ void main() {
     expect(
         eq(symbol('y'), symbol('x') ^ 3)
           ..substitute(eq(symbol('x'), 3))
-          ..evaluate(),
+          ..evaluate(ctx.compute),
         equals(eq(symbol('y'), 27)));
   });
 }

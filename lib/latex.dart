@@ -4,8 +4,6 @@
 
 library eqlib.latex;
 
-import 'dart:async';
-
 import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/utils.dart';
 

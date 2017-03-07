@@ -7,33 +7,36 @@ import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/exceptions.dart';
 
 void main() {
-  test('Fibonacci', () {
-    final fib = new Eq.parse('fib(?n) = ffib(?n, 1, 0)');
-    final ffib = new Eq.parse('ffib(?n, ?a, ?b) = ffib(?n - 1, ?a + ?b, ?a)');
-    final ffib0 = new Eq.parse('ffib(0, ?a, ?b) = ?b');
+  final ctx = new SimpleExprContext();
 
-    var e = new Expr.parse('fib(10)');
+  test('Fibonacci', () {
+    final fib = ctx.parseEq('fib(?n) = ffib(?n, 1, 0)');
+    final ffib = ctx.parseEq('ffib(?n, ?a, ?b) = ffib(?n - 1, ?a + ?b, ?a)');
+    final ffib0 = ctx.parseEq('ffib(0, ?a, ?b) = ?b');
+
+    var e = ctx.parse('fib(10)');
     e = e.substitute(fib);
-    expect(e.substituteRecursivly(ffib, ffib0).evaluate(), equals(55));
+    expect(ctx.evaluate(ctx.substituteRecursivly(e, ffib, ffib0)), equals(55));
 
     // Test max recursions.
-    expect(() => e.substituteRecursivly(ffib, ffib0, 0), throwsArgumentError);
-    expect(() => e.substituteRecursivly(ffib, ffib0, 9),
+    expect(
+        () => ctx.substituteRecursivly(e, ffib, ffib0, 0), throwsArgumentError);
+    expect(() => ctx.substituteRecursivly(e, ffib, ffib0, 9),
         eqlibThrows('reached maximum number of recursions'));
 
     // Test incorrect recursion.
     expect(
-        () => e.substituteRecursivly(
-            new Eq.parse('fffib(?n, ?a, ?b) = 0'), ffib0),
+        () => ctx.substituteRecursivly(
+            e, ctx.parseEq('fffib(?n, ?a, ?b) = 0'), ffib0),
         eqlibThrows('recursion ended before terminator was reached'));
   });
 
   test('Factorial', () {
-    final fac = new Eq.parse('fac(?n) = ?n * fac(?n - 1)');
-    final fac1 = new Eq.parse('fac(1) = 1');
+    final fac = ctx.parseEq('fac(?n) = ?n * fac(?n - 1)');
+    final fac1 = ctx.parseEq('fac(1) = 1');
 
-    var e = new Expr.parse('fac(10)');
-    e = e.substituteRecursivly(fac, fac1);
-    expect(e.evaluate(), equals(3628800));
+    var e = ctx.parse('fac(10)');
+    e = ctx.substituteRecursivly(e, fac, fac1);
+    expect(ctx.evaluate(e), equals(3628800));
   });
 }

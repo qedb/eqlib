@@ -3,79 +3,79 @@
 // that can be found in the LICENSE file.
 
 import 'package:test/test.dart';
-import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/inline.dart';
 
 /// Even shorter alias for convenience.
-Expr n(num val) => number(val);
+NumberExprOps n(num val) => number(val);
 
 void main() {
+  final ctx = inlineCtx;
+
   test('Fundamental checks for the parser', () {
     final a = generic('a'), b = generic('b'), c = generic('c');
 
     // Extra parentheses
-    expect(new Expr.parse('(((?a + ?b)))'), equals(a + b));
+    expect(ctx.parse('(((?a + ?b)))'), equals(a + b));
 
     // Precedence and whitespaces
-    expect(new Expr.parse(' ( 1 + 2 ) * 3 ^ sin( a + ?b ) '),
+    expect(ctx.parse(' ( 1 + 2 ) * 3 ^ sin( a + ?b ) '),
         equals((n(1) + 2) * (n(3) ^ fn1('sin')(symbol('a') + b))));
 
     // Numeric values
-    expect(new Expr.parse('-1.23 - 4 + .567 ^ -.89'),
+    expect(ctx.parse('-1.23 - 4 + .567 ^ -.89'),
         equals((n(-1.23) - 4) + (n(.567) ^ -.89)));
-    expect(
-        (new Expr.parse('-1.23 - 4 + .567 ^ -.89').evaluate() * 1000).toInt(),
+    expect((ctx.evaluate(ctx.parse('-1.23 - 4 + .567 ^ -.89')) * 1000).toInt(),
         equals(-3573));
 
     // Unary minus
-    expect(new Expr.parse('-  - -1').evaluate(), equals(-1));
-    expect(new Expr.parse('---?a'), equals(-(-(-a))));
-    expect(new Expr.parse('-?a ^ ?b'), equals((-a) ^ b));
+    expect(ctx.evaluate(ctx.parse('-  - -1')), equals(-1));
+    expect(ctx.parse('---?a'), equals(-(-(-a))));
+    expect(ctx.parse('-?a ^ ?b'), equals((-a) ^ b));
 
     // Implicit multiplication
-    expect(new Expr.parse('?a^?b?c'), equals(a ^ (b * c)));
-    expect(new Expr.parse('?a^f(?b)?c'), equals(a ^ (fn1('f')(b)) * c));
-    expect(new Expr.parse('?a ?b ?c'), equals(a * (b * c)));
-    expect(new Expr.parse('(?a ?b) ?c'), equals((a * b) * c));
-    expect(new Expr.parse('?a sin(?b)'), equals(a * fn1('sin')(b)));
-    expect(new Expr.parse('-1 2 ^ -3 4'), equals(n(-1) * (n(2) ^ (n(-3) * 4))));
-    expect(new Expr.parse('-3sin(2 ^3 (4+5)?b)'),
+    expect(ctx.parse('?a^?b?c'), equals(a ^ (b * c)));
+    expect(ctx.parse('?a^f(?b)?c'), equals(a ^ (fn1('f')(b)) * c));
+    expect(ctx.parse('?a ?b ?c'), equals(a * (b * c)));
+    expect(ctx.parse('(?a ?b) ?c'), equals((a * b) * c));
+    expect(ctx.parse('?a sin(?b)'), equals(a * fn1('sin')(b)));
+    expect(ctx.parse('-1 2 ^ -3 4'), equals(n(-1) * (n(2) ^ (n(-3) * 4))));
+    expect(ctx.parse('-3sin(2 ^3 (4+5)?b)'),
         equals(n(-3) * fn1('sin')(n(2) ^ (n(3) * ((n(4) + 5) * b)))));
   });
 
   test('Parentheses mismatch', () {
-    expect(() => new Expr.parse(''), throwsFormatException);
-    expect(() => new Expr.parse(')'), throwsFormatException);
-    expect(() => new Expr.parse('a+b)'), throwsFormatException);
-    expect(() => new Expr.parse('fn(,)'), throwsFormatException);
-    expect(() => new Expr.parse('a,b'), throwsFormatException);
-    expect(() => new Expr.parse('a+b,b'), throwsFormatException);
-    expect(() => new Expr.parse('(a,b)'), throwsFormatException);
-    expect(() => new Expr.parse('a+'), throwsFormatException);
+    expect(() => ctx.parse(''), throwsFormatException);
+    expect(() => ctx.parse(')'), throwsFormatException);
+    expect(() => ctx.parse('a+b)'), throwsFormatException);
+    expect(() => ctx.parse('fn(,)'), throwsFormatException);
+    expect(() => ctx.parse('a,b'), throwsFormatException);
+    expect(() => ctx.parse('a+b,b'), throwsFormatException);
+    expect(() => ctx.parse('(a,b)'), throwsFormatException);
+    expect(() => ctx.parse('a+'), throwsFormatException);
   });
 
   test('Derivation of centripetal acceleration (step 1)', () {
-    final pvec = new Eq.parse('pvec = vec2d');
-    pvec.substitute(new Eq.parse('vec2d = x ihat + y jhat'));
-    pvec.substitute(new Eq.parse('x = px'));
-    pvec.substitute(new Eq.parse('y = py'));
-    pvec.substitute(new Eq.parse('px = r sin(theta)'));
-    pvec.substitute(new Eq.parse('py = r cos(theta)'));
-    pvec.substitute(new Eq.parse('(?a ?b) ?c = ?a (?b ?c)'));
-    pvec.substitute(new Eq.parse('(?a ?b) ?c = ?a (?b ?c)'));
-    pvec.substitute(new Eq.parse('?a ?b + ?a ?c = ?a*(?b+?c)'));
-    expect(pvec.toString(), equals('pvec=r*(sin(theta)*ihat+cos(theta)*jhat)'));
+    final pvec = ctx.parseEq('pvec = vec2d');
+    pvec.substitute(ctx.parseEq('vec2d = x ihat + y jhat'));
+    pvec.substitute(ctx.parseEq('x = px'));
+    pvec.substitute(ctx.parseEq('y = py'));
+    pvec.substitute(ctx.parseEq('px = r sin(theta)'));
+    pvec.substitute(ctx.parseEq('py = r cos(theta)'));
+    pvec.substitute(ctx.parseEq('(?a ?b) ?c = ?a (?b ?c)'));
+    pvec.substitute(ctx.parseEq('(?a ?b) ?c = ?a (?b ?c)'));
+    pvec.substitute(ctx.parseEq('?a ?b + ?a ?c = ?a*(?b+?c)'));
+    expect(ctx.str(pvec), equals('pvec=r*(sin(theta)*ihat+cos(theta)*jhat)'));
   });
 
   test('Solve a simple equation', () {
-    final eq = new Eq.parse('x 2 + 5 = 9');
-    eq.envelop(new Expr.parse('?a + ?b'), new Expr.parse('{} - ?b'));
-    eq.substitute(new Eq.parse('?a + ?b - ?b = ?a'));
-    eq.envelop(new Expr.parse('?a*?b'), new Expr.parse('{} / ?b'));
-    eq.substitute(new Eq.parse('(?a * ?b) / ?b = ?a'));
-    eq.evaluate();
+    final eq = ctx.parseEq('x 2 + 5 = 9');
+    eq.envelop(ctx.parse('?a + ?b'), ctx.parse('{} - ?b'));
+    eq.substitute(ctx.parseEq('?a + ?b - ?b = ?a'));
+    eq.envelop(ctx.parse('?a*?b'), ctx.parse('{} / ?b'));
+    eq.substitute(ctx.parseEq('(?a * ?b) / ?b = ?a'));
+    eq.evaluate(ctx.compute);
 
     expect(eq.left, equals(symbol('x')));
-    expect(eq.right.evaluate(), equals(2.0));
+    expect(ctx.evaluate(eq.right), equals(2.0));
   });
 }

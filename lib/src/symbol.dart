@@ -6,7 +6,7 @@ part of eqlib;
 
 /// Symbolic expression
 class SymbolExpr extends FunctionSymbolExpr {
-  SymbolExpr(int id, [bool generic = false]) : super(id, generic) {
+  SymbolExpr(int id, bool generic) : super(id, generic) {
     assert(id != null); // Do not accept null as input.
   }
 
@@ -34,5 +34,5 @@ class SymbolExpr extends FunctionSymbolExpr {
       mapping.containsKey(id) ? mapping[id].clone() : clone();
 
   @override
-  num evaluateInternal(compute) => double.NAN; // Symbols cannot be evaluated.
+  num evaluate(compute) => double.NAN; // Symbols cannot be evaluated.
 }

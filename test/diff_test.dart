@@ -7,6 +7,7 @@ import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/inline.dart';
 
 void main() {
+  final ctx = inlineCtx;
   final a = symbol('a', generic: true);
   final b = symbol('b', generic: true);
 
@@ -31,37 +32,29 @@ void main() {
     final e4 = e.clone();
 
     // First step difference
-    expect(difference(e1.right, e2.right).toString(),
-        equals(eq(e1.right, e2.right).toString()));
+    expect(difference(e1.right, e2.right),
+        equals(new TreeDiffResult(diff: new TreeDiff(eq(e1.right, e2.right)))));
 
     // Second step difference
     expect(
-        difference(e2.right, e3.right).toString(),
-        equals([
-          '(',
-          eq(e2.right, e3.right).toString(),
-          ' OR ',
-          eq(diff(x ^ 3, x), number(3) * (x ^ (number(3) - 1))).toString(),
-          ')'
-        ].join()));
+        difference(e2.right, e3.right),
+        equals(new TreeDiffResult(
+            diff: new TreeDiff(eq(e2.right, e3.right), [
+          new TreeDiff(eq(diff(x ^ 3, x), number(3) * (x ^ (number(3) - 1))))
+        ]))));
 
     // Third step difference
     expect(
-        difference(e3.right, e4.right).toString(),
-        equals([
-          '(',
-          eq(e3.right, e4.right).toString(),
-          ' OR ',
-          eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)).toString(),
-          ')'
-        ].join()));
+        difference(e3.right, e4.right),
+        equals(new TreeDiffResult(
+            diff: new TreeDiff(eq(e3.right, e4.right),
+                [new TreeDiff(eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))]))));
   });
 
   test('numsNotEqual', () {
-    expect(difference(number(1), number(2)).toString(),
-        '{hasDiff: true, numsNotEqual: true}');
-    expect(
-        difference(new Expr.parse('1 + a'), new Expr.parse('2 + a')).toString(),
-        equals('1+a=2+a'));
+    expect(difference(number(1), number(2)),
+        equals(new TreeDiffResult(hasDiff: true, numsNotEqual: true)));
+    expect(difference(ctx.parse('1 + a'), ctx.parse('2 + a')),
+        equals(new TreeDiffResult(diff: new TreeDiff(ctx.parseEq('1+a=2+a')))));
   });
 }

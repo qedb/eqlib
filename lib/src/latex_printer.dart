@@ -33,19 +33,6 @@ class LaTeXDictEntry {
       this.preEvalIndex = -1]);
 }
 
-class LaTeXDictUpdateAddition {
-  final int id;
-  final LaTeXDictEntry entry;
-  LaTeXDictUpdateAddition(this.id, this.entry);
-}
-
-/// [LaTeXPrinter.onDictUpdate] event data
-class LaTeXDictUpdate {
-  final List<int> remove;
-  final List<LaTeXDictUpdateAddition> add;
-  LaTeXDictUpdate(this.remove, this.add);
-}
-
 /// LaTeX Expr printer
 /// TODO: use [LaTeXTemplateLibrary].
 class LaTeXPrinter {
@@ -59,44 +46,22 @@ class LaTeXPrinter {
   /// (including functions!).
   static const functionPrecedence = 5;
 
-  /// Dictionary update events.
-  final _onDictUpdate = new StreamController<LaTeXDictUpdate>.broadcast();
-  Stream<LaTeXDictUpdate> get onDictUpdate => _onDictUpdate.stream;
-
-  /// Stream destructor.
-  Future destruct() => _onDictUpdate.close();
-
-  void addDefaultEntries() {
-    _dict[Expr.defaultContext.operators.id('+')] =
-        const LaTeXDictEntry(r'$(a)+$(b)', true, 1, 0);
-    _dict[Expr.defaultContext.operators.id('-')] =
-        const LaTeXDictEntry(r'$(a)-$(b)', true, 1, 0);
-    _dict[Expr.defaultContext.operators.id('*')] =
-        const LaTeXDictEntry(r'$(a)\cdot$(b)', true, 2, 0);
-    _dict[Expr.defaultContext.operators.id('/')] =
-        const LaTeXDictEntry(r'\frac{$a}{$b}', false, 2, 0);
-    _dict[Expr.defaultContext.operators.id('^')] =
-        const LaTeXDictEntry(r'$!(a)^{$b}', true, 3, 1);
-    _dict[Expr.defaultContext.operators.id('~')] =
-        const LaTeXDictEntry(r'-$(a)', false, 4, 0);
-  }
-
-  // Add or replace entry in printer dictionary.
-  void dictUpdate(LaTeXDictUpdate update) {
-    update.remove.forEach((id) => _dict.remove(id));
-    update.add.forEach((add) => _dict[add.id] = add.entry);
-    _onDictUpdate.add(update);
+  void addDefaultEntries(OperatorConfig ops) {
+    _dict[ops.id('+')] = const LaTeXDictEntry(r'$(a)+$(b)', true, 1, 0);
+    _dict[ops.id('-')] = const LaTeXDictEntry(r'$(a)-$(b)', true, 1, 0);
+    _dict[ops.id('*')] = const LaTeXDictEntry(r'$(a)\cdot$(b)', true, 2, 0);
+    _dict[ops.id('/')] = const LaTeXDictEntry(r'\frac{$a}{$b}', false, 2, 0);
+    _dict[ops.id('^')] = const LaTeXDictEntry(r'$!(a)^{$b}', true, 3, 1);
+    _dict[ops.id('~')] = const LaTeXDictEntry(r'-$(a)', false, 4, 0);
   }
 
   /// Render LaTeX string from the given expression. Expressions that are not in
-  /// the printer dictionary use [resolveNameOpt] and a generic function
+  /// the printer dictionary use [resolveName] and a generic function
   /// notation.
   ///
   /// The render function should make sure the output can not produce any
   /// conflicts with any surrounding TeX.
-  String render(Expr expr, [ExprGetLabel resolveNameOpt]) {
-    final resolveName = resolveNameOpt ?? Expr.defaultContext.getLabel;
-
+  String render(Expr expr, ExprGetLabel resolveName) {
     // Numbers
     if (expr is NumberExpr) {
       return expr.value.toString();

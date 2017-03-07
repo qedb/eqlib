@@ -13,6 +13,3 @@ typedef String ExprGetLabel(int id);
 /// Function to should compute a numeric value for the given expression ID
 /// and arguments.
 typedef num ExprCompute(int id, List<num> args);
-
-/// Function to generate a human readable string from the given expression.
-typedef String ExprToString(Expr expr);

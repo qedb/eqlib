@@ -8,14 +8,16 @@ import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
 
 void main() {
+  final ctx = new SimpleExprContext();
+
   test('Codec test', () {
-    final expr = new Expr.parse('2 * a(?a, ?b, 3.45 - 6 * 7) ^ (a + b)');
+    final expr = ctx.parse('2 * a(?a, ?b, 3.45 - 6 * 7) ^ (a + b)');
 
     // Check encoder.
     expect(
         expr.toBase64(),
         equals(
-            'CQACAAMAAQCamZmZmZkLQAoAAAALAAAABQAAAAcAAAAJAAAABAAAAAMAAAAJAAAADAAAAAAAAgIDAgIAAAIGBwIJAwQAAQUMAgoLBgcI'));
+            'CQACAAMAAQCamZmZmZkLQAsAAAAMAAAABgAAAAgAAAAKAAAABQAAAAQAAAAKAAAADQAAAAAAAgIDAgIAAAIGBwIJAwQAAQUMAgoLBgcI'));
 
     // Check encoding and decoding.
     expect(new Expr.fromBinary(expr.toBinary()), equals(expr));
@@ -24,8 +26,8 @@ void main() {
 
   test('256+ function table codec', () {
     final n = 1000;
-    final expr = new Expr.parse(
-        new List<String>.generate(n, (i) => 'symbol$i').join('+'));
+    final expr =
+        ctx.parse(new List<String>.generate(n, (i) => 'symbol$i').join('+'));
 
     // Check encoding and decoding.
     expect(new Expr.fromBinary(expr.toBinary()), equals(expr));

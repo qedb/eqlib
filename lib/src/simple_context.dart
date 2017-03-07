@@ -4,6 +4,8 @@
 
 part of eqlib;
 
+typedef num _Compute(List<num> args);
+
 class PrinterEntry {
   final String label;
   final bool generic;
@@ -20,7 +22,7 @@ class PrinterEntry {
 }
 
 /// A standalone/in-memory context for parsing and printing expressions.
-class DefaultExprContext {
+class SimpleExprContext extends ExprContext {
   /// Default envelope self character.
   static const envelopeLbl = '{}';
 
@@ -34,8 +36,13 @@ class DefaultExprContext {
   /// Operator configuration used by this backend.
   final operators = new OperatorConfig(1);
 
-  DefaultExprContext() {
+  /// Computable functions.
+  final computable = new Map<int, _Compute>();
+
+  SimpleExprContext() {
     // Load default operator configuration.
+    operators.add(Associativity.ltr,
+        argc: 2, lvl: 0, char: '=', id: assignId('=', false));
     operators.add(Associativity.ltr,
         argc: 2, lvl: 1, char: '+', id: assignId('+', false));
     operators.add(Associativity.ltr,
@@ -58,9 +65,31 @@ class DefaultExprContext {
     // Negation.
     operators.add(Associativity.rtl,
         argc: 1, lvl: 4, char: '~', id: assignId('~', false));
+
+    // Add computable functions.
+    computable[operators.id('+')] = (args) => args[0] + args[1];
+    computable[operators.id('-')] = (args) => args[0] - args[1];
+    computable[operators.id('*')] = (args) => args[0] * args[1];
+    computable[operators.id('/')] = (args) => args[0] / args[1];
+    computable[operators.id('^')] = (args) => pow(args[0], args[1]);
+    computable[operators.id('~')] = (args) => -args[0];
   }
 
-  /// Implementation of [ExprAssignId].
+  @override
+  Expr parse(String str) => parseExpression(str, operators, assignId);
+
+  @override
+  Eq parseEq(String str) {
+    final expr = parseExpression(str, operators, assignId);
+    if (expr is FunctionExpr && expr.id == operators.id('=')) {
+      assert(expr.args.length == 2);
+      return new Eq(expr.args[0], expr.args[1]);
+    } else {
+      throw new EqLibException('no top level equation found');
+    }
+  }
+
+  @override
   int assignId(String label, bool generic) {
     if (label == envelopeLbl) {
       // This expression label is reserved to represent expression ID 0, which
@@ -78,7 +107,7 @@ class DefaultExprContext {
     }
   }
 
-  /// Implementation of [ExprGetLabel].
+  @override
   String getLabel(int id) {
     final idx = id - idOffset;
     if (idx >= 0 && idx < printerDict.length) {
@@ -88,58 +117,49 @@ class DefaultExprContext {
     }
   }
 
-  /// Default implementation of [ExprCompute].
+  @override
   num compute(int id, List<num> args) {
     // Clean but less efficient implementation.
-    if (id == operators.id('+')) {
-      assert(args.length == 2);
-      return args[0] + args[1];
-    } else if (id == operators.id('-')) {
-      assert(args.length == 2);
-      return args[0] - args[1];
-    } else if (id == operators.id('*')) {
-      assert(args.length == 2);
-      return args[0] * args[1];
-    } else if (id == operators.id('/')) {
-      assert(args.length == 2);
-      return args[0] / args[1];
-    } else if (id == operators.id('^')) {
-      assert(args.length == 2);
-      return pow(args[0], args[1]);
-    } else if (id == operators.id('~')) {
-      assert(args.length == 1);
-      return -args[0];
+    if (computable.containsKey(id)) {
+      assert(operators.idToArgc[id] == args.length);
+      return computable[id](args);
     } else {
       return double.NAN;
     }
   }
 
-  /// Implementation of [ExprToString].
-  String print(Expr expr) {
-    final generic = expr.isGeneric ? '?' : '';
+  @override
+  String str(dynamic input) {
+    if (input is Expr) {
+      final generic = input.isGeneric ? '?' : '';
 
-    if (expr is NumberExpr) {
-      return expr.value.toString();
-    } else if (expr is SymbolExpr) {
-      return '$generic${getLabel(expr.id)}';
-    } else if (expr is FunctionExpr) {
-      final id = expr.id;
-      final args = expr.args;
-      final label = getLabel(id);
+      if (input is NumberExpr) {
+        return input.value.toString();
+      } else if (input is SymbolExpr) {
+        return '$generic${getLabel(input.id)}';
+      } else if (input is FunctionExpr) {
+        final id = input.id;
+        final args = input.args;
+        final label = getLabel(id);
 
-      if (operators.opChars.contains(label.codeUnitAt(0))) {
-        assert(args.length == operators.idToArgc[id]);
-        if (label == '~') {
-          return _printOperator(null, args.first, id, '-');
+        if (operators.opChars.contains(label.codeUnitAt(0))) {
+          assert(args.length == operators.idToArgc[id]);
+          if (label == '~') {
+            return _printOperator(null, args.first, id, '-');
+          } else {
+            return _printOperator(args[0], args[1], id, label);
+          }
         } else {
-          return _printOperator(args[0], args[1], id, label);
+          return '$generic$label(${args.map((arg) => str(arg)).join(',')})';
         }
       } else {
-        return '$generic$label(${args.join(',')})';
+        throw new ArgumentError(
+            'unrecognized input expression: ${input.runtimeType}');
       }
+    } else if (input is Eq) {
+      return '${str(input.left)}=${str(input.right)}';
     } else {
-      throw new ArgumentError(
-          'expr type must be one of: NumberExpr, SymbolExpr, FunctionExpr');
+      throw new ArgumentError('input type must have type Expr or Eq');
     }
   }
 
@@ -167,11 +187,11 @@ class DefaultExprContext {
       final ass = operators.idToAssociativity[id];
       final pre = operators.idToPrecedence[id];
       if (pre < parentPre || (pre == parentPre && ass == direction)) {
-        return '($arg)';
+        return '(${str(arg)})';
       }
     }
 
     // Fallback.
-    return '$arg';
+    return str(arg);
   }
 }

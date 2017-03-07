@@ -3,11 +3,12 @@
 // that can be found in the LICENSE file.
 
 import 'package:test/test.dart';
-import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/inline.dart';
 import 'package:eqlib/exceptions.dart';
 
 void main() {
+  final ctx = inlineCtx;
+
   test('Product rule through limits', () {
     final lim = fn3('lim');
     final diff = fn2('diff');
@@ -27,18 +28,16 @@ void main() {
 
   test('Various staments related to generic function argument inference', () {
     // Generic functions can only have a single argument.
-    expect(
-        () => new Expr.parse('?a(b,c)').substitute(new Eq.parse('?a(b,c)=d')),
+    expect(() => ctx.parse('?a(b,c)').substitute(ctx.parseEq('?a(b,c)=d')),
         eqlibThrows('generic functions can only have a single argument'));
     expect(
-        () => new Expr.parse('?a(b,c)')
-            .remap({Expr.defaultContext.assignId('a', true): symbol('d')}, {}),
+        () => ctx
+            .parse('?a(b,c)')
+            .remap({ctx.assignId('a', true): symbol('d')}, {}),
         eqlibThrows('generic functions can only have a single argument'));
 
     // Generic functions must all be equal.
-    expect(
-        () =>
-            new Expr.parse('?a(b(c))').substitute(new Eq.parse('?a(?a(b))=d')),
+    expect(() => ctx.parse('?a(b(c))').substitute(ctx.parseEq('?a(?a(b))=d')),
         eqlibThrows('generic functions must all be equal'));
   });
 }

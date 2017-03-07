@@ -294,7 +294,7 @@ void _popStack(
     final id = fn.id == ops.implicitMultiplyId ? ops.id('*') : fn.id;
     // Note: the argument list is reversed because they have been added to the
     // stack in first in last out order (because of List.removeLast()).
-    output.add(new FunctionExpr(id, args.reversed.toList(), fn.generic));
+    output.add(new FunctionExpr(id, fn.generic, args.reversed.toList()));
   }
 }
 

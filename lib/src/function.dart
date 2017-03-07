@@ -15,7 +15,7 @@ abstract class FunctionSymbolExpr extends Expr {
 class FunctionExpr extends FunctionSymbolExpr {
   final List<Expr> args;
 
-  FunctionExpr(int id, this.args, [bool generic = false]) : super(id, generic) {
+  FunctionExpr(int id, bool generic, this.args) : super(id, generic) {
     assert(id != null && args != null); // Do not accept null as input.
     assert(args.isNotEmpty); // Without args a SymbolExpr should be used.
   }
@@ -24,16 +24,15 @@ class FunctionExpr extends FunctionSymbolExpr {
   FunctionExpr clone([Expr argCopy(Expr expr) = Expr.staticClone]) =>
       new FunctionExpr(
           id,
+          generic,
           new List<Expr>.generate(args.length, (i) => argCopy(args[i]),
-              growable: false),
-          generic);
+              growable: false));
 
   @override
   bool equals(other) =>
       other is FunctionExpr &&
       other.id == id &&
-      other.args.length == args.length &&
-      ifEvery(other.args, args, (a, b) => a == b);
+      const ListEquality().equals(other.args, args);
 
   @override
   int get expressionHash => jFinish(
@@ -118,7 +117,7 @@ class FunctionExpr extends FunctionSymbolExpr {
   }
 
   @override
-  num evaluateInternal(compute) {
+  num evaluate(compute) {
     final numArgs = new List<num>(args.length);
     var allEval = true;
     for (var i = 0; i < args.length; i++) {

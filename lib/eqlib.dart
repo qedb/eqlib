@@ -10,6 +10,7 @@ import 'dart:typed_data';
 
 import 'package:eqlib/utils.dart';
 import 'package:eqlib/exceptions.dart';
+import 'package:collection/collection.dart';
 
 import 'src/parser_utils.dart';
 
@@ -19,10 +20,11 @@ part 'src/number.dart';
 part 'src/symbol.dart';
 part 'src/function.dart';
 part 'src/interface.dart';
+part 'src/parser.dart';
+part 'src/context.dart';
+part 'src/operator_config.dart';
+part 'src/simple_context.dart';
 
 part 'src/codec.dart';
-part 'src/parser.dart';
 part 'src/stepper.dart';
 part 'src/tree_diff.dart';
-part 'src/standalone.dart';
-part 'src/operator_config.dart';

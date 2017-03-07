@@ -34,5 +34,5 @@ class NumberExpr extends Expr {
   NumberExpr remap(mapping, genericFunctions) => clone();
 
   @override
-  num evaluateInternal(compute) => value;
+  num evaluate(compute) => value;
 }

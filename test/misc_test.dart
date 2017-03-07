@@ -11,18 +11,20 @@ import 'package:eqlib/exceptions.dart';
 import 'myexpr.dart';
 
 void main() {
+  final ctx = inlineCtx;
   final a = symbol('a'), b = symbol('b');
 
   test('Eq.hashCode', () {
     expect(
-        new Eq.parse('100=100').hashCode,
+        ctx.parseEq('100=100').hashCode,
         equals(jFinish(jCombine(jCombine(0, jFinish(jCombine(1041, 100))),
             jFinish(jCombine(1041, 100))))));
-    expect(new Eq.parse('a * b = b * a').hashCode,
+    expect(ctx.parseEq('a * b = b * a').hashCode,
         equals(eq(a * b, b * a).hashCode));
 
     // Vaildate hashCodes across different expression types.
-    expect(new NumberExpr(10).hashCode, isNot(new SymbolExpr(10).hashCode));
+    expect(
+        new NumberExpr(10).hashCode, isNot(new SymbolExpr(10, false).hashCode));
   });
 
   test('EqLibException', () {
@@ -32,28 +34,27 @@ void main() {
   });
 
   test('Expr.from', () {
-    expect(new Expr.from(new SymbolExpr(100)), equals(new SymbolExpr(100)));
+    expect(new Expr.from(new SymbolExpr(100, false)),
+        equals(new SymbolExpr(100, false)));
     expect(new Expr.from(100), equals(new NumberExpr(100)));
     expect(() => new Expr.from('a'), throwsArgumentError);
   });
 
   test('FunctionExpr.matchSuperset', () {
-    expect(
-        new Expr.parse('a(b)').matchSuperset(number(1)).match, equals(false));
-    expect(() => new Expr.parse('a(b)').matchSuperset(new MyExpr()),
+    expect(ctx.parse('a(b)').matchSuperset(number(1)).match, equals(false));
+    expect(() => ctx.parse('a(b)').matchSuperset(new MyExpr()),
         throwsArgumentError);
   });
 
-  test('Standalone engine', () {
-    expect(new Expr.parse('-(1 + 1)').evaluate(), equals(-2));
-    expect(() => Expr.defaultContext.print(new MyExpr()), throwsArgumentError);
+  test('Default context', () {
+    expect(ctx.evaluate(ctx.parse('-(1 + 1)')), equals(-2));
+    expect(() => ctx.str(new MyExpr()), throwsArgumentError);
 
     // Standalone resolve generic/non-generic distinctive.
-    expect(Expr.defaultContext.assignId('x', false),
-        isNot(equals(Expr.defaultContext.assignId('x', true))));
+    expect(ctx.assignId('x', false), isNot(equals(ctx.assignId('x', true))));
 
     // Standalone printer.
-    final printTest = new Expr.parse('1 + a - 3 * (b / 5) ^-c');
-    expect(printTest.toString(), equals('1+a-3*(b/5)^-c'));
+    final printTest = ctx.parse('1 + a - 3 * (b / 5) ^-c');
+    expect(ctx.str(printTest), equals('1+a-3*(b/5)^-c'));
   });
 }

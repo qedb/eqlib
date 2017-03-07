@@ -10,17 +10,6 @@ class W<T> {
   W(T intial) : v = intial;
 }
 
-/// Indexed version of [Iterable.every] for [List].
-bool ifEvery(List a, List b, bool test(dynamic a, dynamic b)) {
-  assert(a.length == b.length);
-  for (var i = 0; i < a.length; i++) {
-    if (!test(a[i], b[i])) {
-      return false;
-    }
-  }
-  return true;
-}
-
 /// Generator function for [generateList].
 typedef T ListItemGenerator<T>(int idx);
 
@@ -37,6 +26,9 @@ List<T> generateList<T>(int n, List<ListItemGenerator<T>> generators) {
 }
 
 /// Jenkins one-at-a-time hash
+///
+/// Copied from:
+/// https://github.com/google/quiver-dart/blob/master/lib/src/core/hash.dart
 
 // ignore: parameter_assignments
 int jCombine(int hash, int value) {
@@ -55,3 +47,12 @@ int jFinish(int hash) {
   hash = hash ^ (hash >> 11);
   return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
 }
+
+int hashCode2(Object a, Object b) =>
+    jFinish(jCombine(jCombine(0, a.hashCode), b.hashCode));
+
+int hashCode3(Object a, Object b, Object c) => jFinish(
+    jCombine(jCombine(jCombine(0, a.hashCode), b.hashCode), c.hashCode));
+
+int hashObjects(Iterable objects) =>
+    jFinish(objects.fold(0, (h, i) => jCombine(h, i.hashCode)));

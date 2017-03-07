@@ -11,8 +11,13 @@ class TreeDiff {
   TreeDiff(this.rule, [this.alt = const []]);
 
   @override
-  String toString() =>
-      alt.isEmpty ? rule.toString() : '($rule OR ${alt.join(" AND ")})';
+  bool operator ==(dynamic other) =>
+      other is TreeDiff &&
+      other.rule == rule &&
+      const ListEquality().equals(other.alt, alt);
+
+  @override
+  int get hashCode => hashCode2(rule, hashObjects(alt));
 }
 
 class TreeDiffResult {
@@ -29,9 +34,14 @@ class TreeDiffResult {
       {this.hasDiff: true, this.numsNotEqual: false, this.diff: null});
 
   @override
-  String toString() => diff != null
-      ? diff.toString()
-      : '{hasDiff: $hasDiff, numsNotEqual: $numsNotEqual}';
+  bool operator ==(dynamic other) =>
+      other is TreeDiffResult &&
+      other.hasDiff == hasDiff &&
+      other.numsNotEqual == numsNotEqual &&
+      other.diff == diff;
+
+  @override
+  int get hashCode => hashCode3(diff, hasDiff, numsNotEqual);
 }
 
 /// Implementation of the full Tree-Diff algorithm for expression trees.

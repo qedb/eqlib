@@ -7,12 +7,14 @@ import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/latex.dart';
 
 void main() {
-  test('Basic LaTeX parsing', () {
-    final parser = new LaTeXParser();
+  final ctx = new SimpleExprContext();
 
-    expect(parser.parse(r'\sin^2\theta'),
-        equals(new Expr.parse(r'sin(\theta)^2')));
-    expect(parser.parse(r'\frac{d}{dx}x^2'),
-        equals(new Expr.parse(r'diff(x^2, x)')));
+  test('Basic LaTeX parsing', () {
+    final parser = new LaTeXParser(ctx);
+
+    expect(parser.parse(r'\sin^2\theta', ctx.assignId),
+        equals(ctx.parse(r'sin(\theta)^2')));
+    expect(parser.parse(r'\frac{d}{dx}x^2', ctx.assignId),
+        equals(ctx.parse(r'diff(x^2, x)')));
   });
 }

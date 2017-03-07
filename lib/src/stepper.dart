@@ -22,7 +22,7 @@ abstract class Step {
       new SubstituteStep(new Eq(left, right));
   factory Step.envelop(Expr template, Expr envelope) =>
       new EnvelopStep(template, envelope);
-  factory Step.evaluate() => new EvalStep();
+  factory Step.evaluate(ExprCompute compute) => new EvalStep(compute);
 
   /// Apply this step to the given equation.
   void applyTo(Eq eq);
@@ -49,8 +49,11 @@ class EnvelopStep implements Step {
 }
 
 class EvalStep implements Step {
+  final ExprCompute compute;
+  EvalStep(this.compute);
+
   @override
   void applyTo(Eq eq) {
-    eq.evaluate();
+    eq.evaluate(compute);
   }
 }

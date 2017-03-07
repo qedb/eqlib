@@ -213,7 +213,7 @@ Expr _exprCodecDecode(W<int> ptr, ExprCodecData data) {
       final args = new List<Expr>.generate(
           argCount, (i) => _exprCodecDecode(ptr, data),
           growable: false);
-      return new FunctionExpr(data.functionId[value], args, generic);
+      return new FunctionExpr(data.functionId[value], generic, args);
     } else {
       return new SymbolExpr(data.functionId[value], generic);
     }
