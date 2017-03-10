@@ -9,8 +9,7 @@ import 'inline_test.dart' as inline_test;
 import 'recursive_test.dart' as recursive_test;
 import 'infer_test.dart' as infer_test;
 import 'codec_test.dart' as codec_test;
-import 'latex_printer_test.dart' as latex_printer_test;
-import 'latex_parser_test.dart' as latex_parser_test;
+import 'latex_test.dart' as latex_test;
 import 'diff_test.dart' as diff_test;
 import 'misc_test.dart' as misc_test;
 
@@ -20,8 +19,7 @@ void main() {
   group('Recursive substitutions', recursive_test.main);
   group('Argument inference', infer_test.main);
   group('Binary codec', codec_test.main);
-  group('LaTeX printer', latex_printer_test.main);
-  group('LaTeX parser', latex_parser_test.main);
+  group('LaTeX', latex_test.main);
   group('Tree-Diff', diff_test.main);
   group('Miscellaneous', misc_test.main);
 }

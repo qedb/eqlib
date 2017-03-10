@@ -103,27 +103,27 @@ class LaTeXParser {
   /// Parsed [rules]
   final parsedRules = new List<Eq>();
 
-  LaTeXParser(ExprContext ctx) {
+  LaTeXParser(ExprContextLabelResolver resolver) {
     // Load default operator configuration.
     operators
       ..add(Associativity.ltr,
-          argc: 2, lvl: 0, char: '=', id: ctx.assignId('=', false))
+          argc: 2, lvl: 0, char: '=', id: resolver.assignId('=', false))
       ..add(Associativity.ltr,
-          argc: 2, lvl: 1, char: '+', id: ctx.assignId('+', false))
+          argc: 2, lvl: 1, char: '+', id: resolver.assignId('+', false))
       ..add(Associativity.ltr,
-          argc: 2, lvl: 1, char: '-', id: ctx.assignId('-', false))
+          argc: 2, lvl: 1, char: '-', id: resolver.assignId('-', false))
       ..add(Associativity.ltr,
-          argc: 2, lvl: 2, char: '*', id: ctx.assignId('*', false))
+          argc: 2, lvl: 2, char: '*', id: resolver.assignId('*', false))
       ..add(Associativity.ltr,
-          argc: 2, lvl: 2, char: '/', id: ctx.assignId('/', false))
+          argc: 2, lvl: 2, char: '/', id: resolver.assignId('/', false))
       ..add(Associativity.rtl,
-          argc: 2, lvl: 3, char: '^', id: ctx.assignId('^', false))
+          argc: 2, lvl: 3, char: '^', id: resolver.assignId('^', false))
       ..add(Associativity.rtl,
-          argc: 1, lvl: 4, char: '~', id: ctx.assignId('~', false))
+          argc: 1, lvl: 4, char: '~', id: resolver.assignId('~', false))
       ..add(Associativity.ltr,
-          argc: 1, lvl: 5, char: '!', id: ctx.assignId('!', false))
+          argc: 1, lvl: 5, char: '!', id: resolver.assignId('!', false))
       ..add(Associativity.ltr,
-          argc: 2, lvl: 6, char: '_', id: ctx.assignId('_', false))
+          argc: 2, lvl: 6, char: '_', id: resolver.assignId('_', false))
       ..add(Associativity.ltr, argc: 2, lvl: 2, id: 0);
 
     // Add variations of basic trigonometry functions to [allFunctions].
@@ -134,15 +134,21 @@ class LaTeXParser {
     ]));
 
     // Parse all specified rules.
-    rules.forEach((left, right) => parsedRules
-        .add(new Eq(parse(left, ctx.assignId, false), ctx.parse(right))));
+    // Note that the right side can be parsed with a bare parser.
+    rules.forEach((left, right) => parsedRules.add(new Eq(
+        parse(left, resolver.assignId, false),
+        parseExpression(right, operators, resolver.assignId))));
 
     // Generate additional rules for all functions specified in [allFunctions].
     parsedRules.addAll(generateList<Eq>(allFunctions.length, [
-      (i) => new Eq(parse('\\${allFunctions[i]} ?a', ctx.assignId, false),
-          ctx.parse('${allFunctions[i]}(?a)')),
-      (i) => new Eq(parse('\\${allFunctions[i]}^?e ?a', ctx.assignId, false),
-          ctx.parse('${allFunctions[i]}(?a)^?e'))
+      (i) => new Eq(
+          parse('\\${allFunctions[i]} ?a', resolver.assignId, false),
+          parseExpression(
+              '${allFunctions[i]}(?a)', operators, resolver.assignId)),
+      (i) => new Eq(
+          parse('\\${allFunctions[i]}^?e ?a', resolver.assignId, false),
+          parseExpression(
+              '${allFunctions[i]}(?a)^?e', operators, resolver.assignId))
     ]));
   }
 

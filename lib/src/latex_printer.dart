@@ -46,15 +46,16 @@ class LaTeXPrinter {
   /// (including functions!).
   static const functionPrecedence = 5;
 
-  void addDefaultEntries(OperatorConfig ops) {
-    _dict[ops.id('+')] = const LaTeXDictEntry(r'$(0)+$(1)', true, 1, 0);
-    _dict[ops.id('-')] = const LaTeXDictEntry(r'$(0)-$(1)', true, 1, 0);
-    _dict[ops.id('*')] = const LaTeXDictEntry(r'$(0)\cdot$(1)', true, 2, 0);
-    _dict[ops.id('/')] = const LaTeXDictEntry(r'\frac{$0}{$1}', false, 2, 0);
-    _dict[ops.id('^')] = const LaTeXDictEntry(r'$!(0)^{$1}', true, 3, 1);
-    _dict[ops.id('~')] = const LaTeXDictEntry(r'-$(0)', false, 4, 0);
-    _dict[ops.id('!')] = const LaTeXDictEntry(r'$(0)!', true, 5, 0);
-    _dict[ops.id('_')] = const LaTeXDictEntry(r'$(0)_$(1)', true, 6, 1);
+  void addDefaultEntries(ExprContextLabelResolver res) {
+    final id = (String char) => res.assignId(char, false);
+    _dict[id('+')] = const LaTeXDictEntry(r'$(0)+$(1)', true, 1, 0);
+    _dict[id('-')] = const LaTeXDictEntry(r'$(0)-$(1)', true, 1, 0);
+    _dict[id('*')] = const LaTeXDictEntry(r'$(0)\cdot$(1)', true, 2, 0);
+    _dict[id('/')] = const LaTeXDictEntry(r'\frac{$0}{$1}', false, 2, 0);
+    _dict[id('^')] = const LaTeXDictEntry(r'$!(0)^{$1}', true, 3, 1);
+    _dict[id('~')] = const LaTeXDictEntry(r'-$(0)', false, 4, 0);
+    _dict[id('!')] = const LaTeXDictEntry(r'$(0)!', true, 5, 0);
+    _dict[id('_')] = const LaTeXDictEntry(r'$(0)_$(1)', true, 6, 1);
   }
 
   /// Render LaTeX string from the given expression. Expressions that are not in
