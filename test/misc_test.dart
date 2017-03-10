@@ -14,6 +14,15 @@ void main() {
   final ctx = inlineCtx;
   final a = symbol('a'), b = symbol('b');
 
+  test('hashCode utils', () {
+    expect(hashCode2(1, 10), equals(hashCode2(1, 10)));
+    expect(hashCode2(1, 10), isNot(hashCode2(1, 11)));
+    expect(hashCode3(1, 10, 100), equals(hashCode3(1, 10, 100)));
+    expect(hashCode3(1, 10, 100), isNot(hashCode3(1, 11, 100)));
+    expect(hashObjects([1, 10, 100]), equals(hashObjects([1, 10, 100])));
+    expect(hashObjects([1, 10, 100]), isNot(hashObjects([1, 11, 100])));
+  });
+
   test('Eq.hashCode', () {
     expect(
         ctx.parseEq('100=100').hashCode,
@@ -46,15 +55,29 @@ void main() {
         throwsArgumentError);
   });
 
-  test('Default context', () {
+  test('Basic SimpleExprContext checks', () {
     expect(ctx.evaluate(ctx.parse('-(1 + 1)')), equals(-2));
     expect(() => ctx.str(new MyExpr()), throwsArgumentError);
 
-    // Standalone resolve generic/non-generic distinctive.
+    // Resolve generic/non-generic is distinctive.
     expect(ctx.assignId('x', false), isNot(equals(ctx.assignId('x', true))));
+    expect(new PrinterEntry('x', false).hashCode,
+        isNot(new PrinterEntry('x', true).hashCode));
 
-    // Standalone printer.
+    // Printing.
     final printTest = ctx.parse('1 + a - 3 * (b / 5) ^-c');
     expect(ctx.str(printTest), equals('1+a-3*(b/5)^-c'));
+
+    // Operator config exception.
+    expect(
+        () => ctx.operators.add(Associativity.ltr,
+            argc: 2, lvl: 0, char: '=', id: ctx.assignId('=', false)),
+        eqlibThrows('operator already configured'));
+
+    // Equation parsing exception.
+    expect(() => ctx.parseEq('a'), eqlibThrows('no top level equation found'));
+
+    // Printing exception.
+    expect(() => ctx.str([]), throwsArgumentError);
   });
 }

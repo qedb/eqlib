@@ -171,7 +171,7 @@ class SimpleExprContext extends ExprContext {
     } else if (input is Eq) {
       return '${str(input.left)}=${str(input.right)}';
     } else {
-      throw new ArgumentError('input type must have type Expr or Eq');
+      throw new ArgumentError('input must have type Expr or Eq');
     }
   }
 

@@ -38,24 +38,21 @@ class LaTeXDictEntry {
 class LaTeXPrinter {
   final _dict = new Map<int, LaTeXDictEntry>();
 
-  /// Default precedence level for function notation
-  ///
-  /// Note: omitting parentheses on single argument functions can be achieved by
-  /// setting the precedence to 1. This means it will put add and sub operators
-  /// in parentheses but not operators with a higer precedence
-  /// (including functions!).
-  static const functionPrecedence = 5;
-
   void addDefaultEntries(ExprContextLabelResolver res) {
     final id = (String char) => res.assignId(char, false);
-    _dict[id('+')] = const LaTeXDictEntry(r'$(0)+$(1)', true, 1, 0);
-    _dict[id('-')] = const LaTeXDictEntry(r'$(0)-$(1)', true, 1, 0);
-    _dict[id('*')] = const LaTeXDictEntry(r'$(0)\cdot$(1)', true, 2, 0);
-    _dict[id('/')] = const LaTeXDictEntry(r'\frac{$0}{$1}', false, 2, 0);
-    _dict[id('^')] = const LaTeXDictEntry(r'$!(0)^{$1}', true, 3, 1);
-    _dict[id('~')] = const LaTeXDictEntry(r'-$(0)', false, 4, 0);
-    _dict[id('!')] = const LaTeXDictEntry(r'$(0)!', true, 5, 0);
-    _dict[id('_')] = const LaTeXDictEntry(r'$(0)_$(1)', true, 6, 1);
+    addDictEntry(id('+'), const LaTeXDictEntry(r'$(0)+$(1)', true, 1, 0));
+    addDictEntry(id('-'), const LaTeXDictEntry(r'$(0)-$(1)', true, 1, 0));
+    addDictEntry(id('*'), const LaTeXDictEntry(r'$(0)\cdot$(1)', true, 2, 0));
+    addDictEntry(id('/'), const LaTeXDictEntry(r'\frac{$0}{$1}', false, 2, 0));
+    addDictEntry(id('^'), const LaTeXDictEntry(r'$!(0)^{$1}', true, 3, 1));
+    addDictEntry(id('~'), const LaTeXDictEntry(r'-$(0)', false, 4, 0));
+    addDictEntry(id('!'), const LaTeXDictEntry(r'$(0)!', true, 5, 0));
+    addDictEntry(id('_'), const LaTeXDictEntry(r'$(0)_$(1)', true, 6, 1));
+  }
+
+  /// Add dictionary entry.
+  void addDictEntry(int id, LaTeXDictEntry entry) {
+    _dict[id] = entry;
   }
 
   /// Render LaTeX string from the given expression. Expressions that are not in

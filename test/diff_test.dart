@@ -44,11 +44,16 @@ void main() {
         ]))));
 
     // Third step difference
-    expect(
-        difference(e3.right, e4.right),
-        equals(new TreeDiffResult(
-            diff: new TreeDiff(eq(e3.right, e4.right),
-                [new TreeDiff(eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))]))));
+    final step3diff = difference(e3.right, e4.right);
+    final step3diffExpect = new TreeDiffResult(
+        diff: new TreeDiff(eq(e3.right, e4.right),
+            [new TreeDiff(eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))]));
+
+    expect(step3diff, equals(step3diffExpect));
+
+    // Compare hash codes in third step difference.
+    expect(step3diff.hashCode, equals(step3diffExpect.hashCode));
+    expect(step3diff.diff.hashCode, equals(step3diffExpect.diff.hashCode));
   });
 
   test('numsNotEqual', () {
