@@ -12,7 +12,7 @@ class LaTeXDictEntry {
   /// Use parentheses to separate this function from surrounding things.
   final bool useParentheses;
 
-  /// Precedence index (when chain).
+  /// Precedence level
   final int precedence;
 
   /// Argument index that is evaluated before this operator is. This index is
@@ -24,7 +24,8 @@ class LaTeXDictEntry {
   /// parentheses (the configuration for this function can again override this
   /// by disabling [useParentheses], for example when the template already
   /// resolves this). This behaviour can also be disabled by the parent template
-  /// if it already provides a way to distinghuish the argument as argument.
+  /// if it already provides a way to distinghuish the argument as inpedenpant
+  /// argument.
   final int preEvalIndex;
 
   const LaTeXDictEntry(this.template,
@@ -34,7 +35,6 @@ class LaTeXDictEntry {
 }
 
 /// LaTeX Expr printer
-/// TODO: use [LaTeXTemplateLibrary].
 class LaTeXPrinter {
   final _dict = new Map<int, LaTeXDictEntry>();
 
@@ -47,12 +47,14 @@ class LaTeXPrinter {
   static const functionPrecedence = 5;
 
   void addDefaultEntries(OperatorConfig ops) {
-    _dict[ops.id('+')] = const LaTeXDictEntry(r'$(a)+$(b)', true, 1, 0);
-    _dict[ops.id('-')] = const LaTeXDictEntry(r'$(a)-$(b)', true, 1, 0);
-    _dict[ops.id('*')] = const LaTeXDictEntry(r'$(a)\cdot$(b)', true, 2, 0);
-    _dict[ops.id('/')] = const LaTeXDictEntry(r'\frac{$a}{$b}', false, 2, 0);
-    _dict[ops.id('^')] = const LaTeXDictEntry(r'$!(a)^{$b}', true, 3, 1);
-    _dict[ops.id('~')] = const LaTeXDictEntry(r'-$(a)', false, 4, 0);
+    _dict[ops.id('+')] = const LaTeXDictEntry(r'$(0)+$(1)', true, 1, 0);
+    _dict[ops.id('-')] = const LaTeXDictEntry(r'$(0)-$(1)', true, 1, 0);
+    _dict[ops.id('*')] = const LaTeXDictEntry(r'$(0)\cdot$(1)', true, 2, 0);
+    _dict[ops.id('/')] = const LaTeXDictEntry(r'\frac{$0}{$1}', false, 2, 0);
+    _dict[ops.id('^')] = const LaTeXDictEntry(r'$!(0)^{$1}', true, 3, 1);
+    _dict[ops.id('~')] = const LaTeXDictEntry(r'-$(0)', false, 4, 0);
+    _dict[ops.id('!')] = const LaTeXDictEntry(r'$(0)!', true, 5, 0);
+    _dict[ops.id('_')] = const LaTeXDictEntry(r'$(0)_$(1)', true, 6, 1);
   }
 
   /// Render LaTeX string from the given expression. Expressions that are not in
@@ -142,7 +144,7 @@ class LaTeXPrinter {
       bool disableParentheses,
       bool forceParentheses) {
     // Compute argument index.
-    final index = match.group(1).codeUnitAt(0) - 'a'.codeUnitAt(0);
+    final index = int.parse(match.group(1));
 
     // If the index is out of bounds with the expression arguments, throw an
     // error.

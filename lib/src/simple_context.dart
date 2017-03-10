@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Herman Bergwerf. All rights reserved.
+// Copyright (c) 2017, Herman Bergwerf. All rights reserved.
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
@@ -6,6 +6,7 @@ part of eqlib;
 
 typedef num _Compute(List<num> args);
 
+/// Item in [SimpleLabelResolver.printerDict]
 class PrinterEntry {
   final String label;
   final bool generic;
@@ -21,8 +22,8 @@ class PrinterEntry {
       (other.label == label && other.generic == generic);
 }
 
-/// A standalone/in-memory context for parsing and printing expressions.
-class SimpleExprContext extends ExprContext {
+/// In-memory label resolver
+class SimpleLabelResolver extends ExprContextLabelResolver {
   /// Default envelope self character.
   static const envelopeLbl = '{}';
 
@@ -32,62 +33,6 @@ class SimpleExprContext extends ExprContext {
 
   /// List of all labels (assigned ID is same List index + [idOffset]).
   final printerDict = new List<PrinterEntry>();
-
-  /// Operator configuration used by this backend.
-  final operators = new OperatorConfig(1);
-
-  /// Computable functions.
-  final computable = new Map<int, _Compute>();
-
-  SimpleExprContext() {
-    // Load default operator configuration.
-    operators.add(Associativity.ltr,
-        argc: 2, lvl: 0, char: '=', id: assignId('=', false));
-    operators.add(Associativity.ltr,
-        argc: 2, lvl: 1, char: '+', id: assignId('+', false));
-    operators.add(Associativity.ltr,
-        argc: 2, lvl: 1, char: '-', id: assignId('-', false));
-    operators.add(Associativity.ltr,
-        argc: 2, lvl: 2, char: '*', id: assignId('*', false));
-    operators.add(Associativity.ltr,
-        argc: 2, lvl: 2, char: '/', id: assignId('/', false));
-    operators.add(Associativity.rtl,
-        argc: 2, lvl: 3, char: '^', id: assignId('^', false));
-
-    /// Implicit multiplication is set to right associativity by default so that
-    /// expressions like these can be written: `a^2b` (which would otherwise be
-    /// parsed as `(a^2)*b`).
-    /// Increasing the precedence level is not an option, this would result in:
-    /// `2a^b` => `(2*a)^b`.
-    operators.add(Associativity.rtl,
-        argc: 2, lvl: 3, id: operators.implicitMultiplyId);
-
-    // Negation.
-    operators.add(Associativity.rtl,
-        argc: 1, lvl: 4, char: '~', id: assignId('~', false));
-
-    // Add computable functions.
-    computable[operators.id('+')] = (args) => args[0] + args[1];
-    computable[operators.id('-')] = (args) => args[0] - args[1];
-    computable[operators.id('*')] = (args) => args[0] * args[1];
-    computable[operators.id('/')] = (args) => args[0] / args[1];
-    computable[operators.id('^')] = (args) => pow(args[0], args[1]);
-    computable[operators.id('~')] = (args) => -args[0];
-  }
-
-  @override
-  Expr parse(String str) => parseExpression(str, operators, assignId);
-
-  @override
-  Eq parseEq(String str) {
-    final expr = parseExpression(str, operators, assignId);
-    if (expr is FunctionExpr && expr.id == operators.id('=')) {
-      assert(expr.args.length == 2);
-      return new Eq(expr.args[0], expr.args[1]);
-    } else {
-      throw new EqLibException('no top level equation found');
-    }
-  }
 
   @override
   int assignId(String label, bool generic) {
@@ -114,6 +59,71 @@ class SimpleExprContext extends ExprContext {
       return printerDict[idx].label;
     } else {
       return null;
+    }
+  }
+}
+
+/// Standalone/in-memory context for parsing and printing expressions
+class SimpleExprContext extends ExprContext {
+  /// Operator configuration used by this backend.
+  final operators = new OperatorConfig(1);
+
+  /// Computable functions.
+  final computable = new Map<int, _Compute>();
+
+  SimpleExprContext(
+      [ExprContextLabelResolver labelResolver,
+      bool loadDefaultOperators = true])
+      : super(labelResolver ?? new SimpleLabelResolver()) {
+    // Load default operator configuration.
+    if (loadDefaultOperators) {
+      operators
+        ..add(Associativity.ltr,
+            argc: 2, lvl: 0, char: '=', id: assignId('=', false))
+        ..add(Associativity.ltr,
+            argc: 2, lvl: 1, char: '+', id: assignId('+', false))
+        ..add(Associativity.ltr,
+            argc: 2, lvl: 1, char: '-', id: assignId('-', false))
+        ..add(Associativity.ltr,
+            argc: 2, lvl: 2, char: '*', id: assignId('*', false))
+        ..add(Associativity.ltr,
+            argc: 2, lvl: 2, char: '/', id: assignId('/', false))
+        ..add(Associativity.rtl,
+            argc: 2, lvl: 3, char: '^', id: assignId('^', false))
+        ..add(Associativity.rtl,
+            argc: 1, lvl: 4, char: '~', id: assignId('~', false))
+        ..add(Associativity.ltr,
+            argc: 1, lvl: 5, char: '!', id: assignId('!', false))
+
+        /// Implicit multiplication is set to right associativity by default so
+        /// that expressions like these can be written: `a^2b` (which would
+        /// otherwise be parsed as `(a^2)*b`).
+        /// Increasing the precedence level is not an option, this would result
+        /// in: `2a^b` => `(2*a)^b`.
+        ..add(Associativity.rtl,
+            argc: 2, lvl: 3, id: operators.implicitMultiplyId);
+    }
+
+    // Add computable functions.
+    computable[operators.id('+')] = (args) => args[0] + args[1];
+    computable[operators.id('-')] = (args) => args[0] - args[1];
+    computable[operators.id('*')] = (args) => args[0] * args[1];
+    computable[operators.id('/')] = (args) => args[0] / args[1];
+    computable[operators.id('^')] = (args) => pow(args[0], args[1]);
+    computable[operators.id('~')] = (args) => -args[0];
+  }
+
+  @override
+  Expr parse(String str) => parseExpression(str, operators, assignId);
+
+  @override
+  Eq parseEq(String str) {
+    final expr = parse(str);
+    if (expr is FunctionExpr && expr.id == operators.id('=')) {
+      assert(expr.args.length == 2);
+      return new Eq(expr.args[0], expr.args[1]);
+    } else {
+      throw new EqLibException('no top level equation found');
     }
   }
 
@@ -146,6 +156,8 @@ class SimpleExprContext extends ExprContext {
           assert(args.length == operators.idToArgc[id]);
           if (label == '~') {
             return _printOperator(null, args.first, id, '-');
+          } else if (label == '!') {
+            return _printOperator(args.first, null, id, label);
           } else {
             return _printOperator(args[0], args[1], id, label);
           }

@@ -41,6 +41,12 @@ void main() {
     expect(ctx.parse('-1 2 ^ -3 4'), equals(n(-1) * (n(2) ^ (n(-3) * 4))));
     expect(ctx.parse('-3sin(2 ^3 (4+5)?b)'),
         equals(n(-3) * fn1('sin')(n(2) ^ (n(3) * ((n(4) + 5) * b)))));
+
+    // Singleton suffix operator (factorial, !)
+    // To keep things together the printing test is also here.
+    final fac = fn1('!');
+    expect(ctx.parse('(?a! + ?b!)/?c!'), equals((fac(a) + fac(b)) / fac(c)));
+    expect(ctx.str(ctx.parse('(?a! + ?b!)/?c!')), equals('(?a!+?b!)/?c!'));
   });
 
   test('Parentheses mismatch', () {

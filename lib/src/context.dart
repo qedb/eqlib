@@ -4,12 +4,23 @@
 
 part of eqlib;
 
-abstract class ExprContext {
+abstract class ExprContextLabelResolver {
   /// Function to assign an ID to an expression label.
   int assignId(String label, bool generic);
 
   /// Function to retrieve the expression label for the given ID.
   String getLabel(int id);
+}
+
+abstract class ExprContext {
+  final ExprContextLabelResolver labelResolver;
+
+  ExprContext(this.labelResolver);
+
+  int assignId(String label, bool generic) =>
+      labelResolver.assignId(label, generic);
+
+  String getLabel(int id) => labelResolver.getLabel(id);
 
   /// Function to should compute a numeric value for the given expression ID
   /// and arguments.

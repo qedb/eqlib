@@ -43,6 +43,9 @@ class LaTeXParser {
     '{': '(',
     '}': ')',
 
+    /// Tilde in LaTeX means a space.
+    '~': ' ',
+
     /// Convert multiplication sign.
     r'\cdot': '*',
 
@@ -86,8 +89,8 @@ class LaTeXParser {
     r'\partial ?x': 'd(?x)',
 
     /// Integrals
-    r'\int ?f d ?x': 'indefinite_integral(?f, ?x)',
-    r'\int_{?x=?a}^{?b} ?f d(?x)': 'definite_integral(?f, ?x, ?a, ?b)',
+    r'\int ?f d ?x': 'int(?f, ?x)',
+    r'\int_{?x=?a}^{?b} ?f d(?x)': 'defint(?f, ?x, ?a, ?b)',
 
     /// Differentials
     r'd/d(?x) ?f': 'diff(?f, ?x)',
@@ -104,6 +107,8 @@ class LaTeXParser {
     // Load default operator configuration.
     operators
       ..add(Associativity.ltr,
+          argc: 2, lvl: 0, char: '=', id: ctx.assignId('=', false))
+      ..add(Associativity.ltr,
           argc: 2, lvl: 1, char: '+', id: ctx.assignId('+', false))
       ..add(Associativity.ltr,
           argc: 2, lvl: 1, char: '-', id: ctx.assignId('-', false))
@@ -116,11 +121,9 @@ class LaTeXParser {
       ..add(Associativity.rtl,
           argc: 1, lvl: 4, char: '~', id: ctx.assignId('~', false))
       ..add(Associativity.ltr,
-          argc: 2, lvl: 0, char: '=', id: ctx.assignId('=', false))
+          argc: 1, lvl: 5, char: '!', id: ctx.assignId('!', false))
       ..add(Associativity.ltr,
-          argc: 2, lvl: 5, char: '_', id: ctx.assignId('_', false))
-      ..add(Associativity.rtl,
-          argc: 1, lvl: 4, char: '!', id: ctx.assignId('!', false))
+          argc: 2, lvl: 6, char: '_', id: ctx.assignId('_', false))
       ..add(Associativity.ltr, argc: 2, lvl: 2, id: 0);
 
     // Add variations of basic trigonometry functions to [allFunctions].
@@ -152,11 +155,10 @@ class LaTeXParser {
     var processedInput = input;
     replaceMap.forEach((key, value) {
       processedInput = processedInput.replaceAllMapped(
-          key, (match) => processReplaceValuee(match, value));
+          key, (match) => processReplaceValue(match, value));
     });
 
     // 2. Parse expression.
-    // TODO: create own context with different ID mechanism and fused printing.
     var expr = parseExpression(processedInput, operators, assignId);
 
     // 3. Apply rules.
@@ -170,7 +172,7 @@ class LaTeXParser {
   }
 
   /// Process [replaceMap] values.
-  String processReplaceValuee(Match keyMatch, String substitute) =>
+  String processReplaceValue(Match keyMatch, String substitute) =>
       substitute.replaceAllMapped(new RegExp(r'\$(\d)+'),
           (match) => keyMatch.group(int.parse(match.group(1))));
 }
