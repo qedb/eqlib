@@ -12,7 +12,7 @@ class StringReader {
   /// String element pointer
   int ptr = 0;
 
-  StringReader(String str) : data = str.codeUnits;
+  StringReader(String str) : data = str.runes.toList();
 
   /// Get current character code.
   int get current => data[ptr];
