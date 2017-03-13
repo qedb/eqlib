@@ -52,7 +52,7 @@ class LaTeXPrinter {
               new List<String>.generate(expr.args.length,
                       (i) => render(expr.args[i], resolveName, ops),
                       growable: false)
-                  .join(',~'),
+                  .join(r',\,'),
               r'\right)}'
             ].join();
     } else {

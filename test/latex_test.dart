@@ -48,7 +48,8 @@ void main() {
     expect(printLaTeX('pi'), equals(r'\pi'));
 
     // Print function that has not been defined.
-    expect(printLaTeX('3 * fn(x)'), equals(r'3~\text{fn}{\left(x\right)}'));
+    expect(
+        printLaTeX('3 * fn(a, b)'), equals(r'3~\text{fn}{\left(a,\,b\right)}'));
 
     // Expect argument error for custom expression.
     expect(() => printLaTeX(new MyExpr()), throwsArgumentError);
