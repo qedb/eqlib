@@ -16,7 +16,7 @@ Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
   final reader = new StringReader(input);
 
   // Process operator config.
-  final opChars = ops.opChars;
+  final opChars = ops.byChar.keys.toList();
   final specialChars = '(,)? '.codeUnits.toList();
   specialChars.addAll(opChars);
 
@@ -112,10 +112,10 @@ Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
       // Handle unary minus operator by checking if:
       // * the previous token is also an operator
       // * this is the first token in the current block
-      var op = ops.charToId[reader.current];
+      var op = ops.byChar[reader.current];
       if (reader.currentIs('-') && opDist.v == 1 || blockStartDist == 1) {
         // This is an unary minus.
-        op = ops.id('~');
+        op = ops.byChar[char('~')];
       }
 
       _stackAddOp(op, stack, output, ops);
@@ -233,7 +233,7 @@ void _detectImplMul(W<int> opDist, int blockStartDist,
   // * This is not the first token in the current block
   // * The previous token is not an operator
   if (blockStartDist != 1 && opDist.v != 1) {
-    _stackAddOp(ops.implicitMultiplyId, stack, output, ops);
+    _stackAddOp(ops.byId[ops.implicitMultiplyId], stack, output, ops);
 
     // Note that we do NOT have to set the operator distance here. We
     // can set it to 1: since we have added an operator and are already
@@ -247,8 +247,8 @@ void _detectImplMul(W<int> opDist, int blockStartDist,
 }
 
 /// Add operator to the [stack].
-void _stackAddOp(
-    int op, List<_StackElement> stack, List<Expr> output, OperatorConfig ops) {
+void _stackAddOp(Operator op, List<_StackElement> stack, List<Expr> output,
+    OperatorConfig ops) {
   // First drain the stack according the algorithm rules.
   //
   // Note: this boolean statement is partially collapsed into a shorter form:
@@ -256,17 +256,18 @@ void _stackAddOp(
   //  (!opLeftAssoc[id] && opPrecedence[id] < opPrecedence[stack.last.id]))
   // Into: opPrecedence[id] < opPrecedence[stack.last.id] +
   //  (opLeftAssoc[id] ? 1 : 0)
-  final myPre = ops.idToPrecedence[op];
-  final assocAdd = ops.idToAssociativity[op] == Associativity.ltr ? 1 : 0;
+  final myPre = op.precedenceLevel;
+  final assocAdd = op.associativity == Associativity.ltr ? 1 : 0;
   while (stack.isNotEmpty &&
       stack.last.isOperator &&
-      myPre < ops.idToPrecedence[stack.last.id] + assocAdd) {
+      myPre < ops.byId[stack.last.id].precedenceLevel + assocAdd) {
     // Pop operator (it precedes the current one).
     _popStack(stack, output, ops);
   }
 
   // Add operator to stack.
-  stack.add(new _StackElement(op, isOperator: true, argc: ops.idToArgc[op]));
+  final argc = op.operatorType == OperatorType.infix ? 2 : 1;
+  stack.add(new _StackElement(op.id, isOperator: true, argc: argc));
 }
 
 /// Pop and process element from the [stack].

@@ -78,30 +78,30 @@ class SimpleExprContext extends ExprContext {
     // Load default operator configuration.
     if (loadDefaultOperators) {
       operators
-        ..add(Associativity.ltr,
-            argc: 2, lvl: 0, char: '=', id: assignId('=', false))
-        ..add(Associativity.ltr,
-            argc: 2, lvl: 1, char: '+', id: assignId('+', false))
-        ..add(Associativity.ltr,
-            argc: 2, lvl: 1, char: '-', id: assignId('-', false))
-        ..add(Associativity.ltr,
-            argc: 2, lvl: 2, char: '*', id: assignId('*', false))
-        ..add(Associativity.ltr,
-            argc: 2, lvl: 2, char: '/', id: assignId('/', false))
-        ..add(Associativity.rtl,
-            argc: 2, lvl: 3, char: '^', id: assignId('^', false))
-        ..add(Associativity.rtl,
-            argc: 1, lvl: 4, char: '~', id: assignId('~', false))
-        ..add(Associativity.ltr,
-            argc: 1, lvl: 5, char: '!', id: assignId('!', false))
+        ..add(new Operator(assignId('=', false), 0, Associativity.ltr,
+            char('='), OperatorType.infix))
+        ..add(new Operator(assignId('+', false), 1, Associativity.ltr,
+            char('+'), OperatorType.infix))
+        ..add(new Operator(assignId('-', false), 1, Associativity.ltr,
+            char('-'), OperatorType.infix))
+        ..add(new Operator(assignId('*', false), 2, Associativity.ltr,
+            char('*'), OperatorType.infix))
+        ..add(new Operator(assignId('/', false), 2, Associativity.ltr,
+            char('/'), OperatorType.infix))
+        ..add(new Operator(assignId('^', false), 3, Associativity.rtl,
+            char('^'), OperatorType.infix))
+        ..add(new Operator(assignId('~', false), 4, Associativity.rtl,
+            char('~'), OperatorType.prefix))
+        ..add(new Operator(assignId('!', false), 5, Associativity.ltr,
+            char('!'), OperatorType.postfix))
 
         /// Implicit multiplication is set to right associativity by default so
         /// that expressions like these can be written: `a^2b` (which would
         /// otherwise be parsed as `(a^2)*b`).
         /// Increasing the precedence level is not an option, this would result
         /// in: `2a^b` => `(2*a)^b`.
-        ..add(Associativity.rtl,
-            argc: 2, lvl: 3, id: operators.implicitMultiplyId);
+        ..add(new Operator(operators.implicitMultiplyId, 3, Associativity.rtl,
+            -1, OperatorType.infix));
     }
 
     // Add computable functions.
@@ -131,7 +131,6 @@ class SimpleExprContext extends ExprContext {
   num compute(int id, List<num> args) {
     // Clean but less efficient implementation.
     if (computable.containsKey(id)) {
-      assert(operators.idToArgc[id] == args.length);
       return computable[id](args);
     } else {
       return double.NAN;
@@ -150,16 +149,22 @@ class SimpleExprContext extends ExprContext {
       } else if (input is FunctionExpr) {
         final id = input.id;
         final args = input.args;
-        final label = getLabel(id);
+        var label = getLabel(id);
 
-        if (operators.opChars.contains(label.codeUnitAt(0))) {
-          assert(args.length == operators.idToArgc[id]);
-          if (label == '~') {
-            return _printOperator(null, args.first, id, '-');
-          } else if (label == '!') {
-            return _printOperator(args.first, null, id, label);
-          } else {
-            return _printOperator(args[0], args[1], id, label);
+        // We prefer using '-' for negation.
+        if (label == '~') {
+          label = '-';
+        }
+
+        if (operators.byId.containsKey(id)) {
+          final op = operators.byId[id];
+          switch (op.operatorType) {
+            case OperatorType.prefix: // null operator arg
+              return _printOperator(null, args.first, id, label);
+            case OperatorType.postfix: // arg operator null
+              return _printOperator(args.first, null, id, label);
+            default: // infix
+              return _printOperator(args[0], args[1], id, label);
           }
         } else {
           return '$generic$label(${args.map((arg) => str(arg)).join(',')})';
@@ -171,39 +176,51 @@ class SimpleExprContext extends ExprContext {
     } else if (input is Eq) {
       return '${str(input.left)}=${str(input.right)}';
     } else {
-      throw new ArgumentError('input must have type Expr or Eq');
+      throw new ArgumentError(
+          'input must have type Expr or Eq, got ${input.runtimeType}');
     }
   }
 
   /// Generate operator funtion string representation using parentheses only
   /// when necessary.
   String _printOperator(Expr left, Expr right, int id, String opChar) {
-    final pre = operators.idToPrecedence[id];
-    final leftArg = _printOperatorArgument(left, pre, Associativity.rtl);
-    final rightArg = _printOperatorArgument(right, pre, Associativity.ltr);
+    final pre = operators.byId[id].precedenceLevel;
+    final leftArg = left == null
+        ? ''
+        : formatExplicitParentheses(
+            '(', ')', left, str(left), pre, Associativity.rtl, operators);
+    final rightArg = right == null
+        ? ''
+        : formatExplicitParentheses(
+            '(', ')', right, str(right), pre, Associativity.ltr, operators);
+
     return '$leftArg$opChar$rightArg';
   }
 
-  /// Helper for [_printOperator].
-  /// Important:
-  /// - For left pass [Associativity.rtl] to [direction]
-  /// - For right pass [Associativity.ltr] to [direction]
-  String _printOperatorArgument(
-      Expr arg, int parentPre, Associativity direction) {
-    if (arg == null) {
-      return '';
-    }
-
-    if (arg is FunctionExpr && operators.opIds.contains(arg.id)) {
-      final id = arg.id;
-      final ass = operators.idToAssociativity[id];
-      final pre = operators.idToPrecedence[id];
+  /// Generic helper for handling parentheses with operators.
+  /// Also used by LaTeXPrinter from the latex library.
+  ///
+  /// [direction]:
+  /// - For left side pass [Associativity.rtl]
+  /// - For right side pass [Associativity.ltr]
+  static String formatExplicitParentheses(
+      String leftP,
+      String rightP,
+      Expr arg,
+      String inner,
+      int parentPre,
+      Associativity direction,
+      OperatorConfig operators) {
+    if (arg is FunctionExpr && operators.byId.containsKey(arg.id)) {
+      final op = operators.byId[arg.id];
+      final ass = op.associativity;
+      final pre = op.precedenceLevel;
       if (pre < parentPre || (pre == parentPre && ass == direction)) {
-        return '(${str(arg)})';
+        return '$leftP$inner$rightP';
       }
     }
 
     // Fallback.
-    return str(arg);
+    return inner;
   }
 }

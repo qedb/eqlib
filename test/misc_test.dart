@@ -68,12 +68,6 @@ void main() {
     final printTest = ctx.parse('1 + a - 3 * (b / 5) ^-c');
     expect(ctx.str(printTest), equals('1+a-3*(b/5)^-c'));
 
-    // Operator config exception.
-    expect(
-        () => ctx.operators.add(Associativity.ltr,
-            argc: 2, lvl: 0, char: '=', id: ctx.assignId('=', false)),
-        eqlibThrows('operator already configured'));
-
     // Equation parsing exception.
     expect(() => ctx.parseEq('a'), eqlibThrows('no top level equation found'));
 

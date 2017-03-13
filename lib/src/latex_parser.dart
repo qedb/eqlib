@@ -104,27 +104,30 @@ class LaTeXParser {
   final parsedRules = new List<Eq>();
 
   LaTeXParser(ExprContextLabelResolver resolver) {
+    final id = (String str) => resolver.assignId(str, false);
+
     // Load default operator configuration.
     operators
-      ..add(Associativity.ltr,
-          argc: 2, lvl: 0, char: '=', id: resolver.assignId('=', false))
-      ..add(Associativity.ltr,
-          argc: 2, lvl: 1, char: '+', id: resolver.assignId('+', false))
-      ..add(Associativity.ltr,
-          argc: 2, lvl: 1, char: '-', id: resolver.assignId('-', false))
-      ..add(Associativity.ltr,
-          argc: 2, lvl: 2, char: '*', id: resolver.assignId('*', false))
-      ..add(Associativity.ltr,
-          argc: 2, lvl: 2, char: '/', id: resolver.assignId('/', false))
-      ..add(Associativity.rtl,
-          argc: 2, lvl: 3, char: '^', id: resolver.assignId('^', false))
-      ..add(Associativity.rtl,
-          argc: 1, lvl: 4, char: '~', id: resolver.assignId('~', false))
-      ..add(Associativity.ltr,
-          argc: 1, lvl: 5, char: '!', id: resolver.assignId('!', false))
-      ..add(Associativity.ltr,
-          argc: 2, lvl: 6, char: '_', id: resolver.assignId('_', false))
-      ..add(Associativity.ltr, argc: 2, lvl: 2, id: 0);
+      ..add(new Operator(
+          id('='), 0, Associativity.ltr, char('='), OperatorType.infix))
+      ..add(new Operator(
+          id('+'), 1, Associativity.ltr, char('+'), OperatorType.infix))
+      ..add(new Operator(
+          id('-'), 1, Associativity.ltr, char('-'), OperatorType.infix))
+      ..add(new Operator(
+          id('*'), 2, Associativity.ltr, char('*'), OperatorType.infix))
+      ..add(new Operator(
+          id('/'), 2, Associativity.ltr, char('/'), OperatorType.infix))
+      ..add(new Operator(
+          id('^'), 3, Associativity.rtl, char('^'), OperatorType.infix))
+      ..add(new Operator(
+          id('~'), 4, Associativity.rtl, char('~'), OperatorType.prefix))
+      ..add(new Operator(
+          id('!'), 5, Associativity.ltr, char('!'), OperatorType.postfix))
+      ..add(new Operator(
+          id('_'), 6, Associativity.ltr, char('_'), OperatorType.infix))
+      ..add(new Operator(operators.implicitMultiplyId, 2, Associativity.ltr, -1,
+          OperatorType.infix));
 
     // Add variations of basic trigonometry functions to [allFunctions].
     allFunctions.addAll(generateList<String>(basicTrigFunctions.length, [

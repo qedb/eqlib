@@ -14,19 +14,44 @@ void main() {
   final printer = new LaTeXPrinter();
   printer.addDefaultEntries(ctx.labelResolver);
 
-  test('Printing', () {
+  // Helper.
+  final printLaTeX = (dynamic input) => printer.render(
+      input is String ? ctx.parse(input) : input, ctx.getLabel, ctx.operators);
+
+  test('Basic printing', () {
     final tests = {
-      '(a + -5) ^ (b * c)': r'\left({a}+-5\right)^{{b}\cdot{c}}',
-      '(a / -5) ^ (b * c)': r'\left(\frac{{a}}{-5}\right)^{{b}\cdot{c}}',
+      '(a + -5) ^ (b * c)': r'\left(a+-5\right)^{b~c}',
+      '(a / -5) ^ (b * c)': r'\left(\frac{a}{-5}\right)^{b~c}',
       '-(1 ^ 2)': r'-\left(1^{2}\right)',
       '(-1)^2': r'-1^{2}',
       '-1 ^ 2': r'-1^{2}',
-      '---a': r'---{a}'
+      '---a': r'---a'
     };
 
     tests.forEach((input, output) {
-      expect(printer.render(ctx.parse(input), ctx.getLabel), equals(output));
+      expect(printLaTeX(input), equals(output));
     });
+  });
+
+  test('LaTeX dictionary', () async {
+    printer.dict[ctx.assignId('lim', false)] = r'\lim_{$0\to$1}$2';
+
+    expect(printLaTeX('lim(x, 0, x ^ 2)'), equals(r'\lim_{x\to0}x^{2}'));
+    expect(printLaTeX('lim(x, a, x + 1)'),
+        equals(r'\lim_{x\to a}\left(x+1\right)'));
+
+    // Render function with too few arguments (template cannot be resolved).
+    expect(() => printLaTeX('lim(x, 0)'), throwsArgumentError);
+
+    // Symbol template.
+    printer.dict[ctx.assignId('pi', false)] = r'\pi';
+    expect(printLaTeX('pi'), equals(r'\pi'));
+
+    // Print function that has not been defined.
+    expect(printLaTeX('3 * fn(x)'), equals(r'3~\text{fn}{\left(x\right)}'));
+
+    // Expect argument error for custom expression.
+    expect(() => printLaTeX(new MyExpr()), throwsArgumentError);
   });
 
   test('Parsing', () {
@@ -35,35 +60,7 @@ void main() {
     expect(parser.parse(r'\frac{d}{dx}x^2', ctx.assignId),
         equals(ctx.parse(r'diff(x^2, x)')));
 
-    expect(
-        printer.render(
-            parser.parse('(a_0!+b_0!)/c_0!', ctx.assignId), ctx.getLabel),
-        equals(r'\frac{{a}_0!+{b}_0!}{{c}_0!}'));
-  });
-
-  test('LaTeX dictionary', () async {
-    printer.addDictEntry(ctx.assignId('lim', false),
-        new LaTeXDictEntry(r'\lim_{$0\to$1}$(2)', false, 1));
-
-    expect(printer.render(ctx.parse('lim(x, 0, x ^ 2)'), ctx.getLabel),
-        equals(r'\lim_{{x}\to0}{x}^{2}'));
-    expect(printer.render(ctx.parse('lim(x, 0, x + 1)'), ctx.getLabel),
-        equals(r'\lim_{{x}\to0}\left({x}+1\right)'));
-
-    // Render function with too few arguments (template cannot be resolved).
-    expect(() => printer.render(ctx.parse('lim(x, 0)'), ctx.getLabel),
-        throwsArgumentError);
-
-    // Symbol template.
-    printer.addDictEntry(ctx.assignId('pi', false), new LaTeXDictEntry(r'\pi'));
-    expect(printer.render(ctx.parse('pi'), ctx.getLabel), equals(r'{\pi}'));
-
-    // Print function that has not been defined.
-    expect(printer.render(ctx.parse('3 * fn(x)'), ctx.getLabel),
-        equals(r'3\cdot\text{fn}\left({x}\right)'));
-
-    // Expect argument error for custom expression.
-    expect(
-        () => printer.render(new MyExpr(), ctx.getLabel), throwsArgumentError);
+    expect(printLaTeX(parser.parse('(a_0!+b_0!)/c_0!', ctx.assignId)),
+        equals(r'\frac{a_{0}!+b_{0}!}{c_{0}!}'));
   });
 }

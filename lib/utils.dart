@@ -25,6 +25,10 @@ List<T> generateList<T>(int n, List<ListItemGenerator<T>> generators) {
   return list;
 }
 
+/// Shortcut for retrieving character ID of the first character in the given
+/// string.
+int char(String str) => str.runes.first;
+
 /// Jenkins one-at-a-time hash
 ///
 /// Copied from:
