@@ -36,7 +36,7 @@ class LaTeXPrinter {
     else if (expr is SymbolExpr) {
       return dict.containsKey(expr.id)
           ? dict[expr.id]
-          : [expr.isGeneric ? r'_\text{?}' : '', resolveName(expr.id)].join();
+          : [expr.isGeneric ? r'{}_\text{?}' : '', resolveName(expr.id)].join();
     }
 
     // Functions
@@ -46,7 +46,7 @@ class LaTeXPrinter {
           ? _renderTemplate(expr, resolveName, ops)
           : [
               r'\text{',
-              expr.isGeneric ? r'_\text{?}' : '',
+              expr.isGeneric ? r'{}_\text{?}' : '',
               resolveName(expr.id),
               r'}{\left(',
               new List<String>.generate(expr.args.length,
