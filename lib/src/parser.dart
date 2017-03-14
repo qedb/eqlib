@@ -112,11 +112,11 @@ Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
       // Handle unary minus operator by checking if:
       // * the previous token is also an operator
       // * this is the first token in the current block
-      var op = ops.byChar[reader.current];
-      if (reader.currentIs('-') && opDist.v == 1 || blockStartDist == 1) {
-        // This is an unary minus.
-        op = ops.byChar[char('~')];
-      }
+      final op = ops.byChar[
+          // Conditions for an unary minus.
+          reader.currentIs('-') && opDist.v == 1 || blockStartDist == 1
+              ? char('~')
+              : reader.current];
 
       _stackAddOp(op, stack, output, ops);
       opDist.v = 0; // Reset operator distance.
