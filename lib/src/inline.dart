@@ -92,6 +92,3 @@ ExprGenerator3 fn3(String label) {
   return (arg1, arg2, arg3) => new FunctionExprOps(id, false,
       [new Expr.from(arg1), new Expr.from(arg2), new Expr.from(arg3)]);
 }
-
-/// We don't want to pollute the global namespace with this in the main library.
-TreeDiffResult difference(Expr a, Expr b) => computeTreeDiff(a, b);

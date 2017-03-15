@@ -27,4 +27,4 @@ part 'src/simple_context.dart';
 
 part 'src/codec.dart';
 part 'src/stepper.dart';
-part 'src/tree_diff.dart';
+part 'src/eq_diff.dart';
