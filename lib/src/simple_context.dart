@@ -170,14 +170,13 @@ class SimpleExprContext extends ExprContext {
           return '$generic$label(${args.map((arg) => str(arg)).join(',')})';
         }
       } else {
-        throw new ArgumentError(
-            'unrecognized input expression: ${input.runtimeType}');
+        throw unsupportedType(
+            'input', input, ['NumberExpr', 'SymbolExpr', 'FunctionExpr']);
       }
     } else if (input is Eq) {
       return '${str(input.left)}=${str(input.right)}';
     } else {
-      throw new ArgumentError(
-          'input must have type Expr or Eq, got ${input.runtimeType}');
+      throw unsupportedType('input', input, ['Expr', 'Eq']);
     }
   }
 

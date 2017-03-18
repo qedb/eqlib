@@ -56,8 +56,8 @@ class LaTeXPrinter {
               r'\right)}'
             ].join();
     } else {
-      throw new ArgumentError(
-          'expr type must be one of: NumberExpr, SymbolExpr, FunctionExpr');
+      throw unsupportedType(
+          'expr', expr, ['NumberExpr', 'SymbolExpr', 'FunctionExpr']);
     }
   }
 

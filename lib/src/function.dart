@@ -7,8 +7,12 @@ part of eqlib;
 /// Grouping for both [FunctionExpr] and [SymbolExpr]
 abstract class FunctionSymbolExpr extends Expr {
   final int id;
-  final bool generic;
-  FunctionSymbolExpr(this.id, this.generic);
+  final bool _generic;
+
+  FunctionSymbolExpr(this.id, this._generic);
+
+  @override
+  bool get isGeneric => _generic;
 }
 
 /// Function expression
@@ -24,7 +28,7 @@ class FunctionExpr extends FunctionSymbolExpr {
   FunctionExpr clone([Expr argCopy(Expr expr) = Expr.staticClone]) =>
       new FunctionExpr(
           id,
-          generic,
+          _generic,
           new List<Expr>.generate(args.length, (i) => argCopy(args[i]),
               growable: false));
 
@@ -37,9 +41,6 @@ class FunctionExpr extends FunctionSymbolExpr {
   @override
   int get expressionHash => jFinish(
       jCombine(args.fold(0, (hash, arg) => jCombine(hash, arg.hashCode)), id));
-
-  @override
-  bool get isGeneric => generic;
 
   @override
   ExprMatchResult matchSuperset(superset) {
@@ -59,8 +60,8 @@ class FunctionExpr extends FunctionSymbolExpr {
         return new ExprMatchResult.noMatch();
       }
     } else {
-      throw new ArgumentError(
-          'superset type must be one of: NumberExpr, SymbolExpr, FunctionExpr');
+      throw unsupportedType(
+          'superset', superset, ['NumberExpr', 'SymbolExpr', 'FunctionExpr']);
     }
   }
 

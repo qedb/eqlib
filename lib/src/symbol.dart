@@ -11,16 +11,13 @@ class SymbolExpr extends FunctionSymbolExpr {
   }
 
   @override
-  SymbolExpr clone() => new SymbolExpr(id, generic);
+  SymbolExpr clone() => new SymbolExpr(id, _generic);
 
   @override
   bool equals(other) => other is SymbolExpr && other.id == id;
 
   @override
   int get expressionHash => jFinish(jCombine(0, id));
-
-  @override
-  bool get isGeneric => generic;
 
   @override
   ExprMatchResult matchSuperset(superset) => equals(superset)

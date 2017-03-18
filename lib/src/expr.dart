@@ -21,6 +21,9 @@ abstract class Expr {
   factory Expr.fromBase64(String base64) =>
       new Expr.fromBinary(new Uint8List.fromList(BASE64.decode(base64)).buffer);
 
+  /// Construct from integer array.
+  factory Expr.fromArray(List<int> input) => decodeExprArray(input);
+
   /// Transform the given value into an expression if it is not an expression
   /// already.
   factory Expr.from(dynamic value) {
@@ -29,7 +32,7 @@ abstract class Expr {
     } else if (value is num) {
       return new NumberExpr(value);
     } else {
-      throw new ArgumentError('value type must be one of: Expr, num');
+      throw unsupportedType('value', value, ['Expr', 'num']);
     }
   }
 
@@ -38,6 +41,9 @@ abstract class Expr {
 
   /// Write Base64 string.
   String toBase64() => BASE64.encode(toBinary().asUint8List());
+
+  /// Write integer array.
+  List<int> toArray() => encodeExprArray(this);
 
   /// Create deep copy.
   Expr clone();
@@ -57,7 +63,7 @@ abstract class Expr {
   int get hashCode => expressionHash;
 
   /// Returns if this is a generic expression.
-  bool get isGeneric => false;
+  bool get isGeneric;
 
   /// Superset pattern matching
   ///

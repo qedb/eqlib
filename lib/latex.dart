@@ -6,6 +6,7 @@ library eqlib.latex;
 
 import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/utils.dart';
+import 'package:eqlib/exceptions.dart';
 
 part 'src/latex_parser.dart';
 part 'src/latex_printer.dart';

@@ -25,6 +25,14 @@ class _EqLibExceptionMatcher extends TypeMatcher {
       description..add('EqLibException:<$message>');
 }
 
+/// Check if an EqLibException was thrown.
 Matcher eqlibThrows([String message = '']) {
   return throwsA(new _EqLibExceptionMatcher(message));
+}
+
+/// Utility function to throw an unsupported type error.
+ArgumentError unsupportedType(
+    String parameter, Object value, List<String> supportedTypes) {
+  return new ArgumentError(
+      '$parameter has type ${value.runtimeType}, expected one of: ${supportedTypes.join(', ')}');
 }

@@ -26,5 +26,6 @@ part 'src/operator_config.dart';
 part 'src/simple_context.dart';
 
 part 'src/codec.dart';
+part 'src/array_codec.dart';
 part 'src/stepper.dart';
 part 'src/eq_diff.dart';

@@ -24,6 +24,9 @@ class NumberExpr extends Expr {
   int get expressionHash => jFinish(jCombine(1041, value.hashCode));
 
   @override
+  bool get isGeneric => false;
+
+  @override
   ExprMatchResult matchSuperset(superset) => equals(superset)
       ? new ExprMatchResult.exactMatch()
       : (superset is FunctionSymbolExpr && superset.isGeneric
