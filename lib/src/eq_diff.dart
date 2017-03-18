@@ -72,10 +72,12 @@ EqDiffResult buildEqDiff(Expr a, Expr b) {
     for (var i = 0; i < a.args.length; i++) {
       final result = buildEqDiff(a.args[i], b.args[i]);
       if (result.numericInequality) {
-        // The branch is illegal: discard.
+        // The branch is illegal: discard argument rules.
+        // Note that the difference can never be fully resolved if one of the
+        // arguments has a numeric inequality. The rule must involve the parent
+        // functions.
         return new EqDiffResult(diff: new EqDiffBranch(rule));
-      } else if (result.hasDiff) {
-        // Include the resulting rules in the alt rules.
+      } else {
         arguments.add(result.diff);
       }
     }

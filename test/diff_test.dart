@@ -43,14 +43,15 @@ void main() {
         equals(new EqDiffResult(
             diff: new EqDiffBranch(eq(e2.right, e3.right), [
           new EqDiffBranch(
-              eq(diff(x ^ 3, x), number(3) * (x ^ (number(3) - 1))))
+              eq(diff(x ^ 3, x), number(3) * (x ^ (number(3) - 1)))),
+          null
         ]))));
 
     // Third step difference
     final step3diff = buildEqDiff(e3.right, e4.right);
     final step3diffExpect = new EqDiffResult(
         diff: new EqDiffBranch(eq(e3.right, e4.right),
-            [new EqDiffBranch(eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))]));
+            [null, new EqDiffBranch(eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))]));
 
     expect(step3diff, equals(step3diffExpect));
 
