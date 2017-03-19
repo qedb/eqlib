@@ -41,15 +41,42 @@ void main() {
   });
 
   test('Array codec', () {
+    final id = (String str) => ctx.assignId(str, false);
+    final idg = (String str) => ctx.assignId(str, true);
+
     // Basic functionality.
     final expr = ctx.parse('2 * a(?a, ?b, 3 - 6 * 7) ^ (a + b)');
     expect(
         expr.toArray(),
         equals([
-          //
-          4, 6, 2, 36, 1, 2, 4, 8, 2, 30, 4, 11, 3, 18, 3, 12, 3, 13, 4, 5,
-          //
-          2, 10, 1, 3, 4, 6, 2, 4, 1, 6, 1, 7, 4, 4, 2, 4, 2, 11, 2, 14
+          // Multiply function, 2 args, content-length: 36
+          4, id('*'), 2, 36,
+          /**/ // Integer with value 2
+          /**/ 1, 2,
+          /**/ // Power function, 2 args, content-length: 30
+          /**/ 4, id('^'), 2, 30,
+          /****/ // a() function, 3 args, content-length: 18
+          /****/ 4, id('a'), 3, 18,
+          /******/ // Generic ?a
+          /******/ 3, idg('a'),
+          /******/ // Generic ?b
+          /******/ 3, idg('b'),
+          /******/ // Subtract function, 2 args, content-length: 10
+          /******/ 4, id('-'), 2, 10,
+          /********/ // Integer with value 3
+          /********/ 1, 3,
+          /********/ // Multiply function, 2 args, content-length: 4
+          /********/ 4, id('*'), 2, 4,
+          /**********/ // Integer with value 6
+          /**********/ 1, 6,
+          /**********/ // Integer with value 7
+          /**********/ 1, 7,
+          /****/ // Addition function, 2 args, content-length: 4
+          /****/ 4, id('+'), 2, 4,
+          /******/ // Symbol a
+          /******/ 2, id('a'),
+          /******/ // Symbol b
+          /******/ 2, id('b')
         ]));
     expect(new Expr.fromArray(expr.toArray()), equals(expr));
 
