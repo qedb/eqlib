@@ -109,7 +109,7 @@ class LaTeXParser {
     // Load default operator configuration.
     operators
       ..add(new Operator(
-          id('='), 0, Associativity.ltr, char('='), OperatorType.infix))
+          id('='), 0, Associativity.rtl, char('='), OperatorType.infix))
       ..add(new Operator(
           id('+'), 1, Associativity.ltr, char('+'), OperatorType.infix))
       ..add(new Operator(
