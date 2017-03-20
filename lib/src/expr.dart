@@ -162,8 +162,8 @@ class ExprMatchResult {
     mapping[generic] = ref;
   }
 
-  /// The generic superset function must contain exactly one argument (less than
-  /// one should be a symbol, more than one cannot guarantee order).
+  /// The generic superset function must contain exactly one argument
+  /// (more than one cannot guarantee order).
   ExprMatchResult.processGenericFunction(
       FunctionExpr superset, FunctionExpr fnref) {
     // Fist establish that the superset has only one argument.

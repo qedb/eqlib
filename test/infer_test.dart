@@ -40,4 +40,11 @@ void main() {
     expect(() => ctx.parse('?a(b(c))').substitute(ctx.parseEq('?a(?a(b))=d')),
         eqlibThrows('generic functions must all be equal'));
   });
+
+  test('Nested generic functions', () {
+    expect(
+        ctx.parse('diff(x, sqrt(x^2))').substitute(ctx.parseEq(
+            'diff(?x, ?f(?g(?x))) = diff(?x, ?g(?x))*diff(?g(?x), ?f(?g(?x)))')),
+        equals(ctx.parse('diff(x,x^2)*diff(x^2,sqrt(x^2))')));
+  });
 }
