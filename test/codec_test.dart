@@ -50,29 +50,29 @@ void main() {
         expr.toArray(),
         equals([
           // Multiply function, 2 args, content-length: 36
-          4, id('*'), 2, 36,
+          4, id('*'), 2, 509018327, 41,
           /**/ // Integer with value 2
           /**/ 1, 2,
           /**/ // Power function, 2 args, content-length: 30
-          /**/ 4, id('^'), 2, 30,
+          /**/ 4, id('^'), 2, 51107015, 34,
           /****/ // a() function, 3 args, content-length: 18
-          /****/ 4, id('a'), 3, 18,
+          /****/ 4, id('a'), 3, 280869510, 20,
           /******/ // Generic ?a
           /******/ 3, idg('a'),
           /******/ // Generic ?b
           /******/ 3, idg('b'),
           /******/ // Subtract function, 2 args, content-length: 10
-          /******/ 4, id('-'), 2, 10,
+          /******/ 4, id('-'), 2, 438846807, 11,
           /********/ // Integer with value 3
           /********/ 1, 3,
           /********/ // Multiply function, 2 args, content-length: 4
-          /********/ 4, id('*'), 2, 4,
+          /********/ 4, id('*'), 2, 355966969, 4,
           /**********/ // Integer with value 6
           /**********/ 1, 6,
           /**********/ // Integer with value 7
           /**********/ 1, 7,
           /****/ // Addition function, 2 args, content-length: 4
-          /****/ 4, id('+'), 2, 4,
+          /****/ 4, id('+'), 2, 86783514, 4,
           /******/ // Symbol a
           /******/ 2, id('a'),
           /******/ // Symbol b

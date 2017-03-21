@@ -39,10 +39,7 @@ void _encodeExprArray(Expr input, List<int> target) {
 
       // Add arguments.
       target.add(input.args.length);
-
-      // TODO: implement function signatures.
-      //target.add(0); // This element will be used to store a function signature.
-
+      target.add(0); // This element will be used to store a function hash.
       target.add(0); // This element will be used to store the content length.
       final startLength = target.length;
       for (final arg in input.args) {
@@ -51,6 +48,10 @@ void _encodeExprArray(Expr input, List<int> target) {
 
       // Store final content length.
       target[startLength - 1] = target.length - startLength;
+
+      // Compute and store hash.
+      target[startLength - 2] =
+          hashObjects(target.sublist(startLength, target.length - 1));
     }
   }
 }
@@ -61,24 +62,21 @@ Expr decodeExprArray(List<int> input) {
 }
 
 Expr _decodeExprArray(List<int> input, W<int> ptr) {
-  final type = input[ptr.v];
-  ptr.v++;
+  final type = input[ptr.v++];
   if (type == _exprArrayTypeInteger) {
-    final value = input[ptr.v];
-    ptr.v++;
+    final value = input[ptr.v++];
     return new NumberExpr(value);
   } else {
-    final id = input[ptr.v];
+    final id = input[ptr.v++];
     final generic =
         type == _exprArrayTypeSymbolGen || type == _exprArrayTypeFunctionGen;
-    ptr.v++;
 
     if (type < _exprArrayTypeFunction) {
       return new FunctionExpr(id, generic, []);
     } else {
-      var argc = input[ptr.v];
+      var argc = input[ptr.v++];
       final args = new List<Expr>();
-      ptr.v += 2; // Jump over argument count and full content length.
+      ptr.v += 2; // Jump over function hash and content length.
       while (argc > 0) {
         args.add(_decodeExprArray(input, ptr));
         argc--;
