@@ -148,3 +148,17 @@ abstract class Expr {
   /// functions. Returns double.NAN if this is unsuccessful.
   num evaluate(ExprCompute compute);
 }
+
+/// Utility function to check if the given expression is dependent only on the
+/// given symbol ID.
+bool _exprOnlyDependsOn(int symbolId, Expr expr) {
+  if (expr is NumberExpr) {
+    return true;
+  } else if (expr is FunctionExpr) {
+    return expr.isSymbol
+        ? expr.id == symbolId
+        : expr.args.every((arg) => _exprOnlyDependsOn(symbolId, arg));
+  } else {
+    return false;
+  }
+}

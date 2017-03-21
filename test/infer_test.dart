@@ -27,13 +27,34 @@ void main() {
   });
 
   test('Various staments related to generic function argument inference', () {
-    // Generic functions can only have a single argument.
-    expect(() => ctx.parse('?a(b,c)').substitute(ctx.parseEq('?a(?b,c)=d')),
-        eqlibThrows('dependant variables must be generic symbols'));
-
-    // Generic functions must have the same arguments.
     expect(
         () => ctx.parse('f(x)+g(x)').substitute(ctx.parseEq('?a(?b)+?a(?c)=d')),
         eqlibThrows('generic functions must have the same arguments'));
+
+    expect(() => ctx.parse('a*c').substitute(ctx.parseEq('?a(c)=d')),
+        eqlibThrows('dependant variables must be generic symbols'));
+
+    expect(
+        () => ctx.parse('a(b)').substitute(ctx.parseEq('?a(?b)=?a(?b,?c)')),
+        eqlibThrows(
+            'dependant variable count does not match the target substitutions'));
+
+    expect(
+        () => ctx.parse('a(b,c)').substitute(ctx.parseEq('?a(?b,?c)=d')),
+        eqlibThrows(
+            'in strict mode multiple dependant variables are not allowed'));
+
+    expect(
+        ctx.str(ctx
+            .parse('fn(b/2, b)')
+            .substitute(ctx.parseEq('fn(?a(?b), ?b)=?a(?b+1)+?b'))),
+        equals('(b+1)/2+b'));
+
+    expect(
+        () => ctx.str(ctx
+            .parse('fn(b/c, b)')
+            .substitute(ctx.parseEq('fn(?a(?b), ?b)=?a(?b+1)+?b'))),
+        eqlibThrows(
+            'in strict mode the generic substitute can only depend on the variable that is remapped'));
   });
 }

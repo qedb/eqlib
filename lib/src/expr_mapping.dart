@@ -6,6 +6,11 @@ part of eqlib;
 
 /// Mapping data.
 class ExprMapping {
+  /// When strict mode is enabled only some cases of generic internal remapping
+  /// are allowed to prevent loopholes.
+  /// Currently we offer no way to disable strict mode.
+  static const strictMode = true;
+
   /// Map of from function ID to expression that is to be substituted.
   final Map<int, Expr> substitute;
 
@@ -21,6 +26,11 @@ class ExprMapping {
   bool addExpression(int id, Expr targetExpr,
       [List<Expr> targetVars = const []]) {
     if (targetVars.isNotEmpty) {
+      if (strictMode && targetVars.length > 1) {
+        throw new EqLibException(
+            'in strict mode multiple dependant variables are not allowed');
+      }
+
       // Sublist may only contain generic symbols (0 args).
       // Collect symbol IDs.
       final ids = new List<int>();

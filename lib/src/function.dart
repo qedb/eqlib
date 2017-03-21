@@ -79,8 +79,7 @@ class FunctionExpr extends Expr {
               'dependant variable count does not match the target substitutions');
         }
 
-        // TODO: to prevent the emergence of incompatible expressions, we must
-        // make sure that the remap is used in every argument (recursively).
+        final substitute = mapping.substitute[id];
 
         // Construct mapping.
         final innerMapping = new Map<int, Expr>();
@@ -89,12 +88,19 @@ class FunctionExpr extends Expr {
           final targetExpr = mapping.substitute[depVarId];
           final argi = args[i];
 
-          // Only add this target to the mapping if the replacement is not the
-          // same.
-          if (!(argi is FunctionExpr && argi.id == depVarId && argi.isSymbol)) {
-            // To be able to use .remap() directly, the target expression must be
-            // a symbol.
+          // Only add this to the mapping if the replacement is not the same as
+          // the generic dependent variable.
+          if (!(argi is FunctionExpr && argi.id == depVarId)) {
+            // Target must be a symbol (else remapping cannot be done).
             if (targetExpr is FunctionExpr && targetExpr.isSymbol) {
+              // Throw error if the substitute depends on other variables than this
+              // one.
+              if (ExprMapping.strictMode &&
+                  !_exprOnlyDependsOn(targetExpr.id, substitute)) {
+                throw new EqLibException(
+                    'in strict mode the generic substitute can only depend on the variable that is remapped');
+              }
+
               innerMapping[targetExpr.id] =
                   argi.remap(new ExprMapping({depVarId: targetExpr}));
             } else {
@@ -104,7 +110,7 @@ class FunctionExpr extends Expr {
           }
         }
 
-        return mapping.substitute[id].remap(new ExprMapping(innerMapping));
+        return substitute.remap(new ExprMapping(innerMapping));
       } else {
         return mapping.substitute[id].clone();
       }
