@@ -5,14 +5,14 @@
 import 'package:eqlib/eqlib.dart';
 
 /// New Expr type for testing
-class MyExpr extends Expr {
-  MyExpr();
+class DummyExpr extends Expr {
+  DummyExpr();
 
   @override
-  MyExpr clone() => new MyExpr();
+  DummyExpr clone() => new DummyExpr();
 
   @override
-  bool equals(other) => other is MyExpr;
+  bool equals(other) => other is DummyExpr;
 
   @override
   int get expressionHash => 0;
@@ -21,10 +21,7 @@ class MyExpr extends Expr {
   bool get isGeneric => true;
 
   @override
-  ExprMatchResult matchSuperset(superset) => new ExprMatchResult.exactMatch();
-
-  @override
-  Expr remap(mapping, genericFunctions) => clone();
+  Expr remap(mapping) => clone();
 
   @override
   num evaluate(compute) => double.NAN;

@@ -41,10 +41,6 @@ class NumberExprOps extends NumberExpr with ExprOperators {
   NumberExprOps(num value) : super(value);
 }
 
-class SymbolExprOps extends SymbolExpr with ExprOperators {
-  SymbolExprOps(int id, bool generic) : super(id, generic);
-}
-
 class FunctionExprOps extends FunctionExpr with ExprOperators {
   FunctionExprOps(int id, bool generic, List<Expr> args)
       : super(id, generic, args);
@@ -52,17 +48,17 @@ class FunctionExprOps extends FunctionExpr with ExprOperators {
 
 /// Expression used to point out where an equation is substituted when
 /// enveloping.
-SymbolExprOps envelopeInner() => new SymbolExprOps(0, false);
+FunctionExprOps envelopeInner() => new FunctionExprOps(0, false, []);
 
 /// Create a numeric expression from the given value.
 NumberExprOps number(num value) => new NumberExprOps(value);
 
 /// Create a symbol expression for the given label.
-SymbolExprOps symbol(String label, {bool generic: false}) =>
-    new SymbolExprOps(inlineCtx.assignId(label, generic), generic);
+FunctionExprOps symbol(String label, {bool generic: false}) =>
+    new FunctionExprOps(inlineCtx.assignId(label, generic), generic, []);
 
 /// Alias for creating generic symbols.
-SymbolExprOps generic(String label) => symbol(label, generic: true);
+FunctionExprOps generic(String label) => symbol(label, generic: true);
 
 /// Quick syntax for equation contruction.
 Eq eq(dynamic left, dynamic right) =>

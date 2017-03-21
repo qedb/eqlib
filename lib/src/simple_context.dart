@@ -144,12 +144,14 @@ class SimpleExprContext extends ExprContext {
 
       if (input is NumberExpr) {
         return input.value.toString();
-      } else if (input is SymbolExpr) {
-        return '$generic${getLabel(input.id)}';
       } else if (input is FunctionExpr) {
         final id = input.id;
         final args = input.args;
         var label = getLabel(id);
+
+        if (input.isSymbol) {
+          return '$generic$label';
+        }
 
         // We prefer using '-' for negation.
         if (label == '~') {
@@ -170,8 +172,7 @@ class SimpleExprContext extends ExprContext {
           return '$generic$label(${args.map((arg) => str(arg)).join(',')})';
         }
       } else {
-        throw unsupportedType(
-            'input', input, ['NumberExpr', 'SymbolExpr', 'FunctionExpr']);
+        throw unsupportedType('input', input, ['NumberExpr', 'FunctionExpr']);
       }
     } else if (input is Eq) {
       return '${str(input.left)}=${str(input.right)}';

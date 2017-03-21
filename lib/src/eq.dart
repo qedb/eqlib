@@ -28,13 +28,13 @@ class Eq {
 
   /// Wrap both sides of the equation using the given [template].
   void envelop(Expr template, Expr envelope) {
-    final lmap = left.matchSuperset(template);
-    if (lmap.match) {
-      _envelop(envelope, lmap.mapping);
+    final lmapping = new ExprMapping();
+    if (left.compare(template, lmapping)) {
+      _envelop(envelope, lmapping);
     } else {
-      final rmap = right.matchSuperset(template);
-      if (rmap.match) {
-        _envelop(envelope, rmap.mapping);
+      final rmapping = new ExprMapping();
+      if (right.compare(template, rmapping)) {
+        _envelop(envelope, rmapping);
       } else {
         throw new EqLibException('the template does not match left or right');
       }
@@ -43,11 +43,13 @@ class Eq {
 
   /// Wrap both sides of the equation using the provided [envelope] expression
   /// and expression [mapping].
-  void _envelop(Expr envelope, Map<int, Expr> mapping) {
-    mapping[0] = left;
-    left = envelope.remap(mapping, {});
-    mapping[0] = right;
-    right = envelope.remap(mapping, {});
+  void _envelop(Expr envelope, ExprMapping mapping) {
+    left = envelope
+        .remap(mapping)
+        .substitute(new Eq(new FunctionExpr(0, false, []), left));
+    right = envelope
+        .remap(mapping)
+        .substitute(new Eq(new FunctionExpr(0, false, []), right));
   }
 
   /// Compute both sides of the equation as far as possible using the given

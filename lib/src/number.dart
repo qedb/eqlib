@@ -27,14 +27,18 @@ class NumberExpr extends Expr {
   bool get isGeneric => false;
 
   @override
-  ExprMatchResult matchSuperset(superset) => equals(superset)
-      ? new ExprMatchResult.exactMatch()
-      : (superset is FunctionSymbolExpr && superset.isGeneric
-          ? new ExprMatchResult.genericMatch(superset.id, this)
-          : new ExprMatchResult.noMatch());
+  bool _compare(pattern, mapping) {
+    if (equals(pattern)) {
+      return true;
+    } else if (pattern is FunctionExpr && pattern.isGeneric) {
+      return mapping.addExpression(pattern.id, this);
+    } else {
+      return false;
+    }
+  }
 
   @override
-  NumberExpr remap(mapping, genericFunctions) => clone();
+  NumberExpr remap(mapping) => clone();
 
   @override
   num evaluate(compute) => value;

@@ -27,24 +27,31 @@ void _encodeExprArray(Expr input, List<int> target) {
       throw new ArgumentError(
           'NumberExpr must be an integer for array encoding');
     }
-  } else if (input is SymbolExpr) {
-    target
-        .add(input.isGeneric ? _exprArrayTypeSymbolGen : _exprArrayTypeSymbol);
-    target.add(input.id);
   } else if (input is FunctionExpr) {
-    target.add(
-        input.isGeneric ? _exprArrayTypeFunctionGen : _exprArrayTypeFunction);
-    target.add(input.id);
+    if (input.isSymbol) {
+      target.add(
+          input.isGeneric ? _exprArrayTypeSymbolGen : _exprArrayTypeSymbol);
+      target.add(input.id);
+    } else {
+      target.add(
+          input.isGeneric ? _exprArrayTypeFunctionGen : _exprArrayTypeFunction);
+      target.add(input.id);
 
-    // Add arguments.
-    target.add(input.args.length);
-    target.add(0); // This element will be used to store the content length.
-    final startLength = target.length;
-    for (final arg in input.args) {
-      _encodeExprArray(arg, target);
+      // Add arguments.
+      target.add(input.args.length);
+
+      // TODO: implement function signatures.
+      //target.add(0); // This element will be used to store a function signature.
+
+      target.add(0); // This element will be used to store the content length.
+      final startLength = target.length;
+      for (final arg in input.args) {
+        _encodeExprArray(arg, target);
+      }
+
+      // Store final content length.
+      target[startLength - 1] = target.length - startLength;
     }
-    // Store final content length.
-    target[startLength - 1] = target.length - startLength;
   }
 }
 
@@ -67,7 +74,7 @@ Expr _decodeExprArray(List<int> input, W<int> ptr) {
     ptr.v++;
 
     if (type < _exprArrayTypeFunction) {
-      return new SymbolExpr(id, generic);
+      return new FunctionExpr(id, generic, []);
     } else {
       var argc = input[ptr.v];
       final args = new List<Expr>();

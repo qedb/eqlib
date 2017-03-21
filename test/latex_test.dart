@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/latex.dart';
 
-import 'myexpr.dart';
+import 'dummy_expr.dart';
 
 void main() {
   final ctx = new SimpleExprContext();
@@ -52,7 +52,7 @@ void main() {
         printLaTeX('3 * fn(a, b)'), equals(r'3~\text{fn}{\left(a,\,b\right)}'));
 
     // Expect argument error for custom expression.
-    expect(() => printLaTeX(new MyExpr()), throwsArgumentError);
+    expect(() => printLaTeX(new DummyExpr()), throwsArgumentError);
   });
 
   test('Parsing', () {

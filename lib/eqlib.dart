@@ -17,11 +17,11 @@ import 'src/parser_utils.dart';
 part 'src/eq.dart';
 part 'src/expr.dart';
 part 'src/number.dart';
-part 'src/symbol.dart';
 part 'src/function.dart';
 part 'src/interface.dart';
 part 'src/parser.dart';
 part 'src/context.dart';
+part 'src/expr_mapping.dart';
 part 'src/operator_config.dart';
 part 'src/simple_context.dart';
 

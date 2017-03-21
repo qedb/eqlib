@@ -65,26 +65,31 @@ abstract class Expr {
   /// Returns if this is a generic expression.
   bool get isGeneric;
 
-  /// Superset pattern matching
+  /// Pattern matching
   ///
-  /// Match another [superset] expression against this expression.
-  ExprMatchResult matchSuperset(Expr superset);
+  /// Match another [pattern] expression against this expression.
+  bool compare(Expr pattern, [ExprMapping mapping]) {
+    final theMapping = mapping ?? new ExprMapping();
+    final result = _compare(pattern, theMapping);
+    theMapping.finalize();
+    return result;
+  }
+
+  /// Should never be called directly.
+  bool _compare(Expr pattern, ExprMapping data) => false;
 
   /// Expression remapping
   ///
-  /// If this expression is in the [mapping] table, this will return the new
-  /// expression. Else this will remap all arguments.
-  ///
   /// This method always returns a new expression instance (deep cody).
-  Expr remap(Map<int, Expr> mapping, Map<int, FunctionExpr> genericFunctions);
+  Expr remap(ExprMapping mapping);
 
   /// Substitute the given [equation] at the given pattern [index].
   /// Returns a new instance of [Expr] if the equation is substituted.
   /// Never returns null, instead returns itself if nothing is substituted.
   Expr substituteInternal(Eq equation, W<int> index) {
-    final result = matchSuperset(equation.left);
-    return result.match && index.v-- == 0
-        ? equation.right.remap(result.mapping, result.genericFunctions)
+    final mapping = new ExprMapping();
+    return _compare(equation.left, mapping) && index.v-- == 0
+        ? equation.right.remap(mapping)
         : this;
   }
 
@@ -142,93 +147,4 @@ abstract class Expr {
   /// Appemts to evaluate this expression to a number using the given compute
   /// functions. Returns double.NAN if this is unsuccessful.
   num evaluate(ExprCompute compute);
-}
-
-/// Return data of [Expr.matchSuperset].
-class ExprMatchResult {
-  bool match;
-
-  /// Map of function/symbol IDs and their mapped expression
-  final mapping = new Map<int, Expr>();
-
-  /// Map of generic functions.
-  final genericFunctions = new Map<int, FunctionExpr>();
-
-  ExprMatchResult.exactMatch() : match = true;
-
-  ExprMatchResult.noMatch() : match = false;
-
-  ExprMatchResult.genericMatch(int generic, Expr ref) : match = true {
-    mapping[generic] = ref;
-  }
-
-  /// The generic superset function must contain exactly one argument
-  /// (more than one cannot guarantee order).
-  ExprMatchResult.processGenericFunction(
-      FunctionExpr superset, FunctionExpr fnref) {
-    // Fist establish that the superset has only one argument.
-    if (superset.args.length != 1) {
-      throw new EqLibException(
-          'generic functions can only have a single argument');
-    }
-
-    // Add the function to the generic function list.
-    genericFunctions[superset.id] = superset;
-
-    // If the reference function also has one argument, we can try to map
-    // generics.
-    if (fnref.args.length == 1) {
-      _processFunction(fnref.args.length,
-          (i) => fnref.args[i].matchSuperset(superset.args[i]));
-    }
-
-    // Store mapping from superset function to the reference function.
-    // Note that the mapping is still empty so additional check are not
-    // required.
-    mapping[superset.id] = fnref;
-    match = true;
-  }
-
-  ExprMatchResult.processFunction(
-      int argsLength, ExprMatchResult matchArg(int i)) {
-    match = _processFunction(argsLength, matchArg);
-  }
-
-  bool _processFunction(int argsLength, ExprMatchResult matchArg(int i)) {
-    for (var i = 0; i < argsLength; i++) {
-      final result = matchArg(i);
-
-      // If this argument does not match, terminate.
-      if (!result.match) {
-        return false;
-      }
-
-      // Check if any existing mappings would be violated by merging with
-      // the mapping resulting from the argument match.
-      for (final key in result.mapping.keys) {
-        if (mapping.containsKey(key) && mapping[key] != result.mapping[key]) {
-          // Violation: terminate.
-          return false;
-        }
-      }
-
-      // Merge argument mapping into this mapping.
-      mapping.addAll(result.mapping);
-
-      // Check if any existing genericFunctions are incompatible with generic
-      // functions from this argument.
-      for (final fn in result.genericFunctions.keys) {
-        if (genericFunctions.containsKey(fn) &&
-            genericFunctions[fn] != result.genericFunctions[fn]) {
-          // Violation: illegal superset rule.
-          // Generic functions must be equal to support argument inference.
-          throw new EqLibException('generic functions must all be equal');
-        }
-      }
-
-      // Merge generic functions.
-      genericFunctions.addAll(result.genericFunctions);
-    }
-    return true;
-  }
 }

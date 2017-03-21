@@ -191,7 +191,7 @@ Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
         // Process token.
         final id = assignId(fnName, generic);
         if (isSymbol) {
-          output.add(new SymbolExpr(id, generic));
+          output.add(new FunctionExpr(id, generic, []));
         } else {
           // We initially expect one argument, this will be incremented when we
           // find argument separators.

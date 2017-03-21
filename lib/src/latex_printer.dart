@@ -32,32 +32,33 @@ class LaTeXPrinter {
       return expr.value.toString();
     }
 
-    // Symbols
-    else if (expr is SymbolExpr) {
-      return dict.containsKey(expr.id)
-          ? dict[expr.id]
-          : [expr.isGeneric ? r'{}_\text{?}' : '', resolveName(expr.id)].join();
-    }
-
     // Functions
     else if (expr is FunctionExpr) {
       // Render expression.
-      return dict.containsKey(expr.id)
-          ? _renderTemplate(expr, resolveName, ops)
-          : [
-              r'\text{',
-              expr.isGeneric ? r'{}_\text{?}' : '',
-              resolveName(expr.id),
-              r'}{\left(',
-              new List<String>.generate(expr.args.length,
-                      (i) => render(expr.args[i], resolveName, ops),
-                      growable: false)
-                  .join(r',\,'),
-              r'\right)}'
-            ].join();
+      if (dict.containsKey(expr.id)) {
+        return _renderTemplate(expr, resolveName, ops);
+      } else {
+        final genericPrefix = expr.isGeneric ? r'{}_\text{?}' : '';
+        if (!expr.isSymbol) {
+          final args = new List<String>.generate(expr.args.length,
+                  (i) => render(expr.args[i], resolveName, ops),
+                  growable: false)
+              .join(r',\,');
+
+          return [
+            genericPrefix,
+            r'\text{',
+            resolveName(expr.id),
+            r'}{\left(',
+            args,
+            r'\right)}'
+          ].join();
+        } else {
+          return [genericPrefix, resolveName(expr.id)].join();
+        }
+      }
     } else {
-      throw unsupportedType(
-          'expr', expr, ['NumberExpr', 'SymbolExpr', 'FunctionExpr']);
+      throw unsupportedType('expr', expr, ['NumberExpr', 'FunctionExpr']);
     }
   }
 
