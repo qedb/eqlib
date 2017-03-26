@@ -14,7 +14,7 @@ class PrinterEntry {
   const PrinterEntry(this.label, this.generic);
 
   @override
-  int get hashCode => jFinish(jCombine(label.hashCode, generic.hashCode));
+  int get hashCode => jPostprocess(jMix(label.hashCode, generic.hashCode));
 
   @override
   bool operator ==(other) =>

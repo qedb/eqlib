@@ -21,7 +21,7 @@ class NumberExpr extends Expr {
   // First mix 0 with 1 to prevent collisions with symbols and functions.
   // jCombine(0, 1) = 1041
   @override
-  int get expressionHash => jFinish(jCombine(1041, value.hashCode));
+  int get expressionHash => jPostprocess(jMix(1041, value.hashCode));
 
   @override
   bool get isGeneric => false;

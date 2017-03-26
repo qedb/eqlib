@@ -26,8 +26,8 @@ void main() {
   test('Eq.hashCode', () {
     expect(
         ctx.parseEq('100=100').hashCode,
-        equals(jFinish(jCombine(jCombine(0, jFinish(jCombine(1041, 100))),
-            jFinish(jCombine(1041, 100))))));
+        equals(jPostprocess(jMix(jMix(0, jPostprocess(jMix(1041, 100))),
+            jPostprocess(jMix(1041, 100))))));
     expect(ctx.parseEq('a * b = b * a').hashCode,
         equals(eq(a * b, b * a).hashCode));
 

@@ -18,41 +18,59 @@ List<int> encodeExprArray(Expr input) {
   return data;
 }
 
-void _encodeExprArray(Expr input, List<int> target) {
+/// Returns hash of encoded object.
+int _encodeExprArray(Expr input, List<int> target) {
   if (input is NumberExpr) {
-    if (input.value is int) {
-      target.add(_exprArrayTypeInteger);
-      target.add(input.value);
+    final value = input.value;
+    if (value is int) {
+      final data = [_exprArrayTypeInteger, value];
+      final hash = hashObjects(data);
+      target.add(hash);
+      target.addAll(data);
+      return hash;
     } else {
       throw new ArgumentError(
           'NumberExpr must be an integer for array encoding');
     }
   } else if (input is FunctionExpr) {
     if (input.isSymbol) {
-      target.add(
-          input.isGeneric ? _exprArrayTypeSymbolGen : _exprArrayTypeSymbol);
-      target.add(input.id);
+      final data = [
+        input.isGeneric ? _exprArrayTypeSymbolGen : _exprArrayTypeSymbol,
+        input.id
+      ];
+      final hash = hashObjects(data);
+      target.add(hash);
+      target.addAll(data);
+      return hash;
     } else {
-      target.add(
-          input.isGeneric ? _exprArrayTypeFunctionGen : _exprArrayTypeFunction);
+      final firstIndex = target.length;
+      var hash = 0;
+
+      final type =
+          input.isGeneric ? _exprArrayTypeFunctionGen : _exprArrayTypeFunction;
+      target.add(0);
+      target.add(type);
       target.add(input.id);
+      hash = jMix(hash, type);
+      hash = jMix(hash, input.id);
 
       // Add arguments.
       target.add(input.args.length);
-      target.add(0); // This element will be used to store a function hash.
       target.add(0); // This element will be used to store the content length.
-      final startLength = target.length;
       for (final arg in input.args) {
-        _encodeExprArray(arg, target);
+        hash = jMix(hash, _encodeExprArray(arg, target));
       }
 
       // Store final content length.
-      target[startLength - 1] = target.length - startLength;
+      target[firstIndex + 4] = target.length - firstIndex - 5;
 
       // Compute and store hash.
-      target[startLength - 2] =
-          hashObjects(target.sublist(startLength, target.length - 1));
+      target[firstIndex] = jPostprocess(hash);
+
+      return hash;
     }
+  } else {
+    return -1;
   }
 }
 
@@ -62,6 +80,7 @@ Expr decodeExprArray(List<int> input) {
 }
 
 Expr _decodeExprArray(List<int> input, W<int> ptr) {
+  ptr.v++; // Jump over hash.
   final type = input[ptr.v++];
   if (type == _exprArrayTypeInteger) {
     final value = input[ptr.v++];
@@ -76,7 +95,7 @@ Expr _decodeExprArray(List<int> input, W<int> ptr) {
     } else {
       var argc = input[ptr.v++];
       final args = new List<Expr>();
-      ptr.v += 2; // Jump over function hash and content length.
+      ptr.v++; // Jump over content length.
       while (argc > 0) {
         args.add(_decodeExprArray(input, ptr));
         argc--;

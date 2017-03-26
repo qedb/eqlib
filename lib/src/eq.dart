@@ -78,5 +78,5 @@ class Eq {
   /// Equation hashcode.
   @override
   int get hashCode =>
-      jFinish(jCombine(jCombine(0, left.hashCode), right.hashCode));
+      jPostprocess(jMix(jMix(0, left.hashCode), right.hashCode));
 }

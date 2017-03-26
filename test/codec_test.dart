@@ -49,34 +49,34 @@ void main() {
     expect(
         expr.toArray(),
         equals([
-          // Multiply function, 2 args, content-length: 36
-          4, id('*'), 2, 509018327, 41,
+          // Multiply function, 2 args, content-length: 49
+          129031807, 4, id('*'), 2, 49,
           /**/ // Integer with value 2
-          /**/ 1, 2,
-          /**/ // Power function, 2 args, content-length: 30
-          /**/ 4, id('^'), 2, 51107015, 34,
-          /****/ // a() function, 3 args, content-length: 18
-          /****/ 4, id('a'), 3, 280869510, 20,
+          /**/ 93096440, 1, 2,
+          /**/ // Power function, 2 args, content-length: 41
+          /**/ 103543355, 4, id('^'), 2, 41,
+          /****/ // a() function, 3 args, content-length: 25
+          /****/ 487176588, 4, id('a'), 3, 25,
           /******/ // Generic ?a
-          /******/ 3, idg('a'),
+          /******/ 206116114, 3, idg('a'),
           /******/ // Generic ?b
-          /******/ 3, idg('b'),
-          /******/ // Subtract function, 2 args, content-length: 10
-          /******/ 4, id('-'), 2, 438846807, 11,
+          /******/ 465318904, 3, idg('b'),
+          /******/ // Subtract function, 2 args, content-length: 14
+          /******/ 331469300, 4, id('-'), 2, 14,
           /********/ // Integer with value 3
-          /********/ 1, 3,
-          /********/ // Multiply function, 2 args, content-length: 4
-          /********/ 4, id('*'), 2, 355966969, 4,
+          /********/ 390737267, 1, 3,
+          /********/ // Multiply function, 2 args, content-length: 6
+          /********/ 302905236, 4, id('*'), 2, 6,
           /**********/ // Integer with value 6
-          /**********/ 1, 6,
+          /**********/ 516308074, 1, 6,
           /**********/ // Integer with value 7
-          /**********/ 1, 7,
-          /****/ // Addition function, 2 args, content-length: 4
-          /****/ 4, id('+'), 2, 86783514, 4,
+          /**********/ 42091490, 1, 7,
+          /****/ // Addition function, 2 args, content-length: 6
+          /****/ 348947024, 4, id('+'), 2, 6,
           /******/ // Symbol a
-          /******/ 2, id('a'),
+          /******/ 165908867, 2, id('a'),
           /******/ // Symbol b
-          /******/ 2, id('b')
+          /******/ 84182980, 2, id('b')
         ]));
     expect(new Expr.fromArray(expr.toArray()), equals(expr));
 

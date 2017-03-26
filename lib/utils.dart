@@ -35,7 +35,7 @@ int char(String str) => str.runes.first;
 /// https://github.com/google/quiver-dart/blob/master/lib/src/core/hash.dart
 
 // ignore: parameter_assignments
-int jCombine(int hash, int value) {
+int jMix(int hash, int value) {
   // ignore: parameter_assignments
   hash = 0x1fffffff & (hash + value);
   // ignore: parameter_assignments
@@ -44,7 +44,7 @@ int jCombine(int hash, int value) {
 }
 
 // ignore: parameter_assignments
-int jFinish(int hash) {
+int jPostprocess(int hash) {
   // ignore: parameter_assignments
   hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
   // ignore: parameter_assignments
@@ -53,10 +53,10 @@ int jFinish(int hash) {
 }
 
 int hashCode2(Object a, Object b) =>
-    jFinish(jCombine(jCombine(0, a.hashCode), b.hashCode));
+    jPostprocess(jMix(jMix(0, a.hashCode), b.hashCode));
 
-int hashCode3(Object a, Object b, Object c) => jFinish(
-    jCombine(jCombine(jCombine(0, a.hashCode), b.hashCode), c.hashCode));
+int hashCode3(Object a, Object b, Object c) =>
+    jPostprocess(jMix(jMix(jMix(0, a.hashCode), b.hashCode), c.hashCode));
 
 int hashObjects(Iterable objects) =>
-    jFinish(objects.fold(0, (h, i) => jCombine(h, i.hashCode)));
+    jPostprocess(objects.fold(0, (h, i) => jMix(h, i.hashCode)));

@@ -34,8 +34,8 @@ class FunctionExpr extends Expr {
       const ListEquality().equals(other.args, args);
 
   @override
-  int get expressionHash => jFinish(
-      jCombine(args.fold(0, (hash, arg) => jCombine(hash, arg.hashCode)), id));
+  int get expressionHash => jPostprocess(
+      jMix(args.fold(0, (hash, arg) => jMix(hash, arg.hashCode)), id));
 
   @override
   bool get isGeneric => _generic;
