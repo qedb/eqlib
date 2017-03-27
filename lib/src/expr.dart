@@ -86,12 +86,7 @@ abstract class Expr {
   /// Substitute the given [equation] at the given pattern [index].
   /// Returns a new instance of [Expr] if the equation is substituted.
   /// Never returns null, instead returns itself if nothing is substituted.
-  Expr substituteInternal(Eq equation, W<int> index) {
-    final mapping = new ExprMapping();
-    return _compare(equation.left, mapping) && index.v-- == 0
-        ? equation.right.remap(mapping)
-        : this;
-  }
+  Expr substituteInternal(Eq equation, W<int> index);
 
   /// Wrapper around [substituteInternal].
   Expr substitute(Eq equation, [int index = 0]) =>

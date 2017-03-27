@@ -51,10 +51,15 @@ void main() {
         equals('(b+1)/2+b'));
 
     expect(
-        () => ctx.str(ctx
+        () => ctx
             .parse('fn(b/c, b)')
-            .substitute(ctx.parseEq('fn(?a(?b), ?b)=?a(?b+1)+?b'))),
+            .substitute(ctx.parseEq('fn(?a(?b), ?b)=?a(?b+1)+?b')),
         eqlibThrows(
             'in strict mode the generic substitute can only depend on the variable that is remapped'));
+
+    expect(
+        () => ctx.parse('diff(x^2, x^2)').substitute(ctx.parseEq(
+            'diff(?f(?x), ?x) = lim(d(?x), 0 (?f(?x+d(?x))-?f(?x))/d(x))')),
+        eqlibThrows('generic function inner mapping must map from a symbol'));
   });
 }

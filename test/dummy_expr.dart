@@ -24,5 +24,8 @@ class DummyExpr extends Expr {
   Expr remap(mapping) => clone();
 
   @override
+  DummyExpr substituteInternal(equation, index) => this;
+
+  @override
   num evaluate(compute) => double.NAN;
 }

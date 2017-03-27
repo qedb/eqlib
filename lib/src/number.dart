@@ -41,5 +41,8 @@ class NumberExpr extends Expr {
   NumberExpr remap(mapping) => clone();
 
   @override
+  NumberExpr substituteInternal(equation, index) => this;
+
+  @override
   num evaluate(compute) => value;
 }
