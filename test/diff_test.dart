@@ -33,25 +33,27 @@ void main() {
 
     // First step difference
     expect(
-        buildEqDiff(e1.right, e2.right),
-        equals(
-            new EqDiffResult(diff: new EqDiffBranch(eq(e1.right, e2.right)))));
+        getExpressionDiff(e1.right, e2.right),
+        equals(new ExprDiffResult(
+            diff: new ExprDiffBranch(eq(e1.right, e2.right)))));
 
     // Second step difference
     expect(
-        buildEqDiff(e2.right, e3.right),
-        equals(new EqDiffResult(
-            diff: new EqDiffBranch(eq(e2.right, e3.right), [
-          new EqDiffBranch(
+        getExpressionDiff(e2.right, e3.right),
+        equals(new ExprDiffResult(
+            diff: new ExprDiffBranch(eq(e2.right, e3.right), [
+          new ExprDiffBranch(
               eq(diff(x ^ 3, x), number(3) * (x ^ (number(3) - 1)))),
           null
         ]))));
 
     // Third step difference
-    final step3diff = buildEqDiff(e3.right, e4.right);
-    final step3diffExpect = new EqDiffResult(
-        diff: new EqDiffBranch(eq(e3.right, e4.right),
-            [null, new EqDiffBranch(eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))]));
+    final step3diff = getExpressionDiff(e3.right, e4.right);
+    final step3diffExpect = new ExprDiffResult(
+        diff: new ExprDiffBranch(eq(e3.right, e4.right), [
+      null,
+      new ExprDiffBranch(eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))
+    ]));
 
     expect(step3diff, equals(step3diffExpect));
 
@@ -61,11 +63,11 @@ void main() {
   });
 
   test('Numeric inequality', () {
-    expect(buildEqDiff(number(1), number(2)),
-        equals(new EqDiffResult(hasDiff: true, numericInequality: true)));
+    expect(getExpressionDiff(number(1), number(2)),
+        equals(new ExprDiffResult(hasDiff: true, numericInequality: true)));
     expect(
-        buildEqDiff(ctx.parse('1 + a'), ctx.parse('2 + a')),
-        equals(
-            new EqDiffResult(diff: new EqDiffBranch(ctx.parseEq('1+a=2+a')))));
+        getExpressionDiff(ctx.parse('1 + a'), ctx.parse('2 + a')),
+        equals(new ExprDiffResult(
+            diff: new ExprDiffBranch(ctx.parseEq('1+a=2+a')))));
   });
 }

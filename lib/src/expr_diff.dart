@@ -4,15 +4,15 @@
 
 part of eqlib;
 
-class EqDiffBranch {
+class ExprDiffBranch {
   final Eq diff;
-  final List<EqDiffBranch> arguments;
+  final List<ExprDiffBranch> arguments;
 
-  EqDiffBranch(this.diff, [this.arguments = const []]);
+  ExprDiffBranch(this.diff, [this.arguments = const []]);
 
   @override
   bool operator ==(dynamic other) =>
-      other is EqDiffBranch &&
+      other is ExprDiffBranch &&
       other.diff == diff &&
       const ListEquality().equals(other.arguments, arguments);
 
@@ -20,9 +20,9 @@ class EqDiffBranch {
   int get hashCode => hashCode2(diff, hashObjects(arguments));
 }
 
-class EqDiffResult {
+class ExprDiffResult {
   /// Difference rules
-  final EqDiffBranch diff;
+  final ExprDiffBranch diff;
 
   /// The result has a difference.
   final bool hasDiff;
@@ -30,12 +30,12 @@ class EqDiffResult {
   /// The two expressions are both numbers and not equal.
   final bool numericInequality;
 
-  EqDiffResult(
+  ExprDiffResult(
       {this.hasDiff: true, this.numericInequality: false, this.diff: null});
 
   @override
   bool operator ==(dynamic other) =>
-      other is EqDiffResult &&
+      other is ExprDiffResult &&
       other.hasDiff == hasDiff &&
       other.numericInequality == numericInequality &&
       other.diff == diff;
@@ -44,18 +44,18 @@ class EqDiffResult {
   int get hashCode => hashCode3(diff, hasDiff, numericInequality);
 }
 
-/// Generate [EqDiffResult] from the difference between expression [a] and [b].
-EqDiffResult buildEqDiff(Expr a, Expr b) {
+/// Generate [ExprDiffResult] from the difference between expression [a] and [b].
+ExprDiffResult getExpressionDiff(Expr a, Expr b) {
   // If a == b, this branch can be terminated.
   if (a == b) {
-    return new EqDiffResult(hasDiff: false);
+    return new ExprDiffResult(hasDiff: false);
   }
 
   // If a and b are numeric, this branch can be discarded.
   else if (a is NumberExpr && b is NumberExpr) {
     // If a and b were equal, they would pass the first if statement, therefore
     // it can be concluded that this difference is invalid.
-    return new EqDiffResult(numericInequality: true);
+    return new ExprDiffResult(numericInequality: true);
   }
 
   // Potential rule: a = b
@@ -67,23 +67,23 @@ EqDiffResult buildEqDiff(Expr a, Expr b) {
       a.id == b.id &&
       a.args.length == b.args.length) {
     // Create alternate branches for each argument.
-    final arguments = new List<EqDiffBranch>();
+    final arguments = new List<ExprDiffBranch>();
 
     for (var i = 0; i < a.args.length; i++) {
-      final result = buildEqDiff(a.args[i], b.args[i]);
+      final result = getExpressionDiff(a.args[i], b.args[i]);
       if (result.numericInequality) {
         // The branch is illegal: discard argument rules.
         // Note that the difference can never be fully resolved if one of the
         // arguments has a numeric inequality. The rule must involve the parent
         // functions.
-        return new EqDiffResult(diff: new EqDiffBranch(rule));
+        return new ExprDiffResult(diff: new ExprDiffBranch(rule));
       } else {
         arguments.add(result.diff);
       }
     }
 
-    return new EqDiffResult(diff: new EqDiffBranch(rule, arguments));
+    return new ExprDiffResult(diff: new ExprDiffBranch(rule, arguments));
   } else {
-    return new EqDiffResult(diff: new EqDiffBranch(rule));
+    return new ExprDiffResult(diff: new ExprDiffBranch(rule));
   }
 }

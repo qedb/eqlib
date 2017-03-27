@@ -28,4 +28,4 @@ part 'src/simple_context.dart';
 part 'src/codec.dart';
 part 'src/array_codec.dart';
 part 'src/stepper.dart';
-part 'src/eq_diff.dart';
+part 'src/expr_diff.dart';
