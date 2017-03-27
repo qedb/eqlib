@@ -15,7 +15,7 @@ void main() {
     final a = generic('a'), b = generic('b'), c = generic('c');
 
     // Extra parentheses
-    expect(ctx.parse('(((?a + ?b)))'), equals(a + b));
+    expect(ctx.parse('(((?a() + ?b)))'), equals(a + b));
 
     // Precedence and whitespaces
     expect(ctx.parse(' ( 1 + 2 ) * 3 ^ sin( a + ?b ) '),

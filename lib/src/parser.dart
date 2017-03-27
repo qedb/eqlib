@@ -182,10 +182,17 @@ Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
         // Since we have implicit multiplication at whitespaces or any other
         // characters, this is only a function if there is an opening
         // parenthesis directly after the name.
-        final isSymbol = !reader.currentIs('(');
+        var isSymbol = !reader.currentIs('(');
         if (!isSymbol) {
           // Move over opening parentheses.
           reader.next();
+
+          // Check if maybe the token is still a symbol because it has 0 args.
+          reader.skipWhitespaces();
+          if (reader.currentIs(')')) {
+            isSymbol = true;
+            reader.next();
+          }
         }
 
         // Process token.
