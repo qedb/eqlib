@@ -11,6 +11,12 @@ void main() {
   final a = symbol('a', generic: true);
   final b = symbol('b', generic: true);
 
+  test('Basic', () {
+    expect(getExpressionDiff(a + 1, number(1) + a).hasDiff, equals(true));
+    expect(getExpressionDiff(ctx.parse('?a + 1'), ctx.parse('1 + ?a')).hasDiff,
+        equals(true));
+  });
+
   test('Chain rule', () {
     final sin = fn1('sin');
     final cos = fn1('cos');
