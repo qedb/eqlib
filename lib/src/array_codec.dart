@@ -19,12 +19,27 @@ List<int> encodeExprArray(Expr input) {
 }
 
 /// Returns hash of encoded object.
+///
+/// Array codec format for integers and 0-argument functions (symbols):
+/// `[$HASH, $TYPE, $VALUE]`
+///
+/// Array codec format for >0 arguments functions:
+/// `[$HASH, $TYPE, $VALUE, $ARGC, $SIZE, ...children...]`
+///
+/// The hash is computed using the jenkins one-at-a-time hash. The hash input
+/// are the type and value. In the case of functions the hash of each argument
+/// is also added as input for the function hash.
+///
+/// The hash is shifted one place to the left and masked within the Dart smi
+/// (small integer) range: 0x3fffffff. In the case of integers the first bit is
+/// set. This way the integer value can later be reconstructed easily from the
+/// hash.
 int _encodeExprArray(Expr input, List<int> target) {
   if (input is NumberExpr) {
     final value = input.value;
     if (value is int) {
       final data = [_exprArrayTypeInteger, value];
-      final hash = hashObjects(data);
+      final hash = ((value << 1) & 0x3fffffff) | 0x1;
       target.add(hash);
       target.addAll(data);
       return hash;
@@ -38,7 +53,8 @@ int _encodeExprArray(Expr input, List<int> target) {
         input.isGeneric ? _exprArrayTypeSymbolGen : _exprArrayTypeSymbol,
         input.id
       ];
-      final hash = hashObjects(data);
+      var hash = hashObjects(data);
+      hash = (hash << 1) & 0x3fffffff;
       target.add(hash);
       target.addAll(data);
       return hash;
@@ -65,7 +81,9 @@ int _encodeExprArray(Expr input, List<int> target) {
       target[firstIndex + 4] = target.length - firstIndex - 5;
 
       // Compute and store hash.
-      target[firstIndex] = jPostprocess(hash);
+      hash = jPostprocess(hash);
+      hash = (hash << 1) & 0x3fffffff;
+      target[firstIndex] = hash;
 
       return hash;
     }

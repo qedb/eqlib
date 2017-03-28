@@ -50,33 +50,33 @@ void main() {
         expr.toArray(),
         equals([
           // Multiply function, 2 args, content-length: 49
-          129031807, 4, id('*'), 2, 49,
+          221356710, 4, id('*'), 2, 49,
           /**/ // Integer with value 2
-          /**/ 93096440, 1, 2,
+          /**/ 5, 1, 2,
           /**/ // Power function, 2 args, content-length: 41
-          /**/ 103543355, 4, id('^'), 2, 41,
+          /**/ 783138374, 4, id('^'), 2, 41,
           /****/ // a() function, 3 args, content-length: 25
-          /****/ 487176588, 4, id('a'), 3, 25,
+          /****/ 76988010, 4, id('a'), 3, 25,
           /******/ // Generic ?a
-          /******/ 206116114, 3, idg('a'),
+          /******/ 412232228, 3, idg('a'),
           /******/ // Generic ?b
-          /******/ 465318904, 3, idg('b'),
+          /******/ 930637808, 3, idg('b'),
           /******/ // Subtract function, 2 args, content-length: 14
-          /******/ 331469300, 4, id('-'), 2, 14,
+          /******/ 265202872, 4, id('-'), 2, 14,
           /********/ // Integer with value 3
-          /********/ 390737267, 1, 3,
+          /********/ 7, 1, 3,
           /********/ // Multiply function, 2 args, content-length: 6
-          /********/ 302905236, 4, id('*'), 2, 6,
+          /********/ 453715154, 4, id('*'), 2, 6,
           /**********/ // Integer with value 6
-          /**********/ 516308074, 1, 6,
+          /**********/ 13, 1, 6,
           /**********/ // Integer with value 7
-          /**********/ 42091490, 1, 7,
+          /**********/ 15, 1, 7,
           /****/ // Addition function, 2 args, content-length: 6
-          /****/ 348947024, 4, id('+'), 2, 6,
+          /****/ 427513450, 4, id('+'), 2, 6,
           /******/ // Symbol a
-          /******/ 165908867, 2, id('a'),
+          /******/ 331817734, 2, id('a'),
           /******/ // Symbol b
-          /******/ 84182980, 2, id('b')
+          /******/ 168365960, 2, id('b')
         ]));
     expect(new Expr.fromArray(expr.toArray()), equals(expr));
 
