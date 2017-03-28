@@ -5,10 +5,11 @@
 part of eqlib;
 
 class ExprDiffBranch {
+  final bool different;
   final Eq diff;
   final List<ExprDiffBranch> arguments;
 
-  ExprDiffBranch(this.diff, [this.arguments = const []]);
+  ExprDiffBranch(this.different, this.diff, [this.arguments = const []]);
 
   @override
   bool operator ==(dynamic other) =>
@@ -24,31 +25,26 @@ class ExprDiffResult {
   /// Difference rules
   final ExprDiffBranch diff;
 
-  /// The result has a difference.
-  final bool hasDiff;
-
   /// The two expressions are both numbers and not equal.
   final bool numericInequality;
 
-  ExprDiffResult(
-      {this.hasDiff: true, this.numericInequality: false, this.diff: null});
+  ExprDiffResult({this.numericInequality: false, this.diff: null});
 
   @override
   bool operator ==(dynamic other) =>
       other is ExprDiffResult &&
-      other.hasDiff == hasDiff &&
       other.numericInequality == numericInequality &&
       other.diff == diff;
 
   @override
-  int get hashCode => hashCode3(diff, hasDiff, numericInequality);
+  int get hashCode => hashCode2(diff, numericInequality);
 }
 
 /// Generate [ExprDiffResult] from the difference between expression [a] and [b].
 ExprDiffResult getExpressionDiff(Expr a, Expr b) {
   // If a == b, this branch can be terminated.
   if (a == b) {
-    return new ExprDiffResult(hasDiff: false);
+    return new ExprDiffResult(diff: new ExprDiffBranch(false, null));
   }
 
   // If a and b are numeric, this branch can be discarded.
@@ -76,14 +72,14 @@ ExprDiffResult getExpressionDiff(Expr a, Expr b) {
         // Note that the difference can never be fully resolved if one of the
         // arguments has a numeric inequality. The rule must involve the parent
         // functions.
-        return new ExprDiffResult(diff: new ExprDiffBranch(rule));
+        return new ExprDiffResult(diff: new ExprDiffBranch(true, rule));
       } else {
         arguments.add(result.diff);
       }
     }
 
-    return new ExprDiffResult(diff: new ExprDiffBranch(rule, arguments));
+    return new ExprDiffResult(diff: new ExprDiffBranch(true, rule, arguments));
   } else {
-    return new ExprDiffResult(diff: new ExprDiffBranch(rule));
+    return new ExprDiffResult(diff: new ExprDiffBranch(true, rule));
   }
 }
