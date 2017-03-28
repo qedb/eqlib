@@ -60,6 +60,7 @@ ExprDiffResult getExpressionDiff(Expr a, Expr b) {
   // If a and b are equal functions, their arguments can be compared.
   if (a is FunctionExpr &&
       b is FunctionExpr &&
+      !a.isSymbol &&
       a.id == b.id &&
       a.args.length == b.args.length) {
     // Create alternate branches for each argument.
