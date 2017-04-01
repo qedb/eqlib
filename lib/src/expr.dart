@@ -152,7 +152,7 @@ bool _exprOnlyDependsOn(int symbolId, Expr expr) {
   } else if (expr is FunctionExpr) {
     return expr.isSymbol
         ? expr.id == symbolId
-        : expr.args.every((arg) => _exprOnlyDependsOn(symbolId, arg));
+        : expr.arguments.every((arg) => _exprOnlyDependsOn(symbolId, arg));
   } else {
     return false;
   }

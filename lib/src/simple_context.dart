@@ -120,8 +120,8 @@ class SimpleExprContext extends ExprContext {
   Eq parseEq(String str) {
     final expr = parse(str);
     if (expr is FunctionExpr && expr.id == operators.id('=')) {
-      assert(expr.args.length == 2);
-      return new Eq(expr.args[0], expr.args[1]);
+      assert(expr.arguments.length == 2);
+      return new Eq(expr.arguments[0], expr.arguments[1]);
     } else {
       throw new EqLibException('no top level equation found');
     }
@@ -146,7 +146,7 @@ class SimpleExprContext extends ExprContext {
         return input.value.toString();
       } else if (input is FunctionExpr) {
         final id = input.id;
-        final args = input.args;
+        final args = input.arguments;
         var label = getLabel(id);
 
         if (input.isSymbol) {

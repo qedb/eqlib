@@ -5,20 +5,36 @@
 part of eqlib;
 
 class ExprDiffBranch {
+  /// Are a and be different?
   final bool different;
-  final Eq diff;
+
+  /// Can a be rearranged into b?
+  final bool rearrangeable;
+
+  /// Resolve by replacement.
+  final Eq replace;
+
+  /// Difference between each argument (if a and b are similar functions).
   final List<ExprDiffBranch> arguments;
 
-  ExprDiffBranch(this.different, this.diff, [this.arguments = const []]);
+  ExprDiffBranch(this.different,
+      {this.replace,
+      this.rearrangeable: false,
+      Iterable<ExprDiffBranch> arguments})
+      : arguments = arguments == null
+            ? new List<ExprDiffBranch>()
+            : new List<ExprDiffBranch>.from(arguments);
 
   @override
   bool operator ==(dynamic other) =>
       other is ExprDiffBranch &&
-      other.diff == diff &&
+      other.different == different &&
+      other.rearrangeable == rearrangeable &&
+      other.replace == replace &&
       const ListEquality().equals(other.arguments, arguments);
 
   @override
-  int get hashCode => hashCode2(diff, hashObjects(arguments));
+  int get hashCode => hashCode2(replace, hashObjects(arguments));
 }
 
 class ExprDiffResult {
@@ -40,11 +56,45 @@ class ExprDiffResult {
   int get hashCode => hashCode2(diff, numericInequality);
 }
 
-/// Generate [ExprDiffResult] from the difference between expression [a] and [b].
-ExprDiffResult getExpressionDiff(Expr a, Expr b) {
+/// Get unique hash of deep arrangable child expressions.
+int _hashArrangableFingerprint(Expr expr, List<int> arrangeableFunctions,
+    [int parentFunction = -1]) {
+  if (expr is FunctionExpr) {
+    if (arrangeableFunctions.contains(expr.id)) {
+      final deep = new List<Expr>();
+      _getDeepChildren(expr, deep, expr.id);
+
+      /// Convert to sorted list of fingerprints.
+      final deepFingerprints = deep
+          .map((child) =>
+              _hashArrangableFingerprint(child, arrangeableFunctions))
+          .toList()..sort();
+
+      return hashObjects(deepFingerprints);
+    }
+  }
+
+  return expr.hashCode;
+}
+
+/// Get all deep children that are not functions with the same ID.
+/// Helper for [_hashArrangableFingerprint].
+void _getDeepChildren(Expr src, List<Expr> dst, int parentFunction) {
+  if (src is FunctionExpr && src.id == parentFunction) {
+    src.arguments.forEach((arg) => _getDeepChildren(arg, dst, parentFunction));
+  } else {
+    dst.add(src);
+  }
+}
+
+/// Generate [ExprDiffResult] for the difference between expression [a] and [b].
+/// You must specify a set of [arrangeableFunctions] (usually addition and
+/// multiplication).
+ExprDiffResult getExpressionDiff(
+    Expr a, Expr b, List<int> arrangeableFunctions) {
   // If a == b, this branch can be terminated.
   if (a == b) {
-    return new ExprDiffResult(diff: new ExprDiffBranch(false, null));
+    return new ExprDiffResult(diff: new ExprDiffBranch(false));
   }
 
   // If a and b are numeric, this branch can be discarded.
@@ -55,32 +105,37 @@ ExprDiffResult getExpressionDiff(Expr a, Expr b) {
   }
 
   // Potential rule: a = b
-  final rule = new Eq(a, b);
+  final result = new ExprDiffResult(
+      diff: new ExprDiffBranch(true,
+          replace: new Eq(a, b),
+          rearrangeable: _hashArrangableFingerprint(a, arrangeableFunctions) ==
+              _hashArrangableFingerprint(b, arrangeableFunctions)));
 
   // If a and b are equal functions, their arguments can be compared.
   if (a is FunctionExpr &&
       b is FunctionExpr &&
       !a.isSymbol &&
       a.id == b.id &&
-      a.args.length == b.args.length) {
-    // Create alternate branches for each argument.
-    final arguments = new List<ExprDiffBranch>();
+      a.arguments.length == b.arguments.length) {
+    // Add branches for each argument.
+    for (var i = 0; i < a.arguments.length; i++) {
+      final argResult = getExpressionDiff(
+          a.arguments[i], b.arguments[i], arrangeableFunctions);
 
-    for (var i = 0; i < a.args.length; i++) {
-      final result = getExpressionDiff(a.args[i], b.args[i]);
-      if (result.numericInequality) {
+      if (argResult.numericInequality) {
         // The branch is illegal: discard argument rules.
         // Note that the difference can never be fully resolved if one of the
         // arguments has a numeric inequality. The rule must involve the parent
         // functions.
-        return new ExprDiffResult(diff: new ExprDiffBranch(true, rule));
+        result.diff.arguments.clear();
+        return result;
       } else {
-        arguments.add(result.diff);
+        result.diff.arguments.add(argResult.diff);
       }
     }
 
-    return new ExprDiffResult(diff: new ExprDiffBranch(true, rule, arguments));
+    return result;
   } else {
-    return new ExprDiffResult(diff: new ExprDiffBranch(true, rule));
+    return result;
   }
 }

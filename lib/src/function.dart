@@ -13,10 +13,10 @@ part of eqlib;
 class FunctionExpr extends Expr {
   final int id;
   final bool _generic;
-  final List<Expr> args;
+  final List<Expr> arguments;
 
-  FunctionExpr(this.id, this._generic, this.args) {
-    assert(id != null && args != null); // Do not accept null as input.
+  FunctionExpr(this.id, this._generic, this.arguments) {
+    assert(id != null && arguments != null); // Do not accept null as input.
   }
 
   @override
@@ -24,23 +24,24 @@ class FunctionExpr extends Expr {
       new FunctionExpr(
           id,
           _generic,
-          new List<Expr>.generate(args.length, (i) => argCopy(args[i]),
+          new List<Expr>.generate(
+              arguments.length, (i) => argCopy(arguments[i]),
               growable: false));
 
   @override
   bool equals(other) =>
       other is FunctionExpr &&
       other.id == id &&
-      const ListEquality().equals(other.args, args);
+      const ListEquality().equals(other.arguments, arguments);
 
   @override
   int get expressionHash => jPostprocess(
-      jMix(args.fold(0, (hash, arg) => jMix(hash, arg.hashCode)), id));
+      jMix(arguments.fold(0, (hash, arg) => jMix(hash, arg.hashCode)), id));
 
   @override
   bool get isGeneric => _generic;
 
-  bool get isSymbol => args.isEmpty;
+  bool get isSymbol => arguments.isEmpty;
 
   @override
   bool _compare(pattern, mapping) {
@@ -48,15 +49,16 @@ class FunctionExpr extends Expr {
       return false;
     } else if (pattern is FunctionExpr) {
       if (pattern.isGeneric) {
-        if (!mapping.addExpression(pattern.id, this, pattern.args)) {
+        if (!mapping.addExpression(pattern.id, this, pattern.arguments)) {
           return false;
         } else {
           return true;
         }
-      } else if (pattern.id == id && pattern.args.length == args.length) {
+      } else if (pattern.id == id &&
+          pattern.arguments.length == arguments.length) {
         // Process arguments.
-        for (var i = 0; i < args.length; i++) {
-          if (!args[i].compare(pattern.args[i], mapping)) {
+        for (var i = 0; i < arguments.length; i++) {
+          if (!arguments[i].compare(pattern.arguments[i], mapping)) {
             return false;
           }
         }
@@ -74,7 +76,7 @@ class FunctionExpr extends Expr {
     if (mapping.substitute.containsKey(id)) {
       if (isGeneric) {
         final depVars = mapping.dependantVars[id] ?? [];
-        if (depVars.length != args.length) {
+        if (depVars.length != arguments.length) {
           throw new EqLibException(
               'dependant variable count does not match the target substitutions');
         }
@@ -86,7 +88,7 @@ class FunctionExpr extends Expr {
         for (var i = 0; i < depVars.length; i++) {
           final depVarId = depVars[i];
           final targetExpr = mapping.substitute[depVarId];
-          final argi = args[i];
+          final argi = arguments[i];
 
           // Only add this to the mapping if the replacement is not the same as
           // the generic dependent variable.
@@ -127,8 +129,8 @@ class FunctionExpr extends Expr {
     }
 
     // Iterate through arguments, and try to substitute the equation there.
-    for (var i = 0; i < args.length; i++) {
-      args[i] = args[i].substituteInternal(equation, index);
+    for (var i = 0; i < arguments.length; i++) {
+      arguments[i] = arguments[i].substituteInternal(equation, index);
       if (index.v < 0) {
         // The substitution position has been found: terminate.
         break;
@@ -140,13 +142,13 @@ class FunctionExpr extends Expr {
 
   @override
   num evaluate(compute) {
-    final numArgs = new List<num>(args.length);
+    final numArgs = new List<num>(arguments.length);
     var allEval = true;
-    for (var i = 0; i < args.length; i++) {
-      final value = args[i].evaluate(compute);
+    for (var i = 0; i < arguments.length; i++) {
+      final value = arguments[i].evaluate(compute);
       if (!value.isNaN) {
         numArgs[i] = value;
-        args[i] = new NumberExpr(value);
+        arguments[i] = new NumberExpr(value);
       } else {
         allEval = false;
       }

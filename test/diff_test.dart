@@ -10,6 +10,7 @@ void main() {
   final ctx = inlineCtx;
   final a = symbol('a', generic: true);
   final b = symbol('b', generic: true);
+  final arrangeableFunctions = [ctx.operators.id('+'), ctx.operators.id('*')];
 
   test('Chain rule', () {
     final sin = fn1('sin');
@@ -33,27 +34,33 @@ void main() {
 
     // First step difference
     expect(
-        getExpressionDiff(e1.right, e2.right),
+        getExpressionDiff(e1.right, e2.right, arrangeableFunctions),
         equals(new ExprDiffResult(
-            diff: new ExprDiffBranch(true, eq(e1.right, e2.right)))));
+            diff: new ExprDiffBranch(true, replace: eq(e1.right, e2.right)))));
 
     // Second step difference
-    expect(
-        getExpressionDiff(e2.right, e3.right),
-        equals(new ExprDiffResult(
-            diff: new ExprDiffBranch(true, eq(e2.right, e3.right), [
-          new ExprDiffBranch(
-              true, eq(diff(x ^ 3, x), number(3) * (x ^ (number(3) - 1)))),
-          new ExprDiffBranch(false, null)
-        ]))));
+    final step2diffExpect = new ExprDiffResult(
+        diff: new ExprDiffBranch(true,
+            replace: eq(e2.right, e3.right),
+            arguments: [
+          new ExprDiffBranch(true,
+              replace: ctx.parseEq('diff(x^3,x) = 3*x^(3-1)')),
+          new ExprDiffBranch(false)
+        ]));
+    expect(getExpressionDiff(e2.right, e3.right, arrangeableFunctions),
+        equals(step2diffExpect));
 
     // Third step difference
-    final step3diff = getExpressionDiff(e3.right, e4.right);
+    final step3diff =
+        getExpressionDiff(e3.right, e4.right, arrangeableFunctions);
     final step3diffExpect = new ExprDiffResult(
-        diff: new ExprDiffBranch(true, eq(e3.right, e4.right), [
-      new ExprDiffBranch(false, null),
-      new ExprDiffBranch(true, eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))
-    ]));
+        diff: new ExprDiffBranch(true,
+            replace: eq(e3.right, e4.right),
+            arguments: [
+          new ExprDiffBranch(false),
+          new ExprDiffBranch(true,
+              replace: eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))
+        ]));
 
     expect(step3diff, equals(step3diffExpect));
 
@@ -63,11 +70,22 @@ void main() {
   });
 
   test('Numeric inequality', () {
-    expect(getExpressionDiff(number(1), number(2)),
+    expect(getExpressionDiff(number(1), number(2), arrangeableFunctions),
         equals(new ExprDiffResult(numericInequality: true)));
     expect(
-        getExpressionDiff(ctx.parse('1 + a'), ctx.parse('2 + a')),
+        getExpressionDiff(
+            ctx.parse('1 + a'), ctx.parse('2 + a'), arrangeableFunctions),
         equals(new ExprDiffResult(
-            diff: new ExprDiffBranch(true, ctx.parseEq('1+a=2+a')))));
+            diff: new ExprDiffBranch(true, replace: ctx.parseEq('1+a=2+a')))));
+  });
+
+  test('Rearrange expressions', () {
+    final shouldPass = getExpressionDiff(ctx.parse('a * b * c * ((d + e) + f)'),
+        ctx.parse('b * c * (f + e + d) * a'), arrangeableFunctions);
+    expect(shouldPass.diff.rearrangeable, equals(true));
+
+    final shouldFail = getExpressionDiff(ctx.parse('a * b * c * ((d + e) + f)'),
+        ctx.parse('b * f * (c + e + d) * a'), arrangeableFunctions);
+    expect(shouldFail.diff.rearrangeable, equals(false));
   });
 }

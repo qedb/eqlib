@@ -10,6 +10,21 @@ class W<T> {
   W(T intial) : v = intial;
 }
 
+/// Simple 2 object tuple.
+/*class T2<A, B> {
+  final A a;
+  final B b;
+
+  T2(this.a, this.b);
+
+  @override
+  bool operator ==(dynamic other) =>
+      other is T2 && other.a == a && other.b == b;
+
+  @override
+  int get hashCode => hashCode2(a, b);
+}*/
+
 /// Generator function for [generateList].
 typedef T ListItemGenerator<T>(int idx);
 

@@ -40,8 +40,8 @@ class LaTeXPrinter {
       } else {
         final genericPrefix = expr.isGeneric ? r'{}_\text{?}' : '';
         if (!expr.isSymbol) {
-          final args = new List<String>.generate(expr.args.length,
-                  (i) => render(expr.args[i], resolveName, ops),
+          final args = new List<String>.generate(expr.arguments.length,
+                  (i) => render(expr.arguments[i], resolveName, ops),
                   growable: false)
               .join(r',\,');
 
@@ -68,7 +68,7 @@ class LaTeXPrinter {
       FunctionExpr expr, ExprGetLabel resolveName, OperatorConfig ops) {
     assert(dict.containsKey(expr.id));
     return dict[expr.id].replaceAllMapped(new RegExp(r'\$(\d+)'), (match) {
-      final arg = expr.args[int.parse(match.group(1))];
+      final arg = expr.arguments[int.parse(match.group(1))];
       var str = render(arg, resolveName, ops);
 
       // Additionaly formatting.

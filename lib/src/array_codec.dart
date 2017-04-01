@@ -71,9 +71,9 @@ int _encodeExprArray(Expr input, List<int> target) {
       hash = jMix(hash, input.id);
 
       // Add arguments.
-      target.add(input.args.length);
+      target.add(input.arguments.length);
       target.add(0); // This element will be used to store the content length.
-      for (final arg in input.args) {
+      for (final arg in input.arguments) {
         hash = jMix(hash, _encodeExprArray(arg, target));
       }
 

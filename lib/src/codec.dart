@@ -173,8 +173,8 @@ void _exprCodecEncodePass1(ExprCodecData data, Expr expr) {
   if (expr is NumberExpr) {
     data.storeNumber(expr.value);
   } else if (expr is FunctionExpr) {
-    data.storeFunction(expr.id, expr.args.length, expr.isGeneric);
-    for (final arg in expr.args) {
+    data.storeFunction(expr.id, expr.arguments.length, expr.isGeneric);
+    for (final arg in expr.arguments) {
       _exprCodecEncodePass1(data, arg);
     }
   }
@@ -184,8 +184,8 @@ void _exprCodecEncodePass2(ExprCodecData data, Expr expr) {
   if (expr is NumberExpr) {
     data.add(data.getNumberRef(expr.value));
   } else if (expr is FunctionExpr) {
-    data.add(data.getFunctionRef(expr.id, expr.args.length, expr.isGeneric));
-    for (final arg in expr.args) {
+    data.add(data.getFunctionRef(expr.id, expr.arguments.length, expr.isGeneric));
+    for (final arg in expr.arguments) {
       _exprCodecEncodePass2(data, arg);
     }
   }

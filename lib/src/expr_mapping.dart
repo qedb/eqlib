@@ -70,8 +70,8 @@ class ExprMapping {
         final id = ids.first;
         if (!substitute.containsKey(id)) {
           final fn = substitute[fnId];
-          if (fn is FunctionExpr && fn.args.length == 1) {
-            substitute[id] = fn.args.first;
+          if (fn is FunctionExpr && fn.arguments.length == 1) {
+            substitute[id] = fn.arguments.first;
           }
         }
       }
