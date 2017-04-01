@@ -68,7 +68,8 @@ int _hashArrangableFingerprint(Expr expr, List<int> arrangeableFunctions,
       final deepFingerprints = deep
           .map((child) =>
               _hashArrangableFingerprint(child, arrangeableFunctions))
-          .toList()..sort();
+          .toList()
+            ..sort();
 
       return hashObjects(deepFingerprints);
     }
