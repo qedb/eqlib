@@ -184,7 +184,8 @@ void _exprCodecEncodePass2(ExprCodecData data, Expr expr) {
   if (expr is NumberExpr) {
     data.add(data.getNumberRef(expr.value));
   } else if (expr is FunctionExpr) {
-    data.add(data.getFunctionRef(expr.id, expr.arguments.length, expr.isGeneric));
+    data.add(
+        data.getFunctionRef(expr.id, expr.arguments.length, expr.isGeneric));
     for (final arg in expr.arguments) {
       _exprCodecEncodePass2(data, arg);
     }
