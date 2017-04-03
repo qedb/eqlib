@@ -70,6 +70,8 @@ void main() {
   });
 
   test('Numeric inequality', () {
+    expect(getExpressionDiff(number(1), number(1), arrangeableFunctions),
+        equals(new ExprDiffResult(diff: new ExprDiffBranch(false))));
     expect(getExpressionDiff(number(1), number(2), arrangeableFunctions),
         equals(new ExprDiffResult(numericInequality: true)));
     expect(
