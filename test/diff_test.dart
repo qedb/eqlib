@@ -36,15 +36,15 @@ void main() {
     expect(
         getExpressionDiff(e1.right, e2.right, arrangeableFunctions),
         equals(new ExprDiffResult(
-            diff: new ExprDiffBranch(true, replace: eq(e1.right, e2.right)))));
+            diff: new ExprDiffBranch(true, replaced: eq(e1.right, e2.right)))));
 
     // Second step difference
     final step2diffExpect = new ExprDiffResult(
         diff: new ExprDiffBranch(true,
-            replace: eq(e2.right, e3.right),
-            arguments: [
+            replaced: eq(e2.right, e3.right),
+            argumentDifference: [
           new ExprDiffBranch(true,
-              replace: ctx.parseEq('diff(x^3,x) = 3*x^(3-1)')),
+              replaced: ctx.parseEq('diff(x^3,x) = 3*x^(3-1)')),
           new ExprDiffBranch(false)
         ]));
     expect(getExpressionDiff(e2.right, e3.right, arrangeableFunctions),
@@ -55,11 +55,11 @@ void main() {
         getExpressionDiff(e3.right, e4.right, arrangeableFunctions);
     final step3diffExpect = new ExprDiffResult(
         diff: new ExprDiffBranch(true,
-            replace: eq(e3.right, e4.right),
-            arguments: [
+            replaced: eq(e3.right, e4.right),
+            argumentDifference: [
           new ExprDiffBranch(false),
           new ExprDiffBranch(true,
-              replace: eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))
+              replaced: eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))
         ]));
 
     expect(step3diff, equals(step3diffExpect));
@@ -78,16 +78,16 @@ void main() {
         getExpressionDiff(
             ctx.parse('1 + a'), ctx.parse('2 + a'), arrangeableFunctions),
         equals(new ExprDiffResult(
-            diff: new ExprDiffBranch(true, replace: ctx.parseEq('1+a=2+a')))));
+            diff: new ExprDiffBranch(true, replaced: ctx.parseEq('1+a=2+a')))));
   });
 
   test('Rearrange expressions', () {
     final shouldPass = getExpressionDiff(ctx.parse('a * b * c * ((d + e) + f)'),
         ctx.parse('b * c * (f + e + d) * a'), arrangeableFunctions);
-    expect(shouldPass.diff.rearrangeable, equals(true));
+    expect(shouldPass.diff.rearranged, equals(true));
 
     final shouldFail = getExpressionDiff(ctx.parse('a * b * c * ((d + e) + f)'),
         ctx.parse('b * f * (c + e + d) * a'), arrangeableFunctions);
-    expect(shouldFail.diff.rearrangeable, equals(false));
+    expect(shouldFail.diff.rearranged, equals(false));
   });
 }

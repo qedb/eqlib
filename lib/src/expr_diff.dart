@@ -4,37 +4,38 @@
 
 part of eqlib;
 
+/// Difference between two expressions.
 class ExprDiffBranch {
   /// Are a and be different?
   final bool different;
 
-  /// Can a be rearranged into b?
-  final bool rearrangeable;
+  /// Is a rearranged into b?
+  final bool rearranged;
 
-  /// Resolve by replacement.
-  final Eq replace;
+  /// Is a replaced by b?
+  final Eq replaced;
 
   /// Difference between each argument (if a and b are similar functions).
-  final List<ExprDiffBranch> arguments;
+  final List<ExprDiffBranch> argumentDifference;
 
   ExprDiffBranch(this.different,
-      {this.replace,
-      this.rearrangeable: false,
-      Iterable<ExprDiffBranch> arguments})
-      : arguments = arguments == null
+      {this.replaced,
+      this.rearranged: false,
+      Iterable<ExprDiffBranch> argumentDifference})
+      : argumentDifference = argumentDifference == null
             ? new List<ExprDiffBranch>()
-            : new List<ExprDiffBranch>.from(arguments);
+            : new List<ExprDiffBranch>.from(argumentDifference);
 
   @override
   bool operator ==(dynamic other) =>
       other is ExprDiffBranch &&
       other.different == different &&
-      other.rearrangeable == rearrangeable &&
-      other.replace == replace &&
-      const ListEquality().equals(other.arguments, arguments);
+      other.rearranged == rearranged &&
+      other.replaced == replaced &&
+      const ListEquality().equals(other.argumentDifference, argumentDifference);
 
   @override
-  int get hashCode => hashCode2(replace, hashObjects(arguments));
+  int get hashCode => hashCode2(replaced, hashObjects(argumentDifference));
 }
 
 class ExprDiffResult {
@@ -108,9 +109,9 @@ ExprDiffResult getExpressionDiff(
   // Potential rule: a = b
   final result = new ExprDiffResult(
       diff: new ExprDiffBranch(true,
-          replace: new Eq(a, b),
-          rearrangeable: _hashArrangableFingerprint(a, arrangeableFunctions) ==
-              _hashArrangableFingerprint(b, arrangeableFunctions)));
+          rearranged: _hashArrangableFingerprint(a, arrangeableFunctions) ==
+              _hashArrangableFingerprint(b, arrangeableFunctions),
+          replaced: new Eq(a, b)));
 
   // If a and b are equal functions, their arguments can be compared.
   if (a is FunctionExpr &&
@@ -128,10 +129,10 @@ ExprDiffResult getExpressionDiff(
         // Note that the difference can never be fully resolved if one of the
         // arguments has a numeric inequality. The rule must involve the parent
         // functions.
-        result.diff.arguments.clear();
+        result.diff.argumentDifference.clear();
         return result;
       } else {
-        result.diff.arguments.add(argResult.diff);
+        result.diff.argumentDifference.add(argResult.diff);
       }
     }
 
