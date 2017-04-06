@@ -25,7 +25,7 @@ class ExprCodecData {
 
     // Header parameters
     final functionCount = headerView[0]; // Number of functions
-    final genericCount = headerView[1]; // Number of generics
+    final genericCount = headerView[1]; // Number of functions that are generic
     final int8Count = headerView[2]; // Number of 8bit ints
     final float64Count = headerView[3]; // Number of 64bit floats
 
@@ -41,7 +41,7 @@ class ExprCodecData {
     offset += int8View.lengthInBytes;
 
     List<int> dataView;
-    if (genericCount + functionCount + int8Count + float64Count > 256) {
+    if (functionCount + int8Count + float64Count > 256) {
       // Allign offset with 16 bit reading frame.
       if (offset % 2 != 0) {
         offset++;
@@ -67,7 +67,7 @@ class ExprCodecData {
         functionCount *
             (Uint32List.BYTES_PER_ELEMENT + Uint8List.BYTES_PER_ELEMENT) +
         int8Count * Int8List.BYTES_PER_ELEMENT;
-    final u16 = genericCount + functionCount + int8Count + float64Count > 256;
+    final u16 = functionCount + int8Count + float64Count > 256;
     if (u16 && dataOffset % 2 != 0) {
       dataOffset++;
     }
@@ -160,6 +160,10 @@ class ExprCodecData {
   }
 
   void add(int id) => data.add(id);
+
+  bool isFunctionId(int value) => value < functionCount;
+
+  bool isGenericId(int id) => id < genericCount;
 }
 
 ExprCodecData exprCodecEncode(Expr expr) {
@@ -201,8 +205,8 @@ Expr exprCodecDecode(ExprCodecData data) =>
 /// data arrays.
 Expr _exprCodecDecode(W<int> ptr, ExprCodecData data) {
   int value = data.data[ptr.v++];
-  if (value < data.functionCount) {
-    final generic = value < data.genericCount;
+  if (data.isFunctionId(value)) {
+    final generic = data.isGenericId(value);
 
     // If there are function arguments, collect those first.
     final argCount = data.functionArgc[value];
