@@ -161,9 +161,11 @@ class ExprCodecData {
 
   void add(int id) => data.add(id);
 
-  bool isFunctionId(int value) => value < functionCount;
+  /// Check if the given index points to a function.
+  bool inFunctionRange(int index) => index < functionCount;
 
-  bool isGenericId(int id) => id < genericCount;
+  /// Check if the given index points to a generic function.
+  bool inGenericRange(int index) => index < genericCount;
 }
 
 ExprCodecData exprCodecEncode(Expr expr) {
@@ -205,8 +207,8 @@ Expr exprCodecDecode(ExprCodecData data) =>
 /// data arrays.
 Expr _exprCodecDecode(W<int> ptr, ExprCodecData data) {
   int value = data.data[ptr.v++];
-  if (data.isFunctionId(value)) {
-    final generic = data.isGenericId(value);
+  if (data.inFunctionRange(value)) {
+    final generic = data.inGenericRange(value);
 
     // If there are function arguments, collect those first.
     final argCount = data.functionArgc[value];
