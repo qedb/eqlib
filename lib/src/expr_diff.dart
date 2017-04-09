@@ -13,7 +13,7 @@ class ExprDiffBranch {
   final bool rearranged;
 
   /// Is a replaced by b?
-  final Eq replaced;
+  final Rule replaced;
 
   /// Difference between each argument (if a and b are similar functions).
   final List<ExprDiffBranch> argumentDifference;
@@ -111,7 +111,7 @@ ExprDiffResult getExpressionDiff(
       diff: new ExprDiffBranch(true,
           rearranged: _hashArrangableFingerprint(a, arrangeableFunctions) ==
               _hashArrangableFingerprint(b, arrangeableFunctions),
-          replaced: new Eq(a, b)));
+          replaced: new Rule(a, b)));
 
   // If a and b are equal functions, their arguments can be compared.
   if (a is FunctionExpr &&

@@ -28,19 +28,11 @@ abstract class ExprContext {
 
   /// Function to generate a human readable string from the given expression or
   /// equation.
-  String str(dynamic input);
+  String str(Expr input);
 
   /// Parse an expression string.
   Expr parse(String str);
 
-  /// Parse an equation string.
-  Eq parseEq(String str);
-
-  /// Recursive substitution (this requires computation).
-  Expr substituteRecursivly(Expr base, Eq equation, Eq terminator,
-          [int maxRecursions = 100]) =>
-      base.substituteRecursivly(equation, terminator, compute, maxRecursions);
-
-  /// Evaluate the given expression.
-  num evaluate(Expr expr) => expr.evaluate(compute);
+  /// Parse expression string as rule.
+  Rule parseRule(String str);
 }

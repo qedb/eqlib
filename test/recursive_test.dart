@@ -8,35 +8,33 @@ import 'package:eqlib/exceptions.dart';
 
 void main() {
   final ctx = new SimpleExprContext();
-
   test('Fibonacci', () {
-    final fib = ctx.parseEq('fib(?n) = ffib(?n, 1, 0)');
-    final ffib = ctx.parseEq('ffib(?n, ?a, ?b) = ffib(?n - 1, ?a + ?b, ?a)');
-    final ffib0 = ctx.parseEq('ffib(0, ?a, ?b) = ?b');
+    final fib = ctx.parseRule('fib(?n) = ffib(?n, 1, 0)');
+    final ffib = ctx.parseRule('ffib(?n, ?a, ?b) = ffib(?n - 1, ?a + ?b, ?a)');
+    final ffib0 = ctx.parseRule('ffib(0, ?a, ?b) = ?b');
 
-    var e = ctx.parse('fib(10)');
-    e = e.substitute(fib);
-    expect(ctx.evaluate(ctx.substituteRecursivly(e, ffib, ffib0)), equals(55));
+    final e = ctx.parse('fib(10)').substitute(fib);
+    expect(
+        substituteRecursive(e, ffib, ffib0, ctx.compute).evaluate(ctx.compute),
+        equals(ctx.parse('55')));
 
     // Test max recursions.
-    expect(
-        () => ctx.substituteRecursivly(e, ffib, ffib0, 0), throwsArgumentError);
-    expect(() => ctx.substituteRecursivly(e, ffib, ffib0, 9),
+    expect(() => substituteRecursive(e, ffib, ffib0, ctx.compute, 1, 9),
         eqlibThrows('reached maximum number of recursions'));
 
     // Test incorrect recursion.
     expect(
-        () => ctx.substituteRecursivly(
-            e, ctx.parseEq('fffib(?n, ?a, ?b) = 0'), ffib0),
-        eqlibThrows('recursion ended before terminator was reached'));
+        () => substituteRecursive(
+            e, ctx.parseRule('ffib(?n, ?a, ?b) = 0'), ffib0, ctx.compute),
+        eqlibThrows('could not find 1 substitution sites'));
   });
 
   test('Factorial', () {
-    final fac = ctx.parseEq('fac(?n) = ?n * fac(?n - 1)');
-    final fac1 = ctx.parseEq('fac(1) = 1');
+    final fac = ctx.parseRule('fac(?n) = ?n * fac(?n - 1)');
+    final fac1 = ctx.parseRule('fac(1) = 1');
 
-    var e = ctx.parse('fac(10)');
-    e = ctx.substituteRecursivly(e, fac, fac1);
-    expect(ctx.evaluate(e), equals(3628800));
+    final e = ctx.parse('fac(10)');
+    expect(substituteRecursive(e, fac, fac1, ctx.compute).evaluate(ctx.compute),
+        equals(ctx.parse('3628800')));
   });
 }

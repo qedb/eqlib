@@ -44,6 +44,13 @@ class FunctionExpr extends Expr {
   bool get isSymbol => arguments.isEmpty;
 
   @override
+  List<Expr> flatten() {
+    final List<Expr> list = [this];
+    arguments.forEach((arg) => list.addAll(arg.flatten()));
+    return list;
+  }
+
+  @override
   bool _compare(pattern, mapping) {
     if (pattern is NumberExpr) {
       return false;
@@ -122,42 +129,48 @@ class FunctionExpr extends Expr {
   }
 
   @override
-  Expr substituteInternal(Eq equation, W<int> index) {
-    final mapping = new ExprMapping();
-    if (compare(equation.left, mapping) && index.v-- == 0) {
-      return equation.right.remap(mapping);
-    }
-
-    // Iterate through arguments, and try to substitute the equation there.
-    for (var i = 0; i < arguments.length; i++) {
-      arguments[i] = arguments[i].substituteInternal(equation, index);
-      if (index.v < 0) {
-        // The substitution position has been found: terminate.
-        break;
+  Expr _substituteAt(rule, position) {
+    if (position.v == 0) {
+      position.v--; // Set to -1 so it is clear the substitution is processed.
+      final mapping = new ExprMapping();
+      if (compare(rule.left, mapping)) {
+        return rule.right.remap(mapping);
+      } else {
+        throw new EqLibException('rule does not match at given position');
       }
-    }
+    } else {
+      position.v--;
 
-    return this;
+      // Walk through arguments.
+      for (var i = 0; i < arguments.length; i++) {
+        arguments[i] = arguments[i]._substituteAt(rule, position);
+        if (position.v == -1) {
+          break;
+        }
+      }
+
+      return this;
+    }
   }
 
   @override
-  num evaluate(compute) {
-    final numArgs = new List<num>(arguments.length);
-    var allEval = true;
+  Expr evaluate(compute) {
+    // It is possible to return immediately if there are no arugments.
+
+    final numericArguments = new List<num>();
     for (var i = 0; i < arguments.length; i++) {
-      final value = arguments[i].evaluate(compute);
-      if (!value.isNaN) {
-        numArgs[i] = value;
-        arguments[i] = new NumberExpr(value);
-      } else {
-        allEval = false;
+      final evaluated = arguments[i].evaluate(compute);
+      arguments[i] = evaluated;
+      if (evaluated is NumberExpr) {
+        numericArguments.add(evaluated.value);
       }
     }
 
-    if (allEval) {
-      return compute(id, numArgs);
+    if (numericArguments.length == arguments.length) {
+      final value = compute(id, numericArguments);
+      return !value.isNaN ? new NumberExpr(value) : this;
     } else {
-      return double.NAN;
+      return this;
     }
   }
 }

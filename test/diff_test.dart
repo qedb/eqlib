@@ -7,7 +7,7 @@ import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/inline.dart';
 
 void main() {
-  final ctx = inlineCtx;
+  final ctx = inlineExprContext;
   final a = symbol('a', generic: true);
   final b = symbol('b', generic: true);
   final arrangeableFunctions = [ctx.operators.id('+'), ctx.operators.id('*')];
@@ -20,46 +20,45 @@ void main() {
     final x = symbol('x');
 
     /// Use chain rule to find derivative of sin(x^3)
-    final e = eq(symbol('y'), diff(sin(x ^ 3), x));
+    var e = diff(sin(x ^ 3), x);
     final e1 = e.clone();
 
-    e.substitute(eq(diff(fn(a), b), diff(a, b) * diff(fn(a), a)));
+    e = e.substitute(rule(diff(fn(a), b), diff(a, b) * diff(fn(a), a)));
     final e2 = e.clone();
 
-    e.substitute(eq(diff(a ^ b, a), b * (a ^ (b - 1))));
+    e = e.substitute(rule(diff(a ^ b, a), b * (a ^ (b - 1))));
     final e3 = e.clone();
 
-    e.substitute(eq(diff(sin(a), a), cos(a)));
+    e = e.substitute(rule(diff(sin(a), a), cos(a)));
     final e4 = e.clone();
 
     // First step difference
     expect(
-        getExpressionDiff(e1.right, e2.right, arrangeableFunctions),
+        getExpressionDiff(e1, e2, arrangeableFunctions),
         equals(new ExprDiffResult(
-            diff: new ExprDiffBranch(true, replaced: eq(e1.right, e2.right)))));
+            diff: new ExprDiffBranch(true, replaced: rule(e1, e2)))));
 
     // Second step difference
     final step2diffExpect = new ExprDiffResult(
         diff: new ExprDiffBranch(true,
-            replaced: eq(e2.right, e3.right),
+            replaced: rule(e2, e3),
             argumentDifference: [
           new ExprDiffBranch(true,
-              replaced: ctx.parseEq('diff(x^3,x) = 3*x^(3-1)')),
+              replaced: ctx.parseRule('diff(x^3,x) = 3*x^(3-1)')),
           new ExprDiffBranch(false)
         ]));
-    expect(getExpressionDiff(e2.right, e3.right, arrangeableFunctions),
+    expect(getExpressionDiff(e2, e3, arrangeableFunctions),
         equals(step2diffExpect));
 
     // Third step difference
-    final step3diff =
-        getExpressionDiff(e3.right, e4.right, arrangeableFunctions);
+    final step3diff = getExpressionDiff(e3, e4, arrangeableFunctions);
     final step3diffExpect = new ExprDiffResult(
         diff: new ExprDiffBranch(true,
-            replaced: eq(e3.right, e4.right),
+            replaced: rule(e3, e4),
             argumentDifference: [
           new ExprDiffBranch(false),
           new ExprDiffBranch(true,
-              replaced: eq(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))
+              replaced: rule(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))
         ]));
 
     expect(step3diff, equals(step3diffExpect));
@@ -78,7 +77,8 @@ void main() {
         getExpressionDiff(
             ctx.parse('1 + a'), ctx.parse('2 + a'), arrangeableFunctions),
         equals(new ExprDiffResult(
-            diff: new ExprDiffBranch(true, replaced: ctx.parseEq('1+a=2+a')))));
+            diff:
+                new ExprDiffBranch(true, replaced: ctx.parseRule('1+a=2+a')))));
   });
 
   test('Rearrange expressions', () {

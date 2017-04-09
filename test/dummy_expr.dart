@@ -21,11 +21,14 @@ class DummyExpr extends Expr {
   bool get isGeneric => true;
 
   @override
+  List<Expr> flatten() => [this];
+
+  @override
   Expr remap(mapping) => clone();
 
   @override
-  DummyExpr substituteInternal(equation, index) => this;
+  Expr substituteAt(equation, position) => this;
 
   @override
-  num evaluate(compute) => double.NAN;
+  Expr evaluate(compute) => this;
 }

@@ -24,9 +24,6 @@ class PrinterEntry {
 
 /// In-memory label resolver
 class SimpleLabelResolver extends ExprContextLabelResolver {
-  /// Default envelope self character.
-  static const envelopeLbl = '{}';
-
   /// Expression ID offset (IDs between 0 and this offset can be assigned to
   /// special symbols/functions).
   final idOffset = 3;
@@ -36,19 +33,13 @@ class SimpleLabelResolver extends ExprContextLabelResolver {
 
   @override
   int assignId(String label, bool generic) {
-    if (label == envelopeLbl) {
-      // This expression label is reserved to represent expression ID 0, which
-      // is used to envelope the entire expression.
-      return 0;
+    final entry = new PrinterEntry(label, generic);
+    final idx = printerDict.indexOf(entry);
+    if (idx != -1) {
+      return idx + idOffset;
     } else {
-      final entry = new PrinterEntry(label, generic);
-      final idx = printerDict.indexOf(entry);
-      if (idx != -1) {
-        return idx + idOffset;
-      } else {
-        printerDict.add(entry);
-        return printerDict.length - 1 + idOffset;
-      }
+      printerDict.add(entry);
+      return printerDict.length - 1 + idOffset;
     }
   }
 
@@ -116,16 +107,17 @@ class SimpleExprContext extends ExprContext {
   @override
   Expr parse(String str) => parseExpression(str, operators, assignId);
 
-  @override
-  Eq parseEq(String str) {
-    final expr = parse(str);
+  Rule toRule(Expr expr) {
     if (expr is FunctionExpr && expr.id == operators.id('=')) {
       assert(expr.arguments.length == 2);
-      return new Eq(expr.arguments[0], expr.arguments[1]);
+      return new Rule(expr.arguments[0], expr.arguments[1]);
     } else {
-      throw new EqLibException('no top level equation found');
+      throw new EqLibException('expr is not an equation');
     }
   }
+
+  @override
+  Rule parseRule(String str) => toRule(parse(str));
 
   @override
   num compute(int id, List<num> args) {
@@ -138,7 +130,7 @@ class SimpleExprContext extends ExprContext {
   }
 
   @override
-  String str(dynamic input) {
+  String str(Expr input) {
     if (input is Expr) {
       final generic = input.isGeneric ? '?' : '';
 
@@ -174,8 +166,6 @@ class SimpleExprContext extends ExprContext {
       } else {
         throw unsupportedType('input', input, ['NumberExpr', 'FunctionExpr']);
       }
-    } else if (input is Eq) {
-      return '${str(input.left)}=${str(input.right)}';
     } else {
       throw unsupportedType('input', input, ['Expr', 'Eq']);
     }

@@ -2,6 +2,8 @@
 // Use of this source code is governed by an AGPL-3.0-style license
 // that can be found in the LICENSE file.
 
+import 'dart:math';
+
 import 'package:test/test.dart';
 import 'package:eqlib/inline.dart';
 
@@ -9,7 +11,7 @@ import 'package:eqlib/inline.dart';
 NumberExprOps n(num val) => number(val);
 
 void main() {
-  final ctx = inlineCtx;
+  final ctx = inlineExprContext;
 
   test('Fundamental checks for the parser', () {
     final a = generic('a'), b = generic('b'), c = generic('c');
@@ -24,11 +26,11 @@ void main() {
     // Numeric values
     expect(ctx.parse('-1.23 - 4 + .567 ^ -.89'),
         equals((n(-1.23) - 4) + (n(.567) ^ -.89)));
-    expect((ctx.evaluate(ctx.parse('-1.23 - 4 + .567 ^ -.89')) * 1000).toInt(),
-        equals(-3573));
+    expect(ctx.parse('-1.23 - 4 + .567 ^ -.89').evaluate(ctx.compute),
+        equals(number(-1.23 - 4 + pow(.567, -.89))));
 
     // Unary minus
-    expect(ctx.evaluate(ctx.parse('-  - -1')), equals(-1));
+    expect(ctx.parse('-  - -1').evaluate(ctx.compute), equals(number(-1)));
     expect(ctx.parse('---?a'), equals(-(-(-a))));
     expect(ctx.parse('-?a ^ ?b'), equals((-a) ^ b));
 
@@ -61,27 +63,27 @@ void main() {
   });
 
   test('Derivation of centripetal acceleration (step 1)', () {
-    final pvec = ctx.parseEq('pvec = vec2d');
-    pvec.substitute(ctx.parseEq('vec2d = x ihat + y jhat'));
-    pvec.substitute(ctx.parseEq('x = px'));
-    pvec.substitute(ctx.parseEq('y = py'));
-    pvec.substitute(ctx.parseEq('px = r sin(theta)'));
-    pvec.substitute(ctx.parseEq('py = r cos(theta)'));
-    pvec.substitute(ctx.parseEq('(?a ?b) ?c = ?a (?b ?c)'));
-    pvec.substitute(ctx.parseEq('(?a ?b) ?c = ?a (?b ?c)'));
-    pvec.substitute(ctx.parseEq('?a ?b + ?a ?c = ?a*(?b+?c)'));
+    final pvec = ctx
+        .parse('pvec = vec2d')
+        .substitute(ctx.parseRule('vec2d = x ihat + y jhat'))
+        .substitute(ctx.parseRule('x = px'))
+        .substitute(ctx.parseRule('y = py'))
+        .substitute(ctx.parseRule('px = r sin(theta)'))
+        .substitute(ctx.parseRule('py = r cos(theta)'))
+        .substitute(ctx.parseRule('(?a ?b) ?c = ?a (?b ?c)'))
+        .substitute(ctx.parseRule('(?a ?b) ?c = ?a (?b ?c)'))
+        .substitute(ctx.parseRule('?a ?b + ?a ?c = ?a*(?b+?c)'));
+
     expect(ctx.str(pvec), equals('pvec=r*(sin(theta)*ihat+cos(theta)*jhat)'));
   });
 
   test('Solve a simple equation', () {
-    final eq = ctx.parseEq('x 2 + 5 = 9');
-    eq.envelop(ctx.parse('?a + ?b'), ctx.parse('{} - ?b'));
-    eq.substitute(ctx.parseEq('?a + ?b - ?b = ?a'));
-    eq.envelop(ctx.parse('?a*?b'), ctx.parse('{} / ?b'));
-    eq.substitute(ctx.parseEq('(?a * ?b) / ?b = ?a'));
-    eq.evaluate(ctx.compute);
+    final e = ctx
+        .parse('x 2 + 5 = 9')
+        .substitute(ctx.parseRule('(?a + ?b = ?c) = (?a = ?c - ?b)'))
+        .substitute(ctx.parseRule('(?a * ?b = ?c) = (?a = ?c / ?b)'))
+        .evaluate(ctx.compute);
 
-    expect(eq.left, equals(symbol('x')));
-    expect(ctx.evaluate(eq.right), equals(2.0));
+    expect(e, equals(ctx.parse('x = 2.0')));
   });
 }

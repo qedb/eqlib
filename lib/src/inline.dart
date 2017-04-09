@@ -5,12 +5,12 @@
 part of eqlib.inline;
 
 /// Ugly, but fine for testing.
-final inlineCtx = new SimpleExprContext();
+final inlineExprContext = new SimpleExprContext();
 
 /// Caution, this is EXTREMELY ugly glue to inherit expression operators for
 /// writing nice tests without having to pollute the main implementation.
 class ExprOperators {
-  static int _opId(String char) => inlineCtx.assignId(char, false);
+  static int _opId(String char) => inlineExprContext.assignId(char, false);
 
   /// Add other expression.
   FunctionExprOps operator +(dynamic other) => new FunctionExprOps(
@@ -46,23 +46,20 @@ class FunctionExprOps extends FunctionExpr with ExprOperators {
       : super(id, generic, args);
 }
 
-/// Expression used to point out where an equation is substituted when
-/// enveloping.
-FunctionExprOps envelopeInner() => new FunctionExprOps(0, false, []);
-
 /// Create a numeric expression from the given value.
 NumberExprOps number(num value) => new NumberExprOps(value);
 
 /// Create a symbol expression for the given label.
 FunctionExprOps symbol(String label, {bool generic: false}) =>
-    new FunctionExprOps(inlineCtx.assignId(label, generic), generic, []);
+    new FunctionExprOps(
+        inlineExprContext.assignId(label, generic), generic, []);
 
 /// Alias for creating generic symbols.
 FunctionExprOps generic(String label) => symbol(label, generic: true);
 
-/// Quick syntax for equation contruction.
-Eq eq(dynamic left, dynamic right) =>
-    new Eq(new Expr.from(left), new Expr.from(right));
+/// Quick syntax for rule contruction.
+Rule rule(dynamic left, dynamic right) =>
+    new Rule(new Expr.from(left), new Expr.from(right));
 
 typedef FunctionExprOps ExprGenerator1(dynamic arg1);
 typedef FunctionExprOps ExprGenerator2(dynamic arg1, dynamic arg2);
@@ -71,20 +68,20 @@ typedef FunctionExprOps ExprGenerator3(
 
 /// Create single argument expression generator.
 ExprGenerator1 fn1(String label, {bool generic: false}) {
-  final id = inlineCtx.assignId(label, generic);
+  final id = inlineExprContext.assignId(label, generic);
   return (arg1) => new FunctionExprOps(id, generic, [new Expr.from(arg1)]);
 }
 
 /// Create double argument expression generator.
 ExprGenerator2 fn2(String label) {
-  final id = inlineCtx.assignId(label, false);
+  final id = inlineExprContext.assignId(label, false);
   return (arg1, arg2) => new FunctionExprOps(
       id, false, [new Expr.from(arg1), new Expr.from(arg2)]);
 }
 
 /// Create double argument expression generator.
 ExprGenerator3 fn3(String label) {
-  final id = inlineCtx.assignId(label, false);
+  final id = inlineExprContext.assignId(label, false);
   return (arg1, arg2, arg3) => new FunctionExprOps(id, false,
       [new Expr.from(arg1), new Expr.from(arg2), new Expr.from(arg3)]);
 }

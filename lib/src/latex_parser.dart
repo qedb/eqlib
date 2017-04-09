@@ -101,7 +101,7 @@ class LaTeXParser {
   };
 
   /// Parsed [rules]
-  final parsedRules = new List<Eq>();
+  final parsedRules = new List<Rule>();
 
   LaTeXParser(ExprContextLabelResolver resolver) {
     final id = (String str) => resolver.assignId(str, false);
@@ -138,17 +138,17 @@ class LaTeXParser {
 
     // Parse all specified rules.
     // Note that the right side can be parsed with a bare parser.
-    rules.forEach((left, right) => parsedRules.add(new Eq(
+    rules.forEach((left, right) => parsedRules.add(new Rule(
         parse(left, resolver.assignId, false),
         parseExpression(right, operators, resolver.assignId))));
 
     // Generate additional rules for all functions specified in [allFunctions].
-    parsedRules.addAll(generateList<Eq>(allFunctions.length, [
-      (i) => new Eq(
+    parsedRules.addAll(generateList<Rule>(allFunctions.length, [
+      (i) => new Rule(
           parse('\\${allFunctions[i]} ?a', resolver.assignId, false),
           parseExpression(
               '${allFunctions[i]}(?a)', operators, resolver.assignId)),
-      (i) => new Eq(
+      (i) => new Rule(
           parse('\\${allFunctions[i]}^?e ?a', resolver.assignId, false),
           parseExpression(
               '${allFunctions[i]}(?a)^?e', operators, resolver.assignId))
@@ -173,7 +173,7 @@ class LaTeXParser {
     // 3. Apply rules.
     if (applyRules) {
       for (final rule in parsedRules) {
-        expr = expr.substituteAll(rule);
+        expr = expr.substitute(rule, -1);
       }
     }
 

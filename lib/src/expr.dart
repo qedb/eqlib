@@ -65,6 +65,9 @@ abstract class Expr {
   /// Returns if this is a generic expression.
   bool get isGeneric;
 
+  /// Convert expression to flat structure.
+  List<Expr> flatten();
+
   /// Pattern matching
   ///
   /// Match another [pattern] expression against this expression.
@@ -80,72 +83,98 @@ abstract class Expr {
 
   /// Expression remapping
   ///
-  /// This method always returns a new expression instance (deep cody).
+  /// This method always returns a new expression instance (deep copy).
   Expr remap(ExprMapping mapping);
 
-  /// Substitute the given [equation] at the given pattern [index].
-  /// Returns a new instance of [Expr] if the equation is substituted.
-  /// Never returns null, instead returns itself if nothing is substituted.
-  Expr substituteInternal(Eq equation, W<int> index);
+  /// Substitute the given [rule] at the given [position]. The position of this
+  /// node is 0. The position should be decremented when passing it on to
+  /// children.
+  Expr substituteAt(Rule rule, int position) =>
+      _substituteAt(rule, new W<int>(position));
 
-  /// Wrapper around [substituteInternal].
-  Expr substitute(Eq equation, [int index = 0]) =>
-      substituteInternal(equation, new W<int>(index));
+  /// [substituteAt] with shared position pointer.
+  Expr _substituteAt(Rule rule, W<int> position);
 
-  /// Substitute all occurences of [equation].
-  Expr substituteAll(Eq equation) {
-    var expr = this;
-    final index = new W<int>(1);
-    while (index.v != 0) {
-      index.v = 0;
-      expr = expr.substituteInternal(equation, index);
+  /// Find first [n] positions that match [expr].
+  List<int> search(Expr expr, [int n = 1]) {
+    final result = new List<int>();
+    final flat = flatten();
+    for (var i = 0; i < flat.length; i++) {
+      if (flat[i].compare(expr)) {
+        result.add(i);
+        if (n > 0 && result.length == n) {
+          break;
+        }
+      }
     }
+    return result;
+  }
+
+  /// Substitute [rule] at first [n] matching positions.
+  /// Throws an error if [n] > 0 and it is not possible to substitute [n] times.
+  Expr substitute(Rule rule, [int n = 1]) {
+    final positions = search(rule.left, n);
+    if (n > 0 && positions.length != n) {
+      throw new EqLibException('could not find $n substitution sites');
+    }
+
+    // Iterate backwards so positions stay fixed.
+    var expr = this;
+    for (final position in positions.reversed) {
+      expr = expr.substituteAt(rule, position);
+    }
+
     return expr;
   }
 
-  /// Recursive substitution.
-  Expr substituteRecursivly(Eq equation, Eq terminator, ExprCompute compute,
-      [int maxRecursions = 100]) {
-    if (maxRecursions <= 0) {
-      throw new ArgumentError.value(
-          maxRecursions, 'maxRecursions', 'must be larger than 0');
+  /// Appemts to evaluate this expression to a number using the given compute
+  /// functions. Returns expression that is evaluated as far as possible. This
+  /// is not guaranteed to be a new instance.
+  Expr evaluate(ExprCompute compute);
+}
+
+/// Repeat [n] [Expr.substitute] calls with [rule] on [target] for at most [max]
+/// cycles. After each cycle the expression is evaluated. After each cycle the
+/// terminator is substituted. When [_n] terminators are substituted this
+/// function returns with the new expression.
+Expr substituteRecursive(
+    Expr target, Rule rule, Rule terminator, ExprCompute compute,
+    [int _n = 1, int max = 100]) {
+  assert(max > 0 && _n > 0);
+
+  var n = _n;
+  var cycles = 0;
+  var expr = target;
+
+  while (n > 0) {
+    cycles++;
+    if (cycles > max) {
+      throw new EqLibException('reached maximum number of recursions');
     }
 
-    // Note: no need to clone: subsInternal will return a new instance.
-    var expr = this;
+    // Try to substitute rule.
+    expr = expr.substitute(rule, n);
 
-    var cycle = 0;
-    while (cycle < maxRecursions) {
-      // Check if terminator is already reached.
-      final index = new W<int>(0);
-      expr = expr.substituteInternal(terminator, index);
-      if (index.v < 0) {
-        return expr;
+    // Evaluate expression before searching for terminators.
+    expr = expr.evaluate(compute);
+
+    // Subsitute terminators.
+    while (n > 0) {
+      final nextPosition = expr.search(terminator.left, 1);
+      if (nextPosition.isNotEmpty) {
+        expr = expr.substituteAt(terminator, nextPosition.first);
+        n--;
+      } else {
+        break;
       }
-
-      expr = expr.substituteInternal(equation, index);
-      if (index.v == 0) {
-        // Substitution failed, but condition is not yet met.
-        throw new EqLibException(
-            'recursion ended before terminator was reached');
-      }
-
-      // Evaluate new substitution.
-      expr.evaluate(compute);
-
-      cycle++;
     }
-
-    throw new EqLibException('reached maximum number of recursions');
   }
 
-  /// Appemts to evaluate this expression to a number using the given compute
-  /// functions. Returns double.NAN if this is unsuccessful.
-  num evaluate(ExprCompute compute);
+  return expr;
 }
 
 /// Utility function to check if the given expression is dependent only on the
-/// given symbol ID.
+/// given symbol ID. Used by [FunctionExpr.remap].
 bool _exprOnlyDependsOn(int symbolId, Expr expr) {
   if (expr is NumberExpr) {
     return true;

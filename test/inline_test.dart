@@ -3,12 +3,11 @@
 // that can be found in the LICENSE file.
 
 import 'package:test/test.dart';
-import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/inline.dart';
-import 'package:eqlib/exceptions.dart';
 
 void main() {
-  final ctx = inlineCtx;
+  final ctx = inlineExprContext;
+  final equation = fn2('=');
   final a = generic('a'), b = generic('b'), c = generic('c');
 
   test('Derivation of centripetal acceleration (step 1)', () {
@@ -26,36 +25,18 @@ void main() {
     final cos = fn1('cos');
 
     // Derive equation for circular motion.
-    final e = eq(pvec, vec2d);
-    e.substitute(eq(vec2d, x * ihat + y * jhat));
-    e.substitute(eq(x, px));
-    e.substitute(eq(y, py));
-    e.substitute(eq(px, r * sin(theta)));
-    e.substitute(eq(py, r * cos(theta)));
-    e.substitute(eq((a * b) * c, a * (b * c)));
-    e.substitute(eq((a * b) * c, a * (b * c)));
-    e.substitute(eq(a * b + a * c, a * (b + c)));
+    final e = equation(pvec, vec2d)
+        .substitute(rule(vec2d, x * ihat + y * jhat))
+        .substitute(rule(x, px))
+        .substitute(rule(y, py))
+        .substitute(rule(px, r * sin(theta)))
+        .substitute(rule(py, r * cos(theta)))
+        .substitute(rule((a * b) * c, a * (b * c)))
+        .substitute(rule((a * b) * c, a * (b * c)))
+        .substitute(rule(a * b + a * c, a * (b + c)));
 
-    expect(e, equals(eq(pvec, r * (sin(theta) * ihat + cos(theta) * jhat))));
-  });
-
-  test('Solve simple equations with Stepper', () {
-    final x = symbol('x');
-
-    final steps = new Stepper([
-      new Step.envelop(a + b, envelopeInner() - b),
-      new Step.substitute((a + b) - b, a),
-      new Step.envelop(a * b, envelopeInner() / b),
-      new Step.substitute((a * b) / b, a),
-      new Step.evaluate(ctx.compute)
-    ]);
-
-    expect(steps.run(eq(x * 2 + 5, 9)), equals(eq(x, 2)));
-    expect(steps.run(eq(9, x * 2 + 5)), equals(eq(2, x)));
-
-    // Fail on purpose.
-    expect(() => steps.run(eq(x * 5, 9)),
-        eqlibThrows('the template does not match left or right'));
+    expect(
+        e, equals(equation(pvec, r * (sin(theta) * ihat + cos(theta) * jhat))));
   });
 
   test('Chain rule', () {
@@ -66,19 +47,20 @@ void main() {
     final x = symbol('x');
 
     /// Use chain rule to find derivative of sin(x^3)
-    final e = eq(symbol('y'), diff(sin(x ^ 3), x));
-    e.substitute(eq(diff(fn(a), b), diff(a, b) * diff(fn(a), a)));
-    e.substitute(eq(diff(a ^ b, a), b * (a ^ (b - 1))));
-    e.substitute(eq(diff(sin(a), a), cos(a)));
-    e.evaluate(ctx.compute);
-    expect(e, equals(eq(symbol('y'), number(3) * (x ^ 2) * cos(x ^ 3))));
+    final e = equation(symbol('y'), diff(sin(x ^ 3), x))
+        .substitute(rule(diff(fn(a), b), diff(a, b) * diff(fn(a), a)))
+        .substitute(rule(diff(a ^ b, a), b * (a ^ (b - 1))))
+        .substitute(rule(diff(sin(a), a), cos(a)))
+        .evaluate(ctx.compute);
+
+    expect(e, equals(equation(symbol('y'), number(3) * (x ^ 2) * cos(x ^ 3))));
   });
 
   test('Power operator', () {
     expect(
-        eq(symbol('y'), symbol('x') ^ 3)
-          ..substitute(eq(symbol('x'), 3))
-          ..evaluate(ctx.compute),
-        equals(eq(symbol('y'), 27)));
+        equation(symbol('y'), symbol('x') ^ 3)
+            .substitute(rule(symbol('x'), 3))
+            .evaluate(ctx.compute),
+        equals(equation(symbol('y'), 27)));
   });
 }

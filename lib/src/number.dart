@@ -27,6 +27,9 @@ class NumberExpr extends Expr {
   bool get isGeneric => false;
 
   @override
+  List<Expr> flatten() => [this];
+
+  @override
   bool _compare(pattern, mapping) {
     if (equals(pattern)) {
       return true;
@@ -41,8 +44,19 @@ class NumberExpr extends Expr {
   NumberExpr remap(mapping) => clone();
 
   @override
-  NumberExpr substituteInternal(equation, index) => this;
+  Expr _substituteAt(rule, position) {
+    if (position.v == 0) {
+      if (compare(rule.left)) {
+        return rule.right.clone();
+      } else {
+        throw new EqLibException('rule does not match at given position');
+      }
+    } else {
+      position.v--;
+      return this;
+    }
+  }
 
   @override
-  num evaluate(compute) => value;
+  NumberExpr evaluate(compute) => this;
 }

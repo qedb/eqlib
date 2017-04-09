@@ -11,7 +11,7 @@ import 'package:eqlib/exceptions.dart';
 import 'dummy_expr.dart';
 
 void main() {
-  final ctx = inlineCtx;
+  final ctx = inlineExprContext;
   final a = symbol('a'), b = symbol('b');
 
   test('hashCode utils', () {
@@ -23,13 +23,8 @@ void main() {
     expect(hashObjects([1, 10, 100]), isNot(hashObjects([1, 11, 100])));
   });
 
-  test('Eq.hashCode', () {
-    expect(
-        ctx.parseEq('100=100').hashCode,
-        equals(jPostprocess(jMix(jMix(0, jPostprocess(jMix(1041, 100))),
-            jPostprocess(jMix(1041, 100))))));
-    expect(ctx.parseEq('a * b = b * a').hashCode,
-        equals(eq(a * b, b * a).hashCode));
+  test('Expr.hashCode', () {
+    expect(ctx.parse('a * b * 2').hashCode, equals((a * b * 2).hashCode));
 
     // Vaildate hashCodes across different expression types.
     expect(new NumberExpr(10).hashCode,
@@ -56,7 +51,7 @@ void main() {
   });
 
   test('Basic SimpleExprContext checks', () {
-    expect(ctx.evaluate(ctx.parse('-(1 + 1)')), equals(-2));
+    expect(ctx.parse('-(1 + 1)').evaluate(ctx.compute), equals(number(-2)));
     expect(() => ctx.str(new DummyExpr()), throwsArgumentError);
 
     // Resolve generic/non-generic is distinctive.
@@ -69,9 +64,6 @@ void main() {
     expect(ctx.str(printTest), equals('1+a-3*(b/5)^-c'));
 
     // Equation parsing exception.
-    expect(() => ctx.parseEq('a'), eqlibThrows('no top level equation found'));
-
-    // Printing exception.
-    expect(() => ctx.str([]), throwsArgumentError);
+    expect(() => ctx.parseRule('a'), eqlibThrows('expr is not an equation'));
   });
 }
