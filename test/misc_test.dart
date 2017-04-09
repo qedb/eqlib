@@ -66,4 +66,13 @@ void main() {
     // Equation parsing exception.
     expect(() => ctx.parseRule('a'), eqlibThrows('expr is not an equation'));
   });
+
+  test('Various Expr.substituteAt cases', () {
+    expect(() => ctx.parse('a').substituteAt(ctx.parseRule('b=c'), 0),
+        eqlibThrows('rule does not match at the given position'));
+    expect(ctx.parse('1').substituteAt(ctx.parseRule('1=1/1'), 0),
+        equals(ctx.parse('1/1')));
+    expect(() => ctx.parse('1').substituteAt(ctx.parseRule('2=3'), 0),
+        eqlibThrows('rule does not match at the given position'));
+  });
 }

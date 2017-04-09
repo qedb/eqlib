@@ -131,43 +131,39 @@ class SimpleExprContext extends ExprContext {
 
   @override
   String str(Expr input) {
-    if (input is Expr) {
-      final generic = input.isGeneric ? '?' : '';
+    final generic = input.isGeneric ? '?' : '';
 
-      if (input is NumberExpr) {
-        return input.value.toString();
-      } else if (input is FunctionExpr) {
-        final id = input.id;
-        final args = input.arguments;
-        var label = getLabel(id);
+    if (input is NumberExpr) {
+      return input.value.toString();
+    } else if (input is FunctionExpr) {
+      final id = input.id;
+      final args = input.arguments;
+      var label = getLabel(id);
 
-        if (input.isSymbol) {
-          return '$generic$label';
-        }
+      if (input.isSymbol) {
+        return '$generic$label';
+      }
 
-        // We prefer using '-' for negation.
-        if (label == '~') {
-          label = '-';
-        }
+      // We prefer using '-' for negation.
+      if (label == '~') {
+        label = '-';
+      }
 
-        if (operators.byId.containsKey(id)) {
-          final op = operators.byId[id];
-          switch (op.operatorType) {
-            case OperatorType.prefix: // null operator arg
-              return _printOperator(null, args.first, id, label);
-            case OperatorType.postfix: // arg operator null
-              return _printOperator(args.first, null, id, label);
-            default: // infix
-              return _printOperator(args[0], args[1], id, label);
-          }
-        } else {
-          return '$generic$label(${args.map((arg) => str(arg)).join(',')})';
+      if (operators.byId.containsKey(id)) {
+        final op = operators.byId[id];
+        switch (op.operatorType) {
+          case OperatorType.prefix: // null operator arg
+            return _printOperator(null, args.first, id, label);
+          case OperatorType.postfix: // arg operator null
+            return _printOperator(args.first, null, id, label);
+          default: // infix
+            return _printOperator(args[0], args[1], id, label);
         }
       } else {
-        throw unsupportedType('input', input, ['NumberExpr', 'FunctionExpr']);
+        return '$generic$label(${args.map((arg) => str(arg)).join(',')})';
       }
     } else {
-      throw unsupportedType('input', input, ['Expr', 'Eq']);
+      throw unsupportedType('input', input, ['NumberExpr', 'FunctionExpr']);
     }
   }
 

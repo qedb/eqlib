@@ -136,7 +136,7 @@ class FunctionExpr extends Expr {
       if (compare(rule.left, mapping)) {
         return rule.right.remap(mapping);
       } else {
-        throw new EqLibException('rule does not match at given position');
+        throw new EqLibException('rule does not match at the given position');
       }
     } else {
       position.v--;

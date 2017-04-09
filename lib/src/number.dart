@@ -49,7 +49,7 @@ class NumberExpr extends Expr {
       if (compare(rule.left)) {
         return rule.right.clone();
       } else {
-        throw new EqLibException('rule does not match at given position');
+        throw new EqLibException('rule does not match at the given position');
       }
     } else {
       position.v--;
