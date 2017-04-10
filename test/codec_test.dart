@@ -43,6 +43,17 @@ void main() {
     expect(() => new Expr.fromBinary(data.buffer), throwsArgumentError);
   });
 
+  test('Binary codec storage overflow', () {
+    expect(
+        () => new FunctionExpr(
+                1, false, new List.generate(500, (_) => new NumberExpr(1)))
+            .toBase64(),
+        throwsArgumentError);
+    expect(() => new FunctionExpr(4294967296, false, []).toBase64(),
+        throwsArgumentError);
+    expect(() => new NumberExpr(2147483648).toBase64(), throwsArgumentError);
+  });
+
   test('Array codec', () {
     final id = (String str) => ctx.assignId(str, false);
     final idg = (String str) => ctx.assignId(str, true);

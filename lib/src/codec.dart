@@ -113,6 +113,10 @@ class ExprCodecData {
 
   void storeNumber(num value) {
     if (value is int) {
+      if (value < -2147483648 || value > 2147483647) {
+        throw new ArgumentError.value(
+            value, 'value', 'must be [-2147483648, 2147483647]');
+      }
       if (!integers.contains(value)) {
         integers.add(value);
       }
@@ -132,6 +136,13 @@ class ExprCodecData {
   }
 
   void storeFunction(int id, int argc, bool generic) {
+    if (id < 0 || id > 4294967295) {
+      throw new ArgumentError.value(argc, 'id', 'must be [0, 4294967295]');
+    }
+    if (argc > 255) {
+      throw new ArgumentError.value(argc, 'argc', 'must be [0, 256]');
+    }
+
     if (getFunctionRef(id, argc, generic) == -1) {
       if (generic) {
         functionIds.insert(genericCount, id);
