@@ -15,6 +15,8 @@ void main() {
         throwsArgumentError);
 
     final expr = ctx.parse('2 * a(?a, ?b, 3.45 - 6 * 7) ^ (aa + b)');
+    expect(new ExprCodecData.decodeHeader(expr.toBinary()).containsFloats(),
+        isTrue);
     expect(
         expr.toBase64(),
         equals(
