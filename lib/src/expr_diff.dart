@@ -40,21 +40,21 @@ class ExprDiffBranch {
 
 class ExprDiffResult {
   /// Difference rules
-  final ExprDiffBranch diff;
+  final ExprDiffBranch branch;
 
   /// The two expressions are both numbers and not equal.
   final bool numericInequality;
 
-  ExprDiffResult({this.numericInequality: false, this.diff: null});
+  ExprDiffResult({this.numericInequality: false, this.branch: null});
 
   @override
   bool operator ==(dynamic other) =>
       other is ExprDiffResult &&
       other.numericInequality == numericInequality &&
-      other.diff == diff;
+      other.branch == branch;
 
   @override
-  int get hashCode => hashCode2(diff, numericInequality);
+  int get hashCode => hashCode2(branch, numericInequality);
 }
 
 /// Get unique hash of deep arrangable child expressions.
@@ -96,7 +96,7 @@ ExprDiffResult getExpressionDiff(
     Expr a, Expr b, List<int> arrangeableFunctions) {
   // If a == b, this branch can be terminated.
   if (a == b) {
-    return new ExprDiffResult(diff: new ExprDiffBranch(false));
+    return new ExprDiffResult(branch: new ExprDiffBranch(false));
   }
 
   // If a and b are numeric, this branch can be discarded.
@@ -108,7 +108,7 @@ ExprDiffResult getExpressionDiff(
 
   // Potential rule: a = b
   final result = new ExprDiffResult(
-      diff: new ExprDiffBranch(true,
+      branch: new ExprDiffBranch(true,
           rearranged: _hashArrangableFingerprint(a, arrangeableFunctions) ==
               _hashArrangableFingerprint(b, arrangeableFunctions),
           replaced: new Rule(a, b)));
@@ -129,10 +129,10 @@ ExprDiffResult getExpressionDiff(
         // Note that the difference can never be fully resolved if one of the
         // arguments has a numeric inequality. The rule must involve the parent
         // functions.
-        result.diff.argumentDifference.clear();
+        result.branch.argumentDifference.clear();
         return result;
       } else {
-        result.diff.argumentDifference.add(argResult.diff);
+        result.branch.argumentDifference.add(argResult.branch);
       }
     }
 
