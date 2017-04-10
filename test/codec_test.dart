@@ -11,20 +11,21 @@ void main() {
   final ctx = new SimpleExprContext();
 
   test('Binary codec', () {
-    final expr = ctx.parse('2 * a(?a, ?b, 3.45 - 6 * 7) ^ (a + b)');
+    expect(() => ctx.parse('2 * a(?a, ?b, 3.45 - 6 * 7) ^ (a + b)').toBase64(),
+        throwsArgumentError);
 
-    // Check encoder.
+    final expr = ctx.parse('2 * a(?a, ?b, 3.45 - 6 * 7) ^ (aa + b)');
     expect(
         expr.toBase64(),
         equals(
-            'CQACAAMAAQCamZmZmZkLQAwAAAANAAAABgAAAAgAAAALAAAABQAAAAQAAAALAAAADgAAAAAAAgIDAgIAAAIGBwIJAwQAAQUMAgoLBgcI'));
+            'AQADAAkAAgCamZmZmZkLQAIAAAAGAAAABwAAAAwAAAANAAAABgAAAAgAAAALAAAABQAAAAQAAAAPAAAADgAAAAAAAgIDAgIAAAIJAwQAAQUMAgoLBgcI'));
 
     // Check encoding and decoding.
     expect(new Expr.fromBinary(expr.toBinary()), equals(expr));
     expect(new Expr.fromBase64(expr.toBase64()), equals(expr));
   });
 
-  test('Binary codec 256+ function table', () {
+  test('Binary codec 255+ function table', () {
     final n = 1000;
     final expr =
         ctx.parse(new List<String>.generate(n, (i) => 'symbol$i').join('+'));
@@ -83,5 +84,10 @@ void main() {
     // Exceptions
     expect(() => ctx.parse('2 * a(?a, ?b, 3.45 - 6 * 7) ^ (a + b)').toArray(),
         throwsArgumentError);
+  });
+
+  test('Array codec integers', () {
+    expect(new Expr.fromBase64(ctx.parse('2147483647').toBase64()).toArray()[2],
+        equals(2147483647));
   });
 }

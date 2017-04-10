@@ -5,43 +5,46 @@
 part of eqlib;
 
 /// Codec data
-/// Note: function argument lists are limited to uint8 storage.
+/// Note: functions can have no more than 255 arguments.
+///
+/// The expression numbering system has the following order:
+/// generic functions < functions < integers < floating points.
 class ExprCodecData {
   int genericCount;
-  final List<double> float64List;
-  final List<int> functionId;
-  final List<int> functionArgc;
-  final List<int> int8List;
-  final List<int> data;
+  final List<double> floatingPoints;
+  final List<int> integers;
+  final List<int> functionIds;
+  final List<int> functionArgcs;
+  final List<int> expression;
 
-  ExprCodecData(this.genericCount, this.float64List, this.functionId,
-      this.functionArgc, this.int8List, this.data);
+  ExprCodecData(this.genericCount, this.floatingPoints, this.integers,
+      this.functionIds, this.functionArgcs, this.expression);
 
   factory ExprCodecData.empty() => new ExprCodecData(0, new List<double>(),
       new List<int>(), new List<int>(), new List<int>(), new List<int>());
 
   factory ExprCodecData.decodeHeader(ByteBuffer buffer) {
-    final headerView = new Uint16List.view(buffer, 0, 4);
+    final headerDimensions = new Uint16List.view(buffer, 0, 4);
 
     // Header parameters
-    final functionCount = headerView[0]; // Number of functions
-    final genericCount = headerView[1]; // Number of functions that are generic
-    final int8Count = headerView[2]; // Number of 8bit ints
-    final float64Count = headerView[3]; // Number of 64bit floats
+    final floatCount = headerDimensions[0]; // Number of 64bit floats
+    final integerCount = headerDimensions[1]; // Number of 32bit integers
+    final functionCount = headerDimensions[2]; // Number of functions
+    final genericCount = headerDimensions[3]; // Number of generic functions
 
     // Data views
     var offset = 8;
-    final float64View = new Float64List.view(buffer, offset, float64Count);
-    offset += float64View.lengthInBytes;
+    final floatView = new Float64List.view(buffer, offset, floatCount);
+    offset += floatView.lengthInBytes;
+    final integerView = new Int32List.view(buffer, offset, integerCount);
+    offset += integerView.lengthInBytes;
     final functionIdView = new Uint32List.view(buffer, offset, functionCount);
     offset += functionIdView.lengthInBytes;
     final functionArgcView = new Uint8List.view(buffer, offset, functionCount);
     offset += functionArgcView.lengthInBytes;
-    final int8View = new Int8List.view(buffer, offset, int8Count);
-    offset += int8View.lengthInBytes;
 
     List<int> dataView;
-    if (functionCount + int8Count + float64Count > 256) {
+    if (floatCount + integerCount + functionCount > 255) {
       // Allign offset with 16 bit reading frame.
       if (offset % 2 != 0) {
         offset++;
@@ -52,114 +55,103 @@ class ExprCodecData {
       dataView = new Uint8List.view(buffer, offset); // Use 8 bit decoding.
     }
 
-    return new ExprCodecData(genericCount, float64View, functionIdView,
-        functionArgcView, int8View, dataView);
+    return new ExprCodecData(genericCount, floatView, integerView,
+        functionIdView, functionArgcView, dataView);
   }
 
-  int get functionCount => functionId.length;
-  int get int8Count => int8List.length;
-  int get float64Count => float64List.length;
+  bool containsFloats() => floatingPoints.isNotEmpty;
+
+  int get floatCount => floatingPoints.length;
+  int get integerCount => integers.length;
+  int get functionCount => functionIds.length;
 
   ByteBuffer writeToBuffer() {
     // Compute buffer length.
-    var dataOffset = 4 * Uint16List.BYTES_PER_ELEMENT +
-        float64Count * Float64List.BYTES_PER_ELEMENT +
-        functionCount *
-            (Uint32List.BYTES_PER_ELEMENT + Uint8List.BYTES_PER_ELEMENT) +
-        int8Count * Int8List.BYTES_PER_ELEMENT;
-    final u16 = functionCount + int8Count + float64Count > 256;
-    if (u16 && dataOffset % 2 != 0) {
-      dataOffset++;
+    var headerSize = 4 * Uint16List.BYTES_PER_ELEMENT +
+        floatCount * Float64List.BYTES_PER_ELEMENT +
+        integerCount * Int32List.BYTES_PER_ELEMENT +
+        functionIds.length * Uint32List.BYTES_PER_ELEMENT +
+        functionArgcs.length * Uint8List.BYTES_PER_ELEMENT;
+
+    // Align expression data view.
+    final u16 = floatCount + integerCount + functionCount > 255;
+    if (u16 && headerSize % 2 != 0) {
+      headerSize++;
     }
 
     // Allocate buffer.
     final buffer =
-        new ByteData(dataOffset + data.length * (u16 ? 2 : 1)).buffer;
+        new ByteData(headerSize + expression.length * (u16 ? 2 : 1)).buffer;
 
     // Copy all data into buffer using views.
-    final headerView = new Uint16List.view(buffer, 0, 4);
-    headerView[0] = functionCount;
-    headerView[1] = genericCount;
-    headerView[2] = int8Count;
-    headerView[3] = float64Count;
+    final headerDimensions = new Uint16List.view(buffer, 0, 4);
+    headerDimensions[0] = floatCount;
+    headerDimensions[1] = integerCount;
+    headerDimensions[2] = functionCount;
+    headerDimensions[3] = genericCount;
 
     var offset = 8;
-    final float64View = new Float64List.view(buffer, offset, float64Count);
-    float64View.setAll(0, float64List);
-    offset += float64View.lengthInBytes;
+    final floatView = new Float64List.view(buffer, offset, floatCount);
+    floatView.setAll(0, floatingPoints);
+    offset += floatView.lengthInBytes;
+    final integerView = new Int32List.view(buffer, offset, integerCount);
+    integerView.setAll(0, integers);
+    offset += integerView.lengthInBytes;
     final functionIdView = new Uint32List.view(buffer, offset, functionCount);
-    functionIdView.setAll(0, functionId);
+    functionIdView.setAll(0, functionIds);
     offset += functionIdView.lengthInBytes;
     final functionArgcView = new Uint8List.view(buffer, offset, functionCount);
-    functionArgcView.setAll(0, functionArgc);
-    offset += functionArgcView.lengthInBytes;
-    final int8View = new Int8List.view(buffer, offset, int8Count);
-    int8View.setAll(0, int8List);
+    functionArgcView.setAll(0, functionArgcs);
 
     final dataView = u16
-        ? new Uint16List.view(buffer, dataOffset)
-        : new Uint8List.view(buffer, dataOffset);
-    dataView.setAll(0, data);
+        ? new Uint16List.view(buffer, headerSize)
+        : new Uint8List.view(buffer, headerSize);
+    dataView.setAll(0, expression);
 
-    // Return buffer.
     return buffer;
   }
 
   void storeNumber(num value) {
-    if (value is int && value >= -128 && value < 128) {
-      // Store in Int8List.
-      if (!int8List.contains(value)) {
-        int8List.add(value);
+    if (value is int) {
+      if (!integers.contains(value)) {
+        integers.add(value);
       }
     } else {
-      // Store in Float64List
-      if (!float64List.contains(value)) {
-        float64List.add(value);
+      if (!floatingPoints.contains(value)) {
+        floatingPoints.add(value);
       }
     }
   }
 
   int getNumberRef(num value) {
-    if (value is int && value >= -128 && value < 128) {
-      return functionCount + int8List.indexOf(value);
+    if (value is int) {
+      return functionCount + integers.indexOf(value);
     } else {
-      return functionCount + int8Count + float64List.indexOf(value);
+      return functionCount + integerCount + floatingPoints.indexOf(value);
     }
   }
 
-  void storeFunction(int id, int argCount, bool generic) {
-    if (getFunctionRef(id, argCount, generic) == -1) {
+  void storeFunction(int id, int argc, bool generic) {
+    if (getFunctionRef(id, argc, generic) == -1) {
       if (generic) {
-        functionId.insert(genericCount, id);
-        functionArgc.insert(genericCount, argCount);
+        functionIds.insert(genericCount, id);
+        functionArgcs.insert(genericCount, argc);
         genericCount++;
       } else {
-        functionId.add(id);
-        functionArgc.add(argCount);
+        functionIds.add(id);
+        functionArgcs.add(argc);
       }
     }
   }
 
-  int getFunctionRef(int id, int argCount, bool generic) {
-    var idx = (generic ? 0 : genericCount) - 1;
-    do {
-      // Advance offset to new starting point.
-      final offset = idx + 1;
-      if (idx >= (generic ? genericCount : functionCount) - 1) {
-        return -1;
-      }
-
-      idx = functionId.indexOf(id, offset);
-
-      // No element found
-      if (idx == -1) {
-        return -1;
-      }
-    } while (functionArgc[idx] != argCount);
+  int getFunctionRef(int id, int argc, bool generic) {
+    final idx = functionIds.indexOf(id);
+    if (idx != -1 &&
+        (functionArgcs[idx] != argc || generic != (idx < genericCount))) {
+      throw new ArgumentError('same function ID has different parameters');
+    }
     return idx;
   }
-
-  void add(int id) => data.add(id);
 
   /// Check if the given index points to a function.
   bool inFunctionRange(int index) => index < functionCount;
@@ -186,11 +178,14 @@ void _exprCodecEncodePass1(ExprCodecData data, Expr expr) {
   }
 }
 
+/// Note: this cannot be done in one pass since the ID if non-generic functions
+/// is not known. It would be possible to adapt the retrieval process (two
+/// function indices instead of one), but two passes seems an ok solution.
 void _exprCodecEncodePass2(ExprCodecData data, Expr expr) {
   if (expr is NumberExpr) {
-    data.add(data.getNumberRef(expr.value));
+    data.expression.add(data.getNumberRef(expr.value));
   } else if (expr is FunctionExpr) {
-    data.add(
+    data.expression.add(
         data.getFunctionRef(expr.id, expr.arguments.length, expr.isGeneric));
     for (final arg in expr.arguments) {
       _exprCodecEncodePass2(data, arg);
@@ -206,29 +201,30 @@ Expr exprCodecDecode(ExprCodecData data) =>
 /// Note: this function does not perform sanity checks, and is unsafe on corrupt
 /// data arrays.
 Expr _exprCodecDecode(W<int> ptr, ExprCodecData data) {
-  int value = data.data[ptr.v++];
+  int value = data.expression[ptr.v++];
   if (data.inFunctionRange(value)) {
+    final id = data.functionIds[value];
     final generic = data.inGenericRange(value);
 
     // If there are function arguments, collect those first.
-    final argCount = data.functionArgc[value];
-    if (argCount > 0) {
+    final argc = data.functionArgcs[value];
+    if (argc > 0) {
       final args = new List<Expr>.generate(
-          argCount, (i) => _exprCodecDecode(ptr, data),
+          argc, (i) => _exprCodecDecode(ptr, data),
           growable: false);
-      return new FunctionExpr(data.functionId[value], generic, args);
+      return new FunctionExpr(id, generic, args);
     } else {
-      return new FunctionExpr(data.functionId[value], generic, []);
+      return new FunctionExpr(id, generic, []);
     }
   }
 
   value -= data.functionCount;
-  if (value < data.int8Count) {
-    return new NumberExpr(data.int8List[value]);
+  if (value < data.integerCount) {
+    return new NumberExpr(data.integers[value]);
   }
-  value -= data.int8Count;
-  if (value < data.float64Count) {
-    return new NumberExpr(data.float64List[value]);
+  value -= data.integerCount;
+  if (value < data.floatCount) {
+    return new NumberExpr(data.floatingPoints[value]);
   }
 
   // Illegal value: it is not within the frame of the given input tables.
