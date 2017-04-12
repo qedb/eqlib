@@ -193,7 +193,7 @@ List<Rearrangement> _computeRearrangement(
       }
     }
 
-    result.add(new Rearrangement(position, format));
+    result.add(new Rearrangement.at(position, format));
     return result;
   } else {
     return [];
@@ -217,9 +217,11 @@ int _computeRearrangeableHash(Expr expr, List<int> rearrangeableIds) {
 }
 
 class Rearrangement {
-  final int position;
-  final List<int> format;
-  Rearrangement(this.position, this.format);
+  int position;
+  List<int> format;
+
+  /// This allows re-use with the rpc package.
+  Rearrangement.at(this.position, this.format);
 
   @override
   bool operator ==(dynamic other) =>
