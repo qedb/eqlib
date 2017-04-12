@@ -45,11 +45,8 @@ class ExprCodecData {
 
     List<int> dataView;
     if (floatCount + integerCount + functionCount > 255) {
-      // Allign offset with 16 bit reading frame.
-      if (offset % 2 != 0) {
-        offset++;
-      }
-
+      // Note: because we use uint16 for the argument count the reading frame
+      // is already aligned.
       dataView = new Uint16List.view(buffer, offset); // Use 16 bit decoding.
     } else {
       dataView = new Uint8List.view(buffer, offset); // Use 8 bit decoding.
@@ -67,19 +64,14 @@ class ExprCodecData {
 
   ByteBuffer writeToBuffer() {
     // Compute buffer length.
-    var headerSize = 4 * Uint16List.BYTES_PER_ELEMENT +
+    final headerSize = 4 * Uint16List.BYTES_PER_ELEMENT +
         floatCount * Float64List.BYTES_PER_ELEMENT +
         integerCount * Int32List.BYTES_PER_ELEMENT +
         functionIds.length * Uint32List.BYTES_PER_ELEMENT +
         functionArgcs.length * Uint16List.BYTES_PER_ELEMENT;
 
-    // Align expression data view.
-    final u16 = floatCount + integerCount + functionCount > 255;
-    if (u16 && headerSize % 2 != 0) {
-      headerSize++;
-    }
-
     // Allocate buffer.
+    final u16 = floatCount + integerCount + functionCount > 255;
     final buffer =
         new ByteData(headerSize + expression.length * (u16 ? 2 : 1)).buffer;
 
@@ -137,13 +129,10 @@ class ExprCodecData {
 
   void storeFunction(int id, int argc, bool generic) {
     if (id < 0 || id > 4294967295) {
-      throw new ArgumentError.value(argc, 'id', 'must be [0, 4294967295]');
-    }
-    if (argc > 65536) {
+      throw new ArgumentError.value(id, 'id', 'must be [0, 4294967295]');
+    } else if (argc > 65536) {
       throw new ArgumentError.value(argc, 'argc', 'must be [0, 65536]');
-    }
-
-    if (getFunctionRef(id, argc, generic) == -1) {
+    } else if (getFunctionRef(id, argc, generic) == -1) {
       if (generic) {
         functionIds.insert(genericCount, id);
         functionArgcs.insert(genericCount, argc);
