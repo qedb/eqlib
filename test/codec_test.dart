@@ -43,7 +43,7 @@ void main() {
     expect(() => new Expr.fromBinary(data.buffer), throwsArgumentError);
   });
 
-  test('Binary codec storage overflow', () {
+  test('Binary codec data overflow', () {
     expect(
         () => new FunctionExpr(
                 1, false, new List.generate(65537, (_) => new NumberExpr(1)))

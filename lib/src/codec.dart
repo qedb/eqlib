@@ -128,29 +128,24 @@ class ExprCodecData {
   }
 
   void storeFunction(int id, int argc, bool generic) {
-    if (id < 0 || id > 4294967295) {
-      throw new ArgumentError.value(id, 'id', 'must be [0, 4294967295]');
-    } else if (argc > 65536) {
-      throw new ArgumentError.value(argc, 'argc', 'must be [0, 65536]');
-    } else if (getFunctionRef(id, argc, generic) == -1) {
-      if (generic) {
-        functionIds.insert(genericCount, id);
-        functionArgcs.insert(genericCount, argc);
-        genericCount++;
-      } else {
-        functionIds.add(id);
-        functionArgcs.add(argc);
+    if (id >= 0 && id <= 4294967295 && argc <= 65536) {
+      final idx = functionIds.indexOf(id);
+      if (idx == -1) {
+        if (generic) {
+          functionIds.insert(genericCount, id);
+          functionArgcs.insert(genericCount, argc);
+          genericCount++;
+        } else {
+          functionIds.add(id);
+          functionArgcs.add(argc);
+        }
+      } else if (functionArgcs[idx] != argc ||
+          generic != (idx < genericCount)) {
+        throw new ArgumentError('conflicting functions');
       }
+    } else {
+      throw new ArgumentError('data overflow');
     }
-  }
-
-  int getFunctionRef(int id, int argc, bool generic) {
-    final idx = functionIds.indexOf(id);
-    if (idx != -1 &&
-        (functionArgcs[idx] != argc || generic != (idx < genericCount))) {
-      throw new ArgumentError('same function ID has different parameters');
-    }
-    return idx;
   }
 
   /// Check if the given index points to a function.
@@ -185,8 +180,7 @@ void _exprCodecEncodePass2(ExprCodecData data, Expr expr) {
   if (expr is NumberExpr) {
     data.expression.add(data.getNumberRef(expr.value));
   } else if (expr is FunctionExpr) {
-    data.expression.add(
-        data.getFunctionRef(expr.id, expr.arguments.length, expr.isGeneric));
+    data.expression.add(data.functionIds.indexOf(expr.id));
     for (final arg in expr.arguments) {
       _exprCodecEncodePass2(data, arg);
     }
