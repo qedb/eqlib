@@ -83,15 +83,25 @@ void main() {
   });
 
   test('Rearrange expressions', () {
-    final shouldPass = getExpressionDiff(ctx.parse('a * b * c * (d + e + f)'),
+    final diff1 = getExpressionDiff(ctx.parse('a * b * c * (d + e + f)'),
         ctx.parse('b * (c * ((f + (e + d)) * a))'), rearrangeableIds);
+    final diff2 = getExpressionDiff(ctx.parse('a * (b * c * (d + e + f))'),
+        ctx.parse('a * (c * ((f + (e + d)) * b))'), rearrangeableIds);
     expect(
-        shouldPass.branch.rearrangements,
+        diff1.branch.rearrangements,
         equals([
           // [0:d, 1:e, 2:f] => [f:2, [e:1, d:0]]
           new Rearrangement(6, [2, 1, 0, -1]),
           // [0:a, 1:b, 2:c, 3:def] => [b:1, [c:2, [def:3, a:0]]]
           new Rearrangement(0, [1, 2, 3, 0, -1, -1])
+        ]));
+    expect(
+        diff2.branch.rearrangements,
+        equals([
+          // [0:d, 1:e, 2:f] => [f:2, [e:1, d:0]]
+          new Rearrangement(6, [2, 1, 0, -1]),
+          // [0:b, 1:c, 2:def] => [c:1, [def:2, b:0]]
+          new Rearrangement(2, [1, 2, 0, -1])
         ]));
 
     final shouldFail = getExpressionDiff(ctx.parse('a * b * c * ((d + e) + f)'),
@@ -99,7 +109,7 @@ void main() {
     expect(shouldFail.branch.rearrangements, equals([]));
 
     // Just to test Rearrangement.hashCode.
-    expect(shouldPass.branch.rearrangements.first.hashCode,
+    expect(diff1.branch.rearrangements.first.hashCode,
         equals(new Rearrangement(6, [2, 1, 0, -1]).hashCode));
     expect(new Rearrangement(6, [2, 1, 0, -1]).hashCode,
         isNot(new Rearrangement(6, [1, 2, 0, -1]).hashCode));

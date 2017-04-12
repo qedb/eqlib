@@ -142,6 +142,21 @@ List<Rearrangement> _computeRearrangement(
       b is FunctionExpr &&
       rearrangeableIds.contains(a.id) &&
       a.id == b.id) {
+    // If only one argument is actually different, return the rearrangement of
+    // this argument.
+    final different = new List<int>();
+    for (var i = 0; i < a.arguments.length; i++) {
+      if (a.arguments[i] != b.arguments[i]) {
+        different.add(i);
+      }
+    }
+    if (different.length == 1) {
+      final argi = different[0];
+      final distance = a.search(a.arguments[argi]).single;
+      return _computeRearrangement(position + distance, a.arguments[argi],
+          b.arguments[argi], rearrangeableIds);
+    }
+
     final result = new List<Rearrangement>();
 
     // Build child map.
