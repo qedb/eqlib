@@ -200,7 +200,7 @@ class FunctionExpr extends Expr {
 
     // Wrap final output in function.
     if (output.length != argc || used.length != children.length) {
-      new EqLibException('malformed format');
+      throw new EqLibException('malformed format');
     }
 
     return new FunctionExpr(id, _generic, output);

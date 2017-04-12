@@ -88,16 +88,30 @@ abstract class Expr {
   /// Substitute the given [rule] at the given [position]. The position of this
   /// node is 0. The position should be decremented when passing it on to
   /// children.
-  Expr substituteAt(Rule rule, int position) =>
-      _substituteAt(rule, new W<int>(position));
+  Expr substituteAt(Rule rule, int position) {
+    final _position = new W<int>(position);
+    final result = _substituteAt(rule, _position);
+    if (_position.v >= 0) {
+      throw new EqLibException('position not found');
+    } else {
+      return result;
+    }
+  }
 
   /// [substituteAt] with shared position pointer.
   Expr _substituteAt(Rule rule, W<int> position);
 
   /// Apply given [rearrange] list at [position].
   Expr rearrangeAt(
-          List<int> rearrange, int position, List<int> rearrangeableIds) =>
-      _rearrangeAt(rearrange, new W<int>(position), rearrangeableIds);
+      List<int> rearrange, int position, List<int> rearrangeableIds) {
+    final _position = new W<int>(position);
+    final result = _rearrangeAt(rearrange, _position, rearrangeableIds);
+    if (_position.v >= 0) {
+      throw new EqLibException('position not found');
+    } else {
+      return result;
+    }
+  }
 
   /// [rearrangeAt] with shared position pointer.
   Expr _rearrangeAt(
