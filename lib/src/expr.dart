@@ -95,11 +95,13 @@ abstract class Expr {
   Expr _substituteAt(Rule rule, W<int> position);
 
   /// Apply given [rearrange] list at [position].
-  Expr rearrangeAt(List rearrange, int position, List<int> rearrangeableIds) =>
+  Expr rearrangeAt(
+          List<int> rearrange, int position, List<int> rearrangeableIds) =>
       _rearrangeAt(rearrange, new W<int>(position), rearrangeableIds);
 
   /// [rearrangeAt] with shared position pointer.
-  Expr _rearrangeAt(List rule, W<int> position, List<int> rearrangeableIds);
+  Expr _rearrangeAt(
+      List<int> rule, W<int> position, List<int> rearrangeableIds);
 
   /// Find first [n] positions that match [expr].
   List<int> search(Expr expr, [int n = 1]) {
