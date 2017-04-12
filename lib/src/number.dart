@@ -45,18 +45,26 @@ class NumberExpr extends Expr {
 
   @override
   Expr _substituteAt(rule, position) {
-    if (position.v == 0) {
+    if (position.v-- == 0) {
       if (compare(rule.left)) {
         return rule.right.clone();
       } else {
         throw new EqLibException('rule does not match at the given position');
       }
     } else {
-      position.v--;
-      return this;
+      return clone();
     }
   }
 
   @override
-  NumberExpr evaluate(compute) => this;
+  Expr _rearrangeAt(rearrange, position, rearrangeableIds) {
+    if (position.v-- == 0) {
+      throw new EqLibException(
+          'given position is not a rearrangeable function');
+    }
+    return clone();
+  }
+
+  @override
+  NumberExpr evaluate(compute) => clone();
 }

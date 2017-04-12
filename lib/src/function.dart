@@ -93,13 +93,13 @@ class FunctionExpr extends Expr {
         // Construct mapping.
         final innerMapping = new Map<int, Expr>();
         for (var i = 0; i < depVars.length; i++) {
+          final argument = arguments[i];
           final depVarId = depVars[i];
           final targetExpr = mapping.substitute[depVarId];
-          final argi = arguments[i];
 
           // Only add this to the mapping if the replacement is not the same as
           // the generic dependent variable.
-          if (!(argi is FunctionExpr && argi.id == depVarId)) {
+          if (!(argument is FunctionExpr && argument.id == depVarId)) {
             // Target must be a symbol (else remapping cannot be done).
             if (targetExpr is FunctionExpr && targetExpr.isSymbol) {
               // Throw error if the substitute depends on other variables than this
@@ -111,7 +111,7 @@ class FunctionExpr extends Expr {
               }
 
               innerMapping[targetExpr.id] =
-                  argi.remap(new ExprMapping({depVarId: targetExpr}));
+                  argument.remap(new ExprMapping({depVarId: targetExpr}));
             } else {
               throw new EqLibException(
                   'generic function inner mapping must map from a symbol');
@@ -130,8 +130,7 @@ class FunctionExpr extends Expr {
 
   @override
   Expr _substituteAt(rule, position) {
-    if (position.v == 0) {
-      position.v--; // Set to -1 so it is clear the substitution is processed.
+    if (position.v-- == 0) {
       final mapping = new ExprMapping();
       if (compare(rule.left, mapping)) {
         return rule.right.remap(mapping);
@@ -139,38 +138,116 @@ class FunctionExpr extends Expr {
         throw new EqLibException('rule does not match at the given position');
       }
     } else {
-      position.v--;
-
-      // Walk through arguments.
-      for (var i = 0; i < arguments.length; i++) {
-        arguments[i] = arguments[i]._substituteAt(rule, position);
-        if (position.v == -1) {
-          break;
-        }
-      }
-
-      return this;
+      final newArguments =
+          arguments.map((arg) => arg._substituteAt(rule, position));
+      return new FunctionExpr(id, _generic, newArguments.toList());
     }
   }
 
   @override
-  Expr evaluate(compute) {
-    // It is possible to return immediately if there are no arugments.
+  Expr _rearrangeAt(rearrange, position, rearrangeableIds) {
+    if (position.v-- == 0) {
+      if (rearrangeableIds.contains(id)) {
+        return _rearrangeArguments(rearrange);
+      } else {
+        throw new EqLibException(
+            'given position is not a rearrangeable function');
+      }
+    } else {
+      final newArguments = arguments.map(
+          (arg) => arg._rearrangeAt(rearrange, position, rearrangeableIds));
+      return new FunctionExpr(id, _generic, newArguments.toList());
+    }
+  }
 
-    final numericArguments = new List<num>();
-    for (var i = 0; i < arguments.length; i++) {
-      final evaluated = arguments[i].evaluate(compute);
-      arguments[i] = evaluated;
-      if (evaluated is NumberExpr) {
-        numericArguments.add(evaluated.value);
+  /// Returns list of cloned arguments that are rearranged according to the
+  /// given order.
+  ///
+  /// Routine:
+  /// + The current children are numbered 0 to N in order of occurrence.
+  /// + The format defines the new structure for these children.
+  /// + This format is squeezed in a flat integer list so is is easier to store.
+  /// + The number of arguments in this function is used as argument number for
+  ///   all formed child functions (compliant with static argc convention).
+  /// + `-1` in the format array means that the previous N arguments are wrapped
+  ///   in a function. (e.g. `[2, [1, 0]]` becomes )
+  Expr _rearrangeArguments(List<int> format) {
+    final argc = arguments.length;
+
+    /// Retrieve rearrangeable children.
+    final children = _getChildren();
+    final used = new Set<int>();
+
+    /// Render resulting format.
+    final output = new List<Expr>();
+    for (final value in format) {
+      if (value == -1) {
+        // Get last N arguments.
+        final args = new List<Expr>.generate(argc, (_) => output.removeLast())
+            .reversed
+            .toList();
+
+        // Wrap arguments in function.
+        output.add(new FunctionExpr(id, _generic, args));
+      } else {
+        if (value >= 0 && value < children.length && used.add(value)) {
+          output.add(children[value]);
+        } else {
+          throw new EqLibException('illegal value');
+        }
       }
     }
 
-    if (numericArguments.length == arguments.length) {
-      final value = compute(id, numericArguments);
-      return !value.isNaN ? new NumberExpr(value) : this;
-    } else {
-      return this;
+    // Wrap final output in function.
+    if (output.length != argc || used.length != children.length) {
+      new EqLibException('malformed format');
     }
+
+    return new FunctionExpr(id, _generic, output);
+  }
+
+  /// Used by [_rearrangeArguments].
+  /// Returns low level children (descends functions with same ID).
+  List<Expr> _getChildren([bool terminateFunctionsWithNull = false]) {
+    final children = new List<Expr>();
+    for (final arg in arguments) {
+      if (arg is FunctionExpr && arg.id == id) {
+        children.addAll(arg._getChildren(terminateFunctionsWithNull));
+        if (terminateFunctionsWithNull) {
+          // This is a bit of a dirty trick, but it allows linear construction
+          // of the rearrange format data in [_computeRearrangement].
+          children.add(null);
+        }
+      } else {
+        children.add(arg);
+      }
+    }
+    return children;
+  }
+
+  @override
+  Expr evaluate(compute) {
+    final newArguments = new List<Expr>();
+    for (var i = 0; i < arguments.length; i++) {
+      newArguments.add(arguments[i].evaluate(compute));
+    }
+
+    final numericValues = newArguments.map((expr) {
+      if (expr is NumberExpr) {
+        return expr.value;
+      } else {
+        return null;
+      }
+    }).toList();
+    numericValues.removeWhere((number) => number == null);
+
+    if (numericValues.length == arguments.length) {
+      final value = compute(id, numericValues);
+      if (!value.isNaN) {
+        return new NumberExpr(value);
+      }
+    }
+
+    return new FunctionExpr(id, _generic, newArguments);
   }
 }

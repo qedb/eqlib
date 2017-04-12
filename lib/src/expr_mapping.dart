@@ -31,13 +31,13 @@ class ExprMapping {
             'in strict mode multiple dependant variables are not allowed');
       }
 
-      // Sublist may only contain generic symbols (0 args).
       // Collect symbol IDs.
       final ids = new List<int>();
       for (final arg in targetVars) {
         if (arg is FunctionExpr && arg.isGeneric && arg.isSymbol) {
           ids.add(arg.id);
         } else {
+          // Generic function arguments may only contain generic symbols.
           throw new EqLibException(
               'dependant variables must be generic symbols');
         }

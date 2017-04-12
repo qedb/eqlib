@@ -56,7 +56,7 @@ class SimpleLabelResolver extends ExprContextLabelResolver {
 
 /// Standalone/in-memory context for parsing and printing expressions
 class SimpleExprContext extends ExprContext {
-  /// Operator configuration used by this backend.
+  /// Operator configuration used by this context.
   final operators = new OperatorConfig(1);
 
   /// Computable functions.
@@ -167,7 +167,7 @@ class SimpleExprContext extends ExprContext {
     }
   }
 
-  /// Generate operator funtion string representation using parentheses only
+  /// Generate operator function string representation using parentheses only
   /// when necessary.
   String _printOperator(Expr left, Expr right, int id, String opChar) {
     final pre = operators.byId[id].precedenceLevel;

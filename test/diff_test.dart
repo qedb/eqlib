@@ -10,7 +10,7 @@ void main() {
   final ctx = inlineExprContext;
   final a = symbol('a', generic: true);
   final b = symbol('b', generic: true);
-  final arrangeableFunctions = [ctx.operators.id('+'), ctx.operators.id('*')];
+  final rearrangeableIds = [ctx.operators.id('+'), ctx.operators.id('*')];
 
   test('Chain rule', () {
     final sin = fn1('sin');
@@ -34,33 +34,34 @@ void main() {
 
     // First step difference
     expect(
-        getExpressionDiff(e1, e2, arrangeableFunctions),
+        getExpressionDiff(e1, e2, rearrangeableIds),
         equals(new ExprDiffResult(
-            branch: new ExprDiffBranch(true, replaced: rule(e1, e2)))));
+            branch: new ExprDiffBranch(0, true, replaced: rule(e1, e2)))));
 
     // Second step difference
+    final step2diff = getExpressionDiff(e2, e3, rearrangeableIds);
     final step2diffExpect = new ExprDiffResult(
-        branch: new ExprDiffBranch(true,
+        branch: new ExprDiffBranch(0, true,
             replaced: rule(e2, e3),
             argumentDifference: [
-          new ExprDiffBranch(true,
+          new ExprDiffBranch(1, true,
               replaced: ctx.parseRule('diff(x^3,x) = 3*x^(3-1)')),
-          new ExprDiffBranch(false)
+          new ExprDiffBranch(6, false)
         ]));
-    expect(getExpressionDiff(e2, e3, arrangeableFunctions),
-        equals(step2diffExpect));
+    //print(ctx.str(fn2('=')(e2, e3)));
+    expect(step2diff, equals(step2diffExpect));
 
     // Third step difference
-    final step3diff = getExpressionDiff(e3, e4, arrangeableFunctions);
+    final step3diff = getExpressionDiff(e3, e4, rearrangeableIds);
     final step3diffExpect = new ExprDiffResult(
-        branch: new ExprDiffBranch(true,
+        branch: new ExprDiffBranch(0, true,
             replaced: rule(e3, e4),
             argumentDifference: [
-          new ExprDiffBranch(false),
-          new ExprDiffBranch(true,
+          new ExprDiffBranch(1, false),
+          new ExprDiffBranch(8, true,
               replaced: rule(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))
         ]));
-
+    //print(ctx.str(fn2('=')(e3, e4)));
     expect(step3diff, equals(step3diffExpect));
 
     // Compare hash codes in third step difference.
@@ -69,25 +70,32 @@ void main() {
   });
 
   test('Numeric inequality', () {
-    expect(getExpressionDiff(number(1), number(1), arrangeableFunctions),
-        equals(new ExprDiffResult(branch: new ExprDiffBranch(false))));
-    expect(getExpressionDiff(number(1), number(2), arrangeableFunctions),
+    expect(getExpressionDiff(number(1), number(1), rearrangeableIds),
+        equals(new ExprDiffResult(branch: new ExprDiffBranch(0, false))));
+    expect(getExpressionDiff(number(1), number(2), rearrangeableIds),
         equals(new ExprDiffResult(numericInequality: true)));
     expect(
         getExpressionDiff(
-            ctx.parse('1 + a'), ctx.parse('2 + a'), arrangeableFunctions),
+            ctx.parse('1 + a'), ctx.parse('2 + a'), rearrangeableIds),
         equals(new ExprDiffResult(
-            branch:
-                new ExprDiffBranch(true, replaced: ctx.parseRule('1+a=2+a')))));
+            branch: new ExprDiffBranch(0, true,
+                replaced: ctx.parseRule('1+a=2+a')))));
   });
 
   test('Rearrange expressions', () {
-    final shouldPass = getExpressionDiff(ctx.parse('a * b * c * ((d + e) + f)'),
-        ctx.parse('b * c * (f + e + d) * a'), arrangeableFunctions);
-    expect(shouldPass.branch.rearranged, equals(true));
+    final shouldPass = getExpressionDiff(ctx.parse('a * b * c * (d + e + f)'),
+        ctx.parse('b * (c * ((f + (e + d)) * a))'), rearrangeableIds);
+    expect(
+        shouldPass.branch.rearrangements,
+        equals([
+          // [0:d, 1:e, 2:f] => [f:2, [e:1, d:0]]
+          new Rearrangement(6, [2, 1, 0, -1]),
+          // [0:a, 1:b, 2:c, 3:def] => [b:1, [c:2, [def:3, a:0]]]
+          new Rearrangement(0, [1, 2, 3, 0, -1, -1])
+        ]));
 
     final shouldFail = getExpressionDiff(ctx.parse('a * b * c * ((d + e) + f)'),
-        ctx.parse('b * f * (c + e + d) * a'), arrangeableFunctions);
-    expect(shouldFail.branch.rearranged, equals(false));
+        ctx.parse('b * f * (c + e + d) * a'), rearrangeableIds);
+    expect(shouldFail.branch.rearrangements, equals([]));
   });
 }

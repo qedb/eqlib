@@ -16,6 +16,9 @@ void main() {
   test('Fundamental checks for the parser', () {
     final a = generic('a'), b = generic('b'), c = generic('c');
 
+    // Operator precedence
+    expect(ctx.parse('?a + ?b + ?c'), equals((a + b) + c));
+
     // Extra parentheses
     expect(ctx.parse('(((?a() + ?b)))'), equals(a + b));
 

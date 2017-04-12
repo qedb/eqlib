@@ -6,8 +6,7 @@ part of eqlib;
 
 /// Expression of a variable or function
 ///
-/// Note: in this class we use some excessive OOP in order to obtain a nice
-/// expression API.
+/// The expression class is supposed to be fully immutable.
 abstract class Expr {
   Expr();
 
@@ -95,6 +94,13 @@ abstract class Expr {
   /// [substituteAt] with shared position pointer.
   Expr _substituteAt(Rule rule, W<int> position);
 
+  /// Apply given [rearrange] list at [position].
+  Expr rearrangeAt(List rearrange, int position, List<int> rearrangeableIds) =>
+      _rearrangeAt(rearrange, new W<int>(position), rearrangeableIds);
+
+  /// [rearrangeAt] with shared position pointer.
+  Expr _rearrangeAt(List rule, W<int> position, List<int> rearrangeableIds);
+
   /// Find first [n] positions that match [expr].
   List<int> search(Expr expr, [int n = 1]) {
     final result = new List<int>();
@@ -127,7 +133,7 @@ abstract class Expr {
     return expr;
   }
 
-  /// Appemts to evaluate this expression to a number using the given compute
+  /// Attempts to evaluate this expression to a number using the given compute
   /// functions. Returns expression that is evaluated as far as possible. This
   /// is not guaranteed to be a new instance.
   Expr evaluate(ExprCompute compute);
@@ -158,7 +164,7 @@ Expr substituteRecursive(
     // Evaluate expression before searching for terminators.
     expr = expr.evaluate(compute);
 
-    // Subsitute terminators.
+    // Substitute terminators.
     while (n > 0) {
       final nextPosition = expr.search(terminator.left, 1);
       if (nextPosition.isNotEmpty) {
