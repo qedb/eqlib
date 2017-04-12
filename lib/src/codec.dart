@@ -40,7 +40,7 @@ class ExprCodecData {
     offset += integerView.lengthInBytes;
     final functionIdView = new Uint32List.view(buffer, offset, functionCount);
     offset += functionIdView.lengthInBytes;
-    final functionArgcView = new Uint8List.view(buffer, offset, functionCount);
+    final functionArgcView = new Uint16List.view(buffer, offset, functionCount);
     offset += functionArgcView.lengthInBytes;
 
     List<int> dataView;
@@ -71,7 +71,7 @@ class ExprCodecData {
         floatCount * Float64List.BYTES_PER_ELEMENT +
         integerCount * Int32List.BYTES_PER_ELEMENT +
         functionIds.length * Uint32List.BYTES_PER_ELEMENT +
-        functionArgcs.length * Uint8List.BYTES_PER_ELEMENT;
+        functionArgcs.length * Uint16List.BYTES_PER_ELEMENT;
 
     // Align expression data view.
     final u16 = floatCount + integerCount + functionCount > 255;
@@ -100,7 +100,7 @@ class ExprCodecData {
     final functionIdView = new Uint32List.view(buffer, offset, functionCount);
     functionIdView.setAll(0, functionIds);
     offset += functionIdView.lengthInBytes;
-    final functionArgcView = new Uint8List.view(buffer, offset, functionCount);
+    final functionArgcView = new Uint16List.view(buffer, offset, functionCount);
     functionArgcView.setAll(0, functionArgcs);
 
     final dataView = u16
@@ -139,8 +139,8 @@ class ExprCodecData {
     if (id < 0 || id > 4294967295) {
       throw new ArgumentError.value(argc, 'id', 'must be [0, 4294967295]');
     }
-    if (argc > 255) {
-      throw new ArgumentError.value(argc, 'argc', 'must be [0, 256]');
+    if (argc > 65536) {
+      throw new ArgumentError.value(argc, 'argc', 'must be [0, 65536]');
     }
 
     if (getFunctionRef(id, argc, generic) == -1) {

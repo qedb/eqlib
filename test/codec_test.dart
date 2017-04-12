@@ -20,7 +20,7 @@ void main() {
     expect(
         expr.toBase64(),
         equals(
-            'AQADAAkAAgCamZmZmZkLQAIAAAAGAAAABwAAAAwAAAANAAAABgAAAAgAAAALAAAABQAAAAQAAAAPAAAADgAAAAAAAgIDAgIAAAIJAwQAAQUMAgoLBgcI'));
+            'AQADAAkAAgCamZmZmZkLQAIAAAAGAAAABwAAAAwAAAANAAAABgAAAAgAAAALAAAABQAAAAQAAAAPAAAADgAAAAAAAAACAAIAAwACAAIAAAAAAAIJAwQAAQUMAgoLBgcI'));
 
     // Check encoding and decoding.
     expect(new Expr.fromBinary(expr.toBinary()), equals(expr));
@@ -46,7 +46,7 @@ void main() {
   test('Binary codec storage overflow', () {
     expect(
         () => new FunctionExpr(
-                1, false, new List.generate(500, (_) => new NumberExpr(1)))
+                1, false, new List.generate(65537, (_) => new NumberExpr(1)))
             .toBase64(),
         throwsArgumentError);
     expect(() => new FunctionExpr(4294967296, false, []).toBase64(),

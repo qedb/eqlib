@@ -11,14 +11,16 @@ void main() {
   final rearrangeableIds = [ctx.operators.id('+'), ctx.operators.id('*')];
 
   test('Expr.substituteAt', () {
-    expect(() => new NumberExpr(1).substituteAt(ctx.parseRule('1 = 1/1'), 1),
+    expect(() => ctx.parse('1').substituteAt(ctx.parseRule('1 = 1/1'), 1),
         eqlibThrows('position not found'));
   });
 
   test('Expr.rearrangeAt', () {
     // Exceptions
-    expect(() => new NumberExpr(1).rearrangeAt([1, 0], 1, rearrangeableIds),
+    expect(() => ctx.parse('1').rearrangeAt([1, 0], 1, rearrangeableIds),
         eqlibThrows('position not found'));
+    expect(() => ctx.parse('1').rearrangeAt([1, 0], 0, rearrangeableIds),
+        eqlibThrows('given position is not a rearrangeable function'));
     expect(() => ctx.parse('a').rearrangeAt([1, 0], 0, rearrangeableIds),
         eqlibThrows('given position is not a rearrangeable function'));
     expect(() => ctx.parse('a + b').rearrangeAt([2, 1], 0, rearrangeableIds),

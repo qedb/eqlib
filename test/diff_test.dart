@@ -97,5 +97,13 @@ void main() {
     final shouldFail = getExpressionDiff(ctx.parse('a * b * c * ((d + e) + f)'),
         ctx.parse('b * f * (c + e + d) * a'), rearrangeableIds);
     expect(shouldFail.branch.rearrangements, equals([]));
+
+    // Just to test Rearrangement.hashCode.
+    expect(shouldPass.branch.rearrangements.first.hashCode,
+        equals(new Rearrangement(6, [2, 1, 0, -1]).hashCode));
+    expect(new Rearrangement(6, [2, 1, 0, -1]).hashCode,
+        isNot(new Rearrangement(6, [1, 2, 0, -1]).hashCode));
+    expect(new Rearrangement(6, [2, 1, 0, -1]).hashCode,
+        isNot(new Rearrangement(7, [2, 1, 0, -1]).hashCode));
   });
 }
