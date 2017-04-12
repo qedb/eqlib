@@ -221,6 +221,8 @@ class Rearrangement {
   List<int> format;
 
   /// This allows re-use with the rpc package.
+  Rearrangement();
+
   Rearrangement.at(this.position, this.format);
 
   @override
