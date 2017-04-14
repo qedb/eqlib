@@ -75,4 +75,11 @@ void main() {
     expect(() => ctx.parse('1').substituteAt(ctx.parseRule('2=3'), 0),
         eqlibThrows('rule does not match at the given position'));
   });
+
+  test('Rearrangement constructor', () {
+    // This is completely useless, but I want 100% coverage.
+    final rearrangement = new Rearrangement();
+    expect(rearrangement.position, isNull);
+    expect(rearrangement.format, isNull);
+  });
 }
