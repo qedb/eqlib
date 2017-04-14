@@ -50,6 +50,12 @@ class FunctionExpr extends Expr {
   }
 
   @override
+  void getFunctionIds(target) {
+    target.add(id);
+    arguments.forEach((arg) => arg.getFunctionIds(target));
+  }
+
+  @override
   bool _compare(pattern, mapping) {
     if (pattern is NumberExpr) {
       return false;

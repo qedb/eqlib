@@ -30,6 +30,9 @@ class NumberExpr extends Expr {
   List<Expr> flatten() => [this];
 
   @override
+  void getFunctionIds(target) {}
+
+  @override
   bool _compare(pattern, mapping) {
     if (equals(pattern)) {
       return true;

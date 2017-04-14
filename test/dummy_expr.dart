@@ -24,6 +24,9 @@ class DummyExpr extends Expr {
   List<Expr> flatten() => [this];
 
   @override
+  void getFunctionIds(target) {}
+
+  @override
   Expr remap(mapping) => clone();
 
   @override

@@ -7,7 +7,6 @@ part of eqlib;
 /// Expression of a variable or function
 ///
 /// The expression class is supposed to be fully immutable.
-/// TODO: add getter to retrieve all contained function IDs.
 abstract class Expr {
   Expr();
 
@@ -67,6 +66,16 @@ abstract class Expr {
 
   /// Convert expression to flat structure.
   List<Expr> flatten();
+
+  /// Get all function IDs in this expression.
+  Set<int> get functionIds {
+    final target = new Set<int>();
+    getFunctionIds(target);
+    return target;
+  }
+
+  /// Internal call for [getFunctionIds].
+  void getFunctionIds(Set<int> target);
 
   /// Pattern matching
   ///

@@ -10,6 +10,15 @@ void main() {
   final ctx = new SimpleExprContext();
   final rearrangeableIds = [ctx.operators.id('+'), ctx.operators.id('*')];
 
+  test('Expr.functionIds', () {
+    expect(
+        ctx.parse('1 + a - b * c(d, e, f(g))').functionIds,
+        equals('+-*abcdefg'
+            .split('')
+            .map((str) => ctx.assignId(str, false))
+            .toSet()));
+  });
+
   test('Expr.substituteAt', () {
     expect(() => ctx.parse('1').substituteAt(ctx.parseRule('1 = 1/1'), 1),
         eqlibThrows('position not found'));
