@@ -290,20 +290,11 @@ void _popStack(
         'stack function arguments are not in the output queue');
   }
 
-  final args = new List<Expr>.generate(fn.argc, (_) => output.removeLast(),
-      growable: false);
-
-  // If this is a negate function, and the argument is a number, we directly
-  // apply it.
-  final first = args.first;
-  if (fn.id == ops.id('~') && first is NumberExpr) {
-    output.add(new NumberExpr(-first.value));
-  } else {
-    final id = fn.id == ops.implicitMultiplyId ? ops.id('*') : fn.id;
-    // Note: the argument list is reversed because they have been added to the
-    // stack in first in last out order (because of List.removeLast()).
-    output.add(new FunctionExpr(id, fn.generic, args.reversed.toList()));
-  }
+  final args = new List<Expr>.generate(fn.argc, (_) => output.removeLast());
+  final id = fn.id == ops.implicitMultiplyId ? ops.id('*') : fn.id;
+  // Note: the argument list is reversed because they have been added to the
+  // stack in first in last out order (because of List.removeLast()).
+  output.add(new FunctionExpr(id, fn.generic, args.reversed.toList()));
 }
 
 /// Element in parsing stack.

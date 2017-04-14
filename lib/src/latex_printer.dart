@@ -41,9 +41,7 @@ class LaTeXPrinter {
         final genericPrefix = expr.isGeneric ? r'{}_\text{?}' : '';
         if (!expr.isSymbol) {
           final args = new List<String>.generate(expr.arguments.length,
-                  (i) => render(expr.arguments[i], resolveName, ops),
-                  growable: false)
-              .join(r',\,');
+              (i) => render(expr.arguments[i], resolveName, ops)).join(r',\,');
 
           return [
             genericPrefix,

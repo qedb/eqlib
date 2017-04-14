@@ -203,9 +203,8 @@ Expr _exprCodecDecode(W<int> ptr, ExprCodecData data) {
     // If there are function arguments, collect those first.
     final argc = data.functionArgcs[value];
     if (argc > 0) {
-      final args = new List<Expr>.generate(
-          argc, (i) => _exprCodecDecode(ptr, data),
-          growable: false);
+      final args =
+          new List<Expr>.generate(argc, (i) => _exprCodecDecode(ptr, data));
       return new FunctionExpr(id, generic, args);
     } else {
       return new FunctionExpr(id, generic, []);

@@ -56,10 +56,6 @@ class StringReader {
 const spaceAsciiCode = 32;
 const zeroAsciiCode = 48;
 const nineAsciiCode = 57;
-const aUpperAsciiCode = 65;
-const zUpperAsciiCode = 90;
-const aLowerAsciiCode = 97;
-const zLowerAsciiCode = 122;
 
 /// Test if the given [char] is within the given ASCII range.
 bool charIsInRange(int char, int start, int endInclusive) =>
@@ -67,18 +63,3 @@ bool charIsInRange(int char, int start, int endInclusive) =>
 
 /// Test if the given [char] is a decimal digit (0-9).
 bool charIsDigit(int char) => charIsInRange(char, zeroAsciiCode, nineAsciiCode);
-
-/*
-This code is not currently used.
-
-/// Test if the given [char] is an upper case letter (A-Z).
-bool charIsUpper(int char) =>
-    charIsInRange(char, aUpperAsciiCode, zUpperAsciiCode);
-
-/// Test if the given [char] is a lower case letter (a-z).
-bool charIsLower(int char) =>
-    charIsInRange(char, aLowerAsciiCode, zLowerAsciiCode);
-
-/// Test if the given [char] is a letter (A-Za-z).
-bool charIsLetter(int char) => charIsUpper(char) || charIsLower(char);
-*/

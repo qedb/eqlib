@@ -28,7 +28,7 @@ void main() {
 
     // Numeric values
     expect(ctx.parse('-1.23 - 4 + .567 ^ -.89'),
-        equals((n(-1.23) - 4) + (n(.567) ^ -.89)));
+        equals((-n(1.23) - 4) + (n(.567) ^ -n(.89))));
     expect(ctx.parse('-1.23 - 4 + .567 ^ -.89').evaluate(ctx.compute),
         equals(number(-1.23 - 4 + pow(.567, -.89))));
 
@@ -43,9 +43,9 @@ void main() {
     expect(ctx.parse('?a ?b ?c'), equals(a * (b * c)));
     expect(ctx.parse('(?a ?b) ?c'), equals((a * b) * c));
     expect(ctx.parse('?a sin(?b)'), equals(a * fn1('sin')(b)));
-    expect(ctx.parse('-1 2 ^ -3 4'), equals(n(-1) * (n(2) ^ (n(-3) * 4))));
+    expect(ctx.parse('-1 2 ^ -3 4'), equals(-n(1) * (n(2) ^ (-n(3) * 4))));
     expect(ctx.parse('-3sin(2 ^3 (4+5)?b)'),
-        equals(n(-3) * fn1('sin')(n(2) ^ (n(3) * ((n(4) + 5) * b)))));
+        equals(-n(3) * fn1('sin')(n(2) ^ (n(3) * ((n(4) + 5) * b)))));
 
     // Postfix operator (factorial, !)
     // To keep things together the printing test is also here.

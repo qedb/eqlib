@@ -25,8 +25,7 @@ class FunctionExpr extends Expr {
           id,
           _generic,
           new List<Expr>.generate(
-              arguments.length, (i) => argCopy(arguments[i]),
-              growable: false));
+              arguments.length, (i) => argCopy(arguments[i])));
 
   @override
   bool equals(other) =>

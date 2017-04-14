@@ -7,6 +7,7 @@ part of eqlib;
 /// Expression of a variable or function
 ///
 /// The expression class is supposed to be fully immutable.
+/// TODO: add getter to retrieve all contained function IDs.
 abstract class Expr {
   Expr();
 
