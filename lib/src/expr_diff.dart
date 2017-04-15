@@ -10,13 +10,10 @@ class ExprDiffBranch {
   /// and [Expr.rearrangeAt]).
   final int position;
 
-  /// Are a and b different?
-  final bool different;
+  /// Expressions being compared.
+  final Expr left, right;
 
-  /// Is a replaced by b?
-  final Rule replaced;
-
-  /// Rearrangements of children
+  /// Rearrangement of children
   ///
   /// When rearrangement is not possible, this list should be empty.
   /// Multiple rearrangements can be specified if different nested functions are
@@ -26,9 +23,8 @@ class ExprDiffBranch {
   /// Difference between each argument (if a and b are similar functions).
   final List<ExprDiffBranch> argumentDifference;
 
-  ExprDiffBranch(this.position, this.different,
-      {this.replaced,
-      this.rearrangements: const [],
+  ExprDiffBranch(this.position, this.left, this.right,
+      {this.rearrangements: const [],
       Iterable<ExprDiffBranch> argumentDifference})
       : argumentDifference = argumentDifference == null
             ? new List<ExprDiffBranch>()
@@ -38,19 +34,16 @@ class ExprDiffBranch {
   bool operator ==(dynamic other) =>
       other is ExprDiffBranch &&
       other.position == position &&
-      other.different == different &&
-      other.replaced == replaced &&
+      other.left == left &&
+      other.right == right &&
       const ListEquality().equals(other.rearrangements, rearrangements) &&
       const ListEquality().equals(other.argumentDifference, argumentDifference);
 
   @override
-  int get hashCode => hashObjects([
-        position,
-        different,
-        replaced,
-        hashObjects(rearrangements),
-        hashObjects(argumentDifference)
-      ]);
+  int get hashCode => hashCode3(hashCode3(position, left, right),
+      hashObjects(rearrangements), hashObjects(argumentDifference));
+
+  bool get isDifferent => left != right;
 }
 
 class ExprDiffResult {
@@ -79,9 +72,9 @@ ExprDiffResult getExpressionDiff(Expr a, Expr b, List<int> rearrangeableIds,
     [int _position = -1]) {
   var position = _position + 1;
 
-  // If a == b, this branch can be terminated.
+  // If there is no difference, this branch can be terminated.
   if (a == b) {
-    return new ExprDiffResult(branch: new ExprDiffBranch(position, false));
+    return new ExprDiffResult(branch: new ExprDiffBranch(position, a, b));
   }
 
   // If a and b are numeric, this branch can be discarded.
@@ -91,12 +84,11 @@ ExprDiffResult getExpressionDiff(Expr a, Expr b, List<int> rearrangeableIds,
     return new ExprDiffResult(numericInequality: true);
   }
 
-  // Potential rule: a = b
+  // Basic return object.
   final result = new ExprDiffResult(
-      branch: new ExprDiffBranch(position, true,
+      branch: new ExprDiffBranch(position, a, b,
           rearrangements:
-              _computeRearrangement(position, a, b, rearrangeableIds),
-          replaced: new Rule(a, b)));
+              _computeRearrangement(position, a, b, rearrangeableIds)));
 
   // If a rearrangement resolves this branch, there is no need to compare
   // individual arguments.
@@ -105,7 +97,7 @@ ExprDiffResult getExpressionDiff(Expr a, Expr b, List<int> rearrangeableIds,
   }
 
   // If a and b are equal functions, their arguments can be compared.
-  if (a is FunctionExpr &&
+  else if (a is FunctionExpr &&
       b is FunctionExpr &&
       !a.isSymbol &&
       a.id == b.id &&

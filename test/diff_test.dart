@@ -33,35 +33,29 @@ void main() {
     final e4 = e.clone();
 
     // First step difference
-    expect(
-        getExpressionDiff(e1, e2, rearrangeableIds),
-        equals(new ExprDiffResult(
-            branch: new ExprDiffBranch(0, true, replaced: rule(e1, e2)))));
+    expect(getExpressionDiff(e1, e2, rearrangeableIds),
+        equals(new ExprDiffResult(branch: new ExprDiffBranch(0, e1, e2))));
 
     // Second step difference
     final step2diff = getExpressionDiff(e2, e3, rearrangeableIds);
     final step2diffExpect = new ExprDiffResult(
-        branch: new ExprDiffBranch(0, true,
-            replaced: rule(e2, e3),
-            argumentDifference: [
-          new ExprDiffBranch(1, true,
-              replaced: ctx.parseRule('diff(x^3,x) = 3*x^(3-1)')),
-          new ExprDiffBranch(6, false)
-        ]));
+        branch: new ExprDiffBranch(0, e2, e3, argumentDifference: [
+      new ExprDiffBranch(1, diff(x ^ 3, x), ctx.parse('3*x^(3-1)')),
+      new ExprDiffBranch(6, diff(sin(x ^ 3), x ^ 3), diff(sin(x ^ 3), x ^ 3))
+    ]));
     //print(ctx.str(fn2('=')(e2, e3)));
+    expect(step2diff.branch.argumentDifference.last.isDifferent, isFalse);
     expect(step2diff, equals(step2diffExpect));
 
     // Third step difference
     final step3diff = getExpressionDiff(e3, e4, rearrangeableIds);
     final step3diffExpect = new ExprDiffResult(
-        branch: new ExprDiffBranch(0, true,
-            replaced: rule(e3, e4),
-            argumentDifference: [
-          new ExprDiffBranch(1, false),
-          new ExprDiffBranch(8, true,
-              replaced: rule(diff(sin(x ^ 3), x ^ 3), cos(x ^ 3)))
-        ]));
+        branch: new ExprDiffBranch(0, e3, e4, argumentDifference: [
+      new ExprDiffBranch(1, ctx.parse('3*x^(3-1)'), ctx.parse('3*x^(3-1)')),
+      new ExprDiffBranch(8, diff(sin(x ^ 3), x ^ 3), cos(x ^ 3))
+    ]));
     //print(ctx.str(fn2('=')(e3, e4)));
+    expect(step3diff.branch.argumentDifference.first.isDifferent, isFalse);
     expect(step3diff, equals(step3diffExpect));
 
     // Compare hash codes in third step difference.
@@ -70,16 +64,17 @@ void main() {
   });
 
   test('Numeric inequality', () {
-    expect(getExpressionDiff(number(1), number(1), rearrangeableIds),
-        equals(new ExprDiffResult(branch: new ExprDiffBranch(0, false))));
-    expect(getExpressionDiff(number(1), number(2), rearrangeableIds),
+    final one = number(1), two = number(2);
+    expect(getExpressionDiff(one, one, rearrangeableIds),
+        equals(new ExprDiffResult(branch: new ExprDiffBranch(0, one, one))));
+    expect(getExpressionDiff(one, two, rearrangeableIds),
         equals(new ExprDiffResult(numericInequality: true)));
     expect(
         getExpressionDiff(
             ctx.parse('1 + a'), ctx.parse('2 + a'), rearrangeableIds),
         equals(new ExprDiffResult(
-            branch: new ExprDiffBranch(0, true,
-                replaced: ctx.parseRule('1+a=2+a')))));
+            branch:
+                new ExprDiffBranch(0, ctx.parse('1+a'), ctx.parse('2+a')))));
   });
 
   test('Rearrange expressions', () {

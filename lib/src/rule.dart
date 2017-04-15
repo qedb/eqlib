@@ -14,4 +14,6 @@ class Rule {
 
   @override
   int get hashCode => hashCode2(left, right);
+
+  bool get isDifferent => left == right;
 }
