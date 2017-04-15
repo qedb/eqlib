@@ -57,34 +57,47 @@ void main() {
   test('Array codec', () {
     final id = (String str) => ctx.assignId(str, false);
     final idg = (String str) => ctx.assignId(str, true);
+    final binary = (int value) {
+      var ret = 0;
+      var i = 0;
+      while (value > 0) {
+        final bit = (value / 10).ceil() > (value / 10).floor() ? 1 : 0;
+        value = value ~/ 10;
+        ret |= (bit << i);
+        i++;
+      }
+      return ret;
+    };
 
     // Basic functionality.
-    final expr = ctx.parse('2 * a(?a, ?b, 3 - 6 * 7) ^ (a + b)');
+    final expr = ctx
+        .parse('2 * a(?a, ?b, 3 - c(6, -7)) ^ (a + b)')
+        .evaluate(ctx.compute);
     expect(
         expr.toArray(),
         equals([
           // Multiply function, 2 args, content-length: 49
-          221356710, 4, id('*'), 2, 49,
+          137229168, 4, id('*'), 2, 49,
           /**/ // Integer with value 2
-          /**/ 5, 1, 2,
+          /**/ binary(1001), 1, 2,
           /**/ // Power function, 2 args, content-length: 41
-          /**/ 783138374, 4, id('^'), 2, 41,
+          /**/ 251831922, 4, id('^'), 2, 41,
           /****/ // a() function, 3 args, content-length: 25
-          /****/ 76988010, 4, id('a'), 3, 25,
+          /****/ 1004447222, 4, id('a'), 3, 25,
           /******/ // Generic ?a
           /******/ 412232228, 3, idg('a'),
           /******/ // Generic ?b
           /******/ 930637808, 3, idg('b'),
           /******/ // Subtract function, 2 args, content-length: 14
-          /******/ 265202872, 4, id('-'), 2, 14,
+          /******/ 975330728, 4, id('-'), 2, 14,
           /********/ // Integer with value 3
-          /********/ 7, 1, 3,
+          /********/ binary(1101), 1, 3,
           /********/ // Multiply function, 2 args, content-length: 6
-          /********/ 453715154, 4, id('*'), 2, 6,
+          /********/ 747787730, 4, id('c'), 2, 6,
           /**********/ // Integer with value 6
-          /**********/ 13, 1, 6,
-          /**********/ // Integer with value 7
-          /**********/ 15, 1, 7,
+          /**********/ binary(11001), 1, 6,
+          /**********/ // Integer with value -7
+          /**********/ binary(11111), 1, -7,
           /****/ // Addition function, 2 args, content-length: 6
           /****/ 427513450, 4, id('+'), 2, 6,
           /******/ // Symbol a

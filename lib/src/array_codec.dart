@@ -39,7 +39,13 @@ int _encodeExprArray(Expr input, List<int> target) {
     final value = input.value;
     if (value is int) {
       final data = [_exprArrayTypeInteger, value];
-      final hash = ((value << 1) & 0x3fffffff) | 0x1;
+      var hash = ((value.abs() << 2) & 0x3fffffff) | 0x1;
+
+      // Add sign bit.
+      if (value < 0) {
+        hash |= 0x2;
+      }
+
       target.add(hash);
       target.addAll(data);
       return hash;
