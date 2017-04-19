@@ -23,7 +23,7 @@ class LaTeXPrinter {
   /// Render LaTeX string from the given expression. Expressions that are not in
   /// the printer dictionary use [resolveName] and a generic function notation.
   ///
-  /// The render function figures out how to prevent uninteded side effects of
+  /// The render function figures out how to prevent unintended side effects of
   /// nested templates. Templates should be as compact as possible and not
   /// contain spaces etc.
   String render(Expr expr, ExprGetLabel resolveName, OperatorConfig ops) {
@@ -69,7 +69,7 @@ class LaTeXPrinter {
       final arg = expr.arguments[int.parse(match.group(1))];
       var str = render(arg, resolveName, ops);
 
-      // Additionaly formatting.
+      // Parentheses
       if (arg is FunctionExpr) {
         final op = ops.byId[expr.id];
         final pre = op != null ? op.precedenceLevel : 1;

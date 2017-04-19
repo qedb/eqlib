@@ -17,7 +17,7 @@ class ExprDiffBranch {
   ///
   /// When rearrangement is not possible, this list should be empty.
   /// Multiple rearrangements can be specified if different nested functions are
-  /// rearranged simulaneously.
+  /// rearranged simultaneously.
   final List<Rearrangement> rearrangements;
 
   /// Difference between each argument (if a and b are similar functions).

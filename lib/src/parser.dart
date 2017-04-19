@@ -212,7 +212,7 @@ Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
         }
 
         // We do NOT have to move the pointer here. By skipping characters
-        // untill we encountered a special character we are already at the next
+        // until we encountered a special character we are already at the next
         // token.
       }
     }
@@ -245,7 +245,7 @@ void _detectImplMul(W<int> opDist, int blockStartDist,
     // Note that we do NOT have to set the operator distance here. We
     // can set it to 1: since we have added an operator and are already
     // processing the next token, the distance is equal to 1.
-    // However, this is not neccesary since opDist is only used to check
+    // However, this is not necessary since opDist is only used to check
     // if the distance is not equal to one, and once it leaves this loop
     // it will be incremented to 2. It is not possible for the operator
     // distance to be 0 at this point.

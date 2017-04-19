@@ -26,7 +26,7 @@ void main() {
         equals(lim(d(x), 0, (a(x + d(x)) * b(x + d(x)) - a(x) * b(x)) / d(x))));
   });
 
-  test('Various staments related to generic function argument inference', () {
+  test('Generic function argument inference exceptions', () {
     expect(
         () =>
             ctx.parse('f(x)+g(x)').substitute(ctx.parseRule('?a(?b)+?a(?c)=d')),

@@ -7,7 +7,7 @@ library eqlib.utils;
 /// Object wrapper
 class W<T> {
   T v;
-  W(T intial) : v = intial;
+  W(this.v);
 }
 
 /// Simple 2 object tuple.

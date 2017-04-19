@@ -26,7 +26,7 @@ void main() {
   test('Expr.hashCode', () {
     expect(ctx.parse('a * b * 2').hashCode, equals((a * b * 2).hashCode));
 
-    // Vaildate hashCodes across different expression types.
+    // Validate hashCodes across different expression types.
     expect(new NumberExpr(10).hashCode,
         isNot(new FunctionExpr(10, false, []).hashCode));
   });

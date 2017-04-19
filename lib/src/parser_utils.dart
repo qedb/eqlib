@@ -27,7 +27,7 @@ class StringReader {
   /// Test if the current character is contained in the given array.
   bool currentOneOf(List<int> array) => !eof && array.contains(current);
 
-  /// Skip all charcters that match the given condition.
+  /// Skip all characters that match the given condition.
   void skip(bool condition(int char)) {
     while (checkCurrent(condition)) {
       next();

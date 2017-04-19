@@ -5,11 +5,11 @@
 part of eqlib.latex;
 
 /// All LaTeX parsing stuff is wrapped in this class to not pollute the global
-/// namespace, and to delay some initialization untill the class is constructed.
+/// namespace, and to delay some initialization until the class is constructed.
 class LaTeXParser {
   /// Substitution rules to pre-process LaTeX for parsing.
   ///
-  /// Optional arguments are not processed seperatecly (e.g. `\sqrt[3]`).
+  /// Optional arguments are not processed separately (e.g. `\sqrt[3]`).
   ///
   /// The following special operators are present after processing:
   /// - A `=` operator (for example in sums or integrals), this operator has a
