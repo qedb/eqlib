@@ -187,7 +187,7 @@ class FunctionExpr extends Expr {
     final output = new List<Expr>();
     for (final value in format) {
       if (value == -1) {
-        // Get last N arguments.
+        // Get last [argc] arguments from stack.
         final args = new List<Expr>.generate(argc, (_) => output.removeLast())
             .reversed
             .toList();

@@ -82,6 +82,8 @@ void main() {
         ctx.parse('b * (c * ((f + (e + d)) * a))'), rearrangeableIds);
     final diff2 = getExpressionDiff(ctx.parse('a * (b * c * (d + e + f))'),
         ctx.parse('a * (c * ((f + (e + d)) * b))'), rearrangeableIds);
+    final diff3 = getExpressionDiff(ctx.parse('b * a + c * a'),
+        ctx.parse('a * b + a * c'), rearrangeableIds);
     expect(
         diff1.branch.rearrangements,
         equals([
@@ -97,6 +99,13 @@ void main() {
           new Rearrangement.at(6, [2, 1, 0, -1]),
           // [0:b, 1:c, 2:def] => [c:1, [def:2, b:0]]
           new Rearrangement.at(2, [1, 2, 0, -1])
+        ]));
+    expect(
+        diff3.branch.rearrangements,
+        equals([
+          new Rearrangement.at(4, [1, 0]),
+          new Rearrangement.at(1, [1, 0]),
+          new Rearrangement.at(0, [0, 1])
         ]));
 
     final shouldFail = getExpressionDiff(ctx.parse('a * b * c * ((d + e) + f)'),

@@ -85,10 +85,14 @@ ExprDiffResult getExpressionDiff(Expr a, Expr b, List<int> rearrangeableIds,
   }
 
   // Basic return object.
+  // The rearrangement positions are reversed so that there are no conflicts
+  // when the rearrangements are executed sequentially.
   final result = new ExprDiffResult(
       branch: new ExprDiffBranch(position, a, b,
           rearrangements:
-              _computeRearrangement(position, a, b, rearrangeableIds)));
+              _computeRearrangement(position, a, b, rearrangeableIds)
+                  .reversed
+                  .toList()));
 
   // If a rearrangement resolves this branch, there is no need to compare
   // individual arguments.
@@ -185,7 +189,7 @@ List<Rearrangement> _computeRearrangement(
       }
     }
 
-    result.add(new Rearrangement.at(position, format));
+    result.insert(0, new Rearrangement.at(position, format));
     return result;
   } else {
     return [];
