@@ -8,6 +8,7 @@ import 'dart:math';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:tuple/tuple.dart';
 import 'package:eqlib/utils.dart';
 import 'package:eqlib/exceptions.dart';
 import 'package:collection/collection.dart';

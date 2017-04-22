@@ -85,14 +85,10 @@ ExprDiffResult getExpressionDiff(Expr a, Expr b, List<int> rearrangeableIds,
   }
 
   // Basic return object.
-  // The rearrangement positions are reversed so that there are no conflicts
-  // when the rearrangements are executed sequentially.
   final result = new ExprDiffResult(
       branch: new ExprDiffBranch(position, a, b,
           rearrangements:
-              _computeRearrangement(position, a, b, rearrangeableIds)
-                  .reversed
-                  .toList()));
+              _computeRearrangement(position, a, b, rearrangeableIds)));
 
   // If a rearrangement resolves this branch, there is no need to compare
   // individual arguments.
@@ -140,15 +136,17 @@ List<Rearrangement> _computeRearrangement(
       a.id == b.id) {
     // If only one argument is actually different, return the rearrangement of
     // this argument.
-    final different = new List<int>();
+    final different = new List<Tuple2<int, int>>();
+    var distanceSum = 1;
     for (var i = 0; i < a.arguments.length; i++) {
       if (a.arguments[i] != b.arguments[i]) {
-        different.add(i);
+        different.add(new Tuple2<int, int>(i, distanceSum));
       }
+      distanceSum += a.arguments[i].size;
     }
     if (different.length == 1) {
-      final argi = different[0];
-      final distance = a.search(a.arguments[argi]).single;
+      final argi = different[0].item1;
+      final distance = different[0].item2;
       return _computeRearrangement(position + distance, a.arguments[argi],
           b.arguments[argi], rearrangeableIds);
     }
@@ -157,39 +155,44 @@ List<Rearrangement> _computeRearrangement(
 
     // Build child map.
     final map = new Map<int, List<int>>();
-    final aChildren = a._getChildren();
+    final aChildren = a.getChildren();
     for (var i = 0; i < aChildren.length; i++) {
-      final hash = _computeRearrangeableHash(aChildren[i], rearrangeableIds);
+      final hash =
+          _computeRearrangeableHash(aChildren[i].expr, rearrangeableIds);
       map.putIfAbsent(hash, () => new List<int>());
       map[hash].add(i);
     }
 
     // Iterate over children in b and construct a rearrangement format.
-    final bChildren = b._getChildren(true);
+    final bChildren = b.getChildren(true);
     final format = new List<int>();
     for (final bChild in bChildren) {
-      final hash = _computeRearrangeableHash(bChild, rearrangeableIds);
       if (bChild == null) {
         format.add(-1);
-      } else if (map.containsKey(hash) && map[hash].isNotEmpty) {
-        format.add(map[hash].removeAt(0));
-
-        // Check if expressions are different. If this is the case, then a
-        // rearrangement cycle must be inserted before the current one.
-        final aChild = aChildren[format.last];
-        if (aChild != bChild) {
-          final distanceToChild = a.search(aChild).single;
-          final preArrangement = _computeRearrangement(
-              position + distanceToChild, aChild, bChild, rearrangeableIds);
-          result.addAll(preArrangement);
-        }
       } else {
-        // Mismatch: expression a cannot be rearranged into expression b.
-        return [];
+        final hash = _computeRearrangeableHash(bChild.expr, rearrangeableIds);
+        if (map.containsKey(hash) && map[hash].isNotEmpty) {
+          format.add(map[hash].removeAt(0));
+
+          // Check if expressions are different. If this is the case, then a
+          // rearrangement cycle must be inserted before the current one.
+          final aChild = aChildren[format.last];
+          if (aChild.expr != bChild.expr) {
+            final preArrangement = _computeRearrangement(
+                position + aChild.distance,
+                aChild.expr,
+                bChild.expr,
+                rearrangeableIds);
+            result.addAll(preArrangement);
+          }
+        } else {
+          // Mismatch: expression a cannot be rearranged into expression b.
+          return [];
+        }
       }
     }
 
-    result.insert(0, new Rearrangement.at(position, format));
+    result.add(new Rearrangement.at(position, format));
     return result;
   } else {
     return [];
@@ -201,8 +204,8 @@ List<Rearrangement> _computeRearrangement(
 int _computeRearrangeableHash(Expr expr, List<int> rearrangeableIds) {
   if (expr is FunctionExpr && rearrangeableIds.contains(expr.id)) {
     final children = expr
-        ._getChildren()
-        .map((child) => _computeRearrangeableHash(child, rearrangeableIds))
+        .getChildren()
+        .map((child) => _computeRearrangeableHash(child.expr, rearrangeableIds))
         .toList();
     children.sort();
     return jPostprocess(

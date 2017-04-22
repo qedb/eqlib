@@ -7,4 +7,5 @@ environment:
   sdk:        '>=1.8.0 <2.0.0'
 dependencies:
   test:       ^0.12.15+11
+  tuple:      ^1.0.1
   collection: ^1.13.0

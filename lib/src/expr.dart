@@ -67,6 +67,9 @@ abstract class Expr {
   /// Convert expression to flat structure.
   List<Expr> flatten();
 
+  /// Get expression size (mainly used for distance compuation).
+  int get size => flatten().length;
+
   /// Get all function IDs in this expression.
   Set<int> get functionIds {
     final target = new Set<int>();

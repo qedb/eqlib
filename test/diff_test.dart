@@ -78,12 +78,14 @@ void main() {
   });
 
   test('Rearrange expressions', () {
-    final diff1 = getExpressionDiff(ctx.parse('a * b * c * (d + e + f)'),
+    final diff1 = getExpressionDiff(ctx.parse('a * b * (c * (d + e + f))'),
         ctx.parse('b * (c * ((f + (e + d)) * a))'), rearrangeableIds);
     final diff2 = getExpressionDiff(ctx.parse('a * (b * c * (d + e + f))'),
         ctx.parse('a * (c * ((f + (e + d)) * b))'), rearrangeableIds);
-    final diff3 = getExpressionDiff(ctx.parse('b * a + c * a'),
-        ctx.parse('a * b + a * c'), rearrangeableIds);
+    final diff3 = getExpressionDiff(ctx.parse('?b * ?a + ?c * ?a'),
+        ctx.parse('?a * ?b + ?a * ?c'), rearrangeableIds);
+    final diff4 = getExpressionDiff(ctx.parse('?b * ?a + ?c * ?a * ?d * ?e'),
+        ctx.parse('?a * ?b + ?e * ?d * ?a * ?c'), rearrangeableIds);
     expect(
         diff1.branch.rearrangements,
         equals([
@@ -103,8 +105,16 @@ void main() {
     expect(
         diff3.branch.rearrangements,
         equals([
-          new Rearrangement.at(4, [1, 0]),
           new Rearrangement.at(1, [1, 0]),
+          new Rearrangement.at(4, [1, 0]),
+          new Rearrangement.at(0, [0, 1])
+        ]));
+    expect(
+        diff4.branch.rearrangements,
+        equals([
+          new Rearrangement.at(1, [1, 0]),
+          // [c:0, a:1, d:2, e:3] => [[[e:3, d:2], a:1], c:0]
+          new Rearrangement.at(4, [3, 2, -1, 1, -1, 0]),
           new Rearrangement.at(0, [0, 1])
         ]));
 

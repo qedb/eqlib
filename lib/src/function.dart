@@ -180,7 +180,7 @@ class FunctionExpr extends Expr {
     final argc = arguments.length;
 
     /// Retrieve rearrangeable children.
-    final children = _getChildren();
+    final children = getChildren();
     final used = new Set<int>();
 
     /// Render resulting format.
@@ -196,7 +196,7 @@ class FunctionExpr extends Expr {
         output.add(new FunctionExpr(id, _generic, args));
       } else {
         if (value >= 0 && value < children.length && used.add(value)) {
-          output.add(children[value]);
+          output.add(children[value].expr);
         } else {
           throw new EqLibException('illegal value');
         }
@@ -213,19 +213,24 @@ class FunctionExpr extends Expr {
 
   /// Used by [_rearrangeArguments].
   /// Returns low level children (descends functions with same ID).
-  List<Expr> _getChildren([bool terminateFunctionsWithNull = false]) {
-    final children = new List<Expr>();
+  List<FunctionChild> getChildren([bool terminateFunctionsWithNull = false]) {
+    final children = new List<FunctionChild>();
+    var distanceSum = 1;
     for (final arg in arguments) {
       if (arg is FunctionExpr && arg.id == id) {
-        children.addAll(arg._getChildren(terminateFunctionsWithNull));
+        final subchildren = arg.getChildren(terminateFunctionsWithNull);
+        children.addAll(subchildren.map((child) => child != null
+            ? new FunctionChild(child.expr, distanceSum + child.distance)
+            : null));
         if (terminateFunctionsWithNull) {
           // This is a bit of a dirty trick, but it allows linear construction
           // of the rearrange format data in [_computeRearrangement].
           children.add(null);
         }
       } else {
-        children.add(arg);
+        children.add(new FunctionChild(arg, distanceSum));
       }
+      distanceSum += arg.size;
     }
     return children;
   }
@@ -255,4 +260,11 @@ class FunctionExpr extends Expr {
 
     return new FunctionExpr(id, _generic, newArguments);
   }
+}
+
+/// Data for [FunctionExpr.getChildren].
+class FunctionChild {
+  final Expr expr;
+  final int distance;
+  FunctionChild(this.expr, this.distance);
 }
