@@ -191,7 +191,7 @@ Expr substituteRecursive(
     expr = expr.evaluate(compute);
 
     // Substitute terminators.
-    while (n > 0) {
+    do {
       final nextPosition = expr.search(terminator.left, 1);
       if (nextPosition.isNotEmpty) {
         expr = expr.substituteAt(terminator, nextPosition.first);
@@ -199,7 +199,7 @@ Expr substituteRecursive(
       } else {
         break;
       }
-    }
+    } while (n > 0);
   }
 
   return expr;
