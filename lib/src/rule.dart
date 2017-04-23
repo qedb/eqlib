@@ -15,8 +15,6 @@ class Rule {
   @override
   int get hashCode => hashCode2(left, right);
 
-  bool get isDifferent => left == right;
-
   /// Get inverted rule (not a deep copy).
   Rule get inverted => new Rule(right, left);
 }

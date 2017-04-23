@@ -82,4 +82,12 @@ void main() {
     expect(rearrangement.position, isNull);
     expect(rearrangement.format, isNull);
   });
+
+  test('Rule class', () {
+    final a = ctx.parseRule('a + b = b + a');
+    final b = ctx.parseRule('b + a = a + b');
+
+    expect(a, equals(b.inverted));
+    expect(a.hashCode, equals(b.inverted.hashCode));
+  });
 }

@@ -49,8 +49,8 @@ void main() {
                 1, false, new List.generate(65537, (_) => new NumberExpr(1)))
             .toBase64(),
         throwsArgumentError);
-    expect(() => new FunctionExpr(4294967296, false, []).toBase64(),
-        throwsArgumentError);
+    expect(
+        () => new FunctionExpr(-1, false, []).toBase64(), throwsArgumentError);
     expect(() => new NumberExpr(2147483648).toBase64(), throwsArgumentError);
   });
 
