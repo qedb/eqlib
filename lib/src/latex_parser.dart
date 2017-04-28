@@ -104,30 +104,7 @@ class LaTeXParser {
   final parsedRules = new List<Rule>();
 
   LaTeXParser(ExprContextLabelResolver resolver) {
-    final id = (String str) => resolver.assignId(str, false);
-
-    // Load default operator configuration.
-    operators
-      ..add(new Operator(
-          id('='), 0, Associativity.rtl, char('='), OperatorType.infix))
-      ..add(new Operator(
-          id('+'), 1, Associativity.ltr, char('+'), OperatorType.infix))
-      ..add(new Operator(
-          id('-'), 1, Associativity.ltr, char('-'), OperatorType.infix))
-      ..add(new Operator(
-          id('*'), 2, Associativity.ltr, char('*'), OperatorType.infix))
-      ..add(new Operator(
-          id('/'), 2, Associativity.ltr, char('/'), OperatorType.infix))
-      ..add(new Operator(
-          id('^'), 3, Associativity.rtl, char('^'), OperatorType.infix))
-      ..add(new Operator(
-          id('~'), 4, Associativity.rtl, char('~'), OperatorType.prefix))
-      ..add(new Operator(
-          id('!'), 5, Associativity.ltr, char('!'), OperatorType.postfix))
-      ..add(new Operator(
-          id('_'), 6, Associativity.ltr, char('_'), OperatorType.infix))
-      ..add(new Operator(operators.implicitMultiplyId, 2, Associativity.ltr, -1,
-          OperatorType.infix));
+    setOperators(operators, resolver.assignId);
 
     // Add variations of basic trigonometry functions to [allFunctions].
     allFunctions.addAll(generateList<String>(basicTrigFunctions.length, [
@@ -153,6 +130,34 @@ class LaTeXParser {
           parseExpression(
               '${allFunctions[i]}(?a)^?e', operators, resolver.assignId))
     ]));
+  }
+
+  /// Static method to get LaTeX operators.
+  static void setOperators(OperatorConfig operators, ExprAssignId assignId) {
+    final id = (String str) => assignId(str, false);
+
+    // Load default operator configuration.
+    operators
+      ..add(new Operator(
+          id('='), 1, Associativity.rtl, char('='), OperatorType.infix))
+      ..add(new Operator(
+          id('+'), 2, Associativity.ltr, char('+'), OperatorType.infix))
+      ..add(new Operator(
+          id('-'), 2, Associativity.ltr, char('-'), OperatorType.infix))
+      ..add(new Operator(
+          id('*'), 3, Associativity.ltr, char('*'), OperatorType.infix))
+      ..add(new Operator(
+          id('/'), 3, Associativity.ltr, char('/'), OperatorType.infix))
+      ..add(new Operator(
+          id('^'), 4, Associativity.rtl, char('^'), OperatorType.infix))
+      ..add(new Operator(
+          id('~'), 5, Associativity.rtl, char('~'), OperatorType.prefix))
+      ..add(new Operator(
+          id('!'), 6, Associativity.ltr, char('!'), OperatorType.postfix))
+      ..add(new Operator(
+          id('_'), 7, Associativity.ltr, char('_'), OperatorType.infix))
+      ..add(new Operator(operators.implicitMultiplyId, 3, Associativity.ltr, -1,
+          OperatorType.infix));
   }
 
   /// Operator configuration for parsing LaTeX.

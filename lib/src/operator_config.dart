@@ -10,7 +10,10 @@ enum OperatorType { prefix, infix, postfix }
 class Operator {
   final int id;
   final int char;
+
+  /// As a convention this should always be a positive integer.
   final int precedenceLevel;
+
   final Associativity associativity;
   final OperatorType operatorType;
 

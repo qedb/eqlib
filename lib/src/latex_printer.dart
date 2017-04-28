@@ -4,20 +4,34 @@
 
 part of eqlib.latex;
 
+class _LaTeXRenderData {
+  final String tex;
+  final int leftBoundaryPre;
+  final int rightBoundaryPre;
+
+  _LaTeXRenderData(this.tex,
+      [this.leftBoundaryPre = -1, this.rightBoundaryPre = -1]);
+}
+
 /// LaTeX Expr printer
 class LaTeXPrinter {
   final dict = new Map<int, String>();
 
   void addDefaultEntries(ExprContextLabelResolver res) {
     final id = (String str) => res.assignId(str, false);
-    dict[id('+')] = r'$0+$1';
-    dict[id('-')] = r'$0-$1';
-    dict[id('*')] = r'$0~$1';
+    dict[id('+')] = r'$(0+)+$(+1)';
+    dict[id('-')] = r'$(0-)-$(-1)';
+    dict[id('*')] = r'$(0*)$(*1)';
     dict[id('/')] = r'\frac{$0}{$1}';
-    dict[id('^')] = r'$0^{$1}';
-    dict[id('~')] = r'-$0';
-    dict[id('!')] = r'$0!';
-    dict[id('_')] = r'$0_{$1}';
+    dict[id('^')] = r'$(0^)^{$1}';
+    dict[id('~')] = r'-$(~0)';
+    dict[id('!')] = r'$(0!)!';
+    dict[id('_')] = r'$(0_)_{$1}';
+  }
+
+  /// Public alias for [_render].
+  String render(Expr expr, ExprGetLabel resolveName, OperatorConfig ops) {
+    return _render(expr, resolveName, ops).tex;
   }
 
   /// Render LaTeX string from the given expression. Expressions that are not in
@@ -26,10 +40,11 @@ class LaTeXPrinter {
   /// The render function figures out how to prevent unintended side effects of
   /// nested templates. Templates should be as compact as possible and not
   /// contain spaces etc.
-  String render(Expr expr, ExprGetLabel resolveName, OperatorConfig ops) {
+  _LaTeXRenderData _render(
+      Expr expr, ExprGetLabel resolveName, OperatorConfig ops) {
     // Numbers
     if (expr is NumberExpr) {
-      return expr.value.toString();
+      return new _LaTeXRenderData(expr.value.toString());
     }
 
     // Functions
@@ -40,19 +55,19 @@ class LaTeXPrinter {
       } else {
         final genericPrefix = expr.isGeneric ? r'{}_\text{?}' : '';
         if (!expr.isSymbol) {
-          final args = new List<String>.generate(expr.arguments.length,
-              (i) => render(expr.arguments[i], resolveName, ops)).join(r',\,');
-
-          return [
+          return new _LaTeXRenderData([
             genericPrefix,
             r'\text{',
             resolveName(expr.id),
             r'}{\left(',
-            args,
+            new List<String>.generate(expr.arguments.length,
+                    (i) => render(expr.arguments[i], resolveName, ops))
+                .join(r',\,'),
             r'\right)}'
-          ].join();
+          ].join());
         } else {
-          return [genericPrefix, resolveName(expr.id)].join();
+          return new _LaTeXRenderData(
+              [genericPrefix, resolveName(expr.id)].join());
         }
       }
     } else {
@@ -62,25 +77,45 @@ class LaTeXPrinter {
 
   /// Render template string.
   /// Borrows functionality from [SimpleExprContext.formatExplicitParentheses].
-  String _renderTemplate(
+  _LaTeXRenderData _renderTemplate(
       FunctionExpr expr, ExprGetLabel resolveName, OperatorConfig ops) {
     assert(dict.containsKey(expr.id));
-    return dict[expr.id].replaceAllMapped(new RegExp(r'\$(\d+)'), (match) {
-      final arg = expr.arguments[int.parse(match.group(1))];
-      var str = render(arg, resolveName, ops);
+    final argRegex = new RegExp(r'\$(?:(\d+)|\(([^\d]?)(\d+)([^\d]?)\))');
+
+    var leftBoundaryPre = -1;
+    var rightBoundaryPre = -1;
+    final tex = dict[expr.id].replaceAllMapped(argRegex, (match) {
+      final nr = match.group(1) ?? match.group(3);
+      final arg = expr.arguments[int.parse(nr)];
+      final argData = _render(arg, resolveName, ops);
+      var tex = argData.tex;
 
       // Parentheses
-      if (arg is FunctionExpr) {
-        final op = ops.byId[expr.id];
-        final pre = op != null ? op.precedenceLevel : 1;
+      final g2 = match.group(2);
+      final g4 = match.group(4);
+      final opChar = g2 != null && g2.isNotEmpty ? g2 : g4;
+      if (opChar != null && opChar.isNotEmpty) {
+        final op = ops.byChar[char(opChar)];
+        final pre = op.precedenceLevel;
+        final direction = opChar == g2 ? Associativity.ltr : Associativity.rtl;
 
-        // Format opening and closing arguments with explicit parentheses.
+        // Proceed with adding parentheses if the argument is an operator or
+        // has colliding boundaries.
+        if (arg is FunctionExpr && ops.byId.containsKey(arg.id)) {
+          tex = SimpleExprContext.formatExplicitParentheses(
+              r'\left(', r'\right)', arg, tex, pre, direction, ops);
+        } else if ((argData.leftBoundaryPre > 0 &&
+                argData.leftBoundaryPre <= pre) ||
+            (argData.rightBoundaryPre > 0 && argData.rightBoundaryPre <= pre)) {
+          tex = '\\left($tex\\right)';
+        }
+
+        // Propagate boundary settings.
+        // Also check if we just added parentheses.
         if (match.start == 0) {
-          str = SimpleExprContext.formatExplicitParentheses(
-              r'\left(', r'\right)', arg, str, pre, Associativity.rtl, ops);
+          leftBoundaryPre = pre;
         } else if (match.end == match.input.length) {
-          str = SimpleExprContext.formatExplicitParentheses(
-              r'\left(', r'\right)', arg, str, pre, Associativity.ltr, ops);
+          rightBoundaryPre = pre;
         }
       }
 
@@ -89,13 +124,17 @@ class LaTeXPrinter {
       // with commands).
       if (match.start > 0) {
         final letter = new RegExp(r'[A-Za-z]');
+        // Check character in input before this argument and the first character
+        // of this argument.
         if (letter.hasMatch(match.input[match.start - 1]) &&
-            letter.hasMatch(str[0])) {
-          str = ' $str';
+            letter.hasMatch(tex[0])) {
+          tex = ' $tex';
         }
       }
 
-      return str;
+      return tex;
     });
+
+    return new _LaTeXRenderData(tex, leftBoundaryPre, rightBoundaryPre);
   }
 }
