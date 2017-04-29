@@ -194,15 +194,15 @@ Expr substituteRecursive(
     expr = expr.evaluate(compute);
 
     // Substitute terminators.
-    do {
-      final nextPosition = expr.search(terminator.left, 1);
-      if (nextPosition.isNotEmpty) {
-        expr = expr.substituteAt(terminator, nextPosition.first);
-        n--;
-      } else {
+    var nextPosition = expr.search(terminator.left, 1);
+    while (nextPosition.isNotEmpty) {
+      expr = expr.substituteAt(terminator, nextPosition.first);
+      nextPosition = expr.search(terminator.left, 1);
+      n--;
+      if (n == 0) {
         break;
       }
-    } while (n > 0);
+    }
   }
 
   return expr;
