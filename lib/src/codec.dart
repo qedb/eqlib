@@ -82,6 +82,13 @@ class ExprCodecData {
     headerDimensions[2] = functionCount;
     headerDimensions[3] = genericCount;
 
+    // Check for type overflow.
+    if (integers.any((i) => i < -2147483648 || i > 2147483647) ||
+        functionIds.any((i) => i < 0 || i > 4294967295) ||
+        functionArgcs.any((i) => i < 0 || i > 65536)) {
+      throw new ArgumentError('data overflow');
+    }
+
     var offset = 8;
     final floatView = new Float64List.view(buffer, offset, floatCount);
     floatView.setAll(0, floatingPoints);
@@ -105,10 +112,6 @@ class ExprCodecData {
 
   void storeNumber(num value) {
     if (value is int) {
-      if (value < -2147483648 || value > 2147483647) {
-        throw new ArgumentError.value(
-            value, 'value', 'must be [-2147483648, 2147483647]');
-      }
       if (!integers.contains(value)) {
         integers.add(value);
       }
@@ -128,23 +131,18 @@ class ExprCodecData {
   }
 
   void storeFunction(int id, int argc, bool generic) {
-    if (id >= 0 && argc <= 65536) {
-      final idx = functionIds.indexOf(id);
-      if (idx == -1) {
-        if (generic) {
-          functionIds.insert(genericCount, id);
-          functionArgcs.insert(genericCount, argc);
-          genericCount++;
-        } else {
-          functionIds.add(id);
-          functionArgcs.add(argc);
-        }
-      } else if (functionArgcs[idx] != argc ||
-          generic != (idx < genericCount)) {
-        throw new ArgumentError('conflicting functions');
+    final idx = functionIds.indexOf(id);
+    if (idx == -1) {
+      if (generic) {
+        functionIds.insert(genericCount, id);
+        functionArgcs.insert(genericCount, argc);
+        genericCount++;
+      } else {
+        functionIds.add(id);
+        functionArgcs.add(argc);
       }
-    } else {
-      throw new ArgumentError('data overflow');
+    } else if (functionArgcs[idx] != argc || generic != (idx < genericCount)) {
+      throw new ArgumentError('conflicting functions');
     }
   }
 

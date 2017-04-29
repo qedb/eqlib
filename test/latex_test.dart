@@ -62,10 +62,13 @@ void main() {
       'a + b + c': r'a+b+c',
       'celcius(10)': r'10^\circ',
       'celcius(a+10)': r'\left(a+10\right)^\circ',
+      'celcius(10)*2': r'10^\circ2',
+      '2*celcius(10)': r'2\left(10^\circ\right)',
       'delta(1+x)+sin(a)^2': r'\Delta\left(1+x\right)+\left(\sin a\right)^{2}',
       'delta(2x)+sin(2a)^2': r'\Delta2x+\left(\sin2a\right)^{2}',
       'int(0,1,x^2+2x+1,1/x)*2':
           r'\left(\int_{0}^{1}x^{2}+2x+1~\text{d}\frac{1}{x}\right)2',
+      '2*int(0,1,x^2+2x+1,1/x)': r'2\int_{0}^{1}x^{2}+2x+1~\text{d}\frac{1}{x}',
       'int(0,1,x^2+2x+1,1/x+1)*2':
           r'\left(\int_{0}^{1}x^{2}+2x+1~\text{d}\left(\frac{1}{x}+1\right)\right)2',
       'diff(x+1, x+2)*2':

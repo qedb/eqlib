@@ -104,9 +104,12 @@ class LaTeXPrinter {
         if (arg is FunctionExpr && ops.byId.containsKey(arg.id)) {
           tex = SimpleExprContext.formatExplicitParentheses(
               r'\left(', r'\right)', arg, tex, pre, direction, ops);
-        } else if ((argData.leftBoundaryPre > 0 &&
+        } else if ((direction == Associativity.ltr &&
+                argData.leftBoundaryPre > 0 &&
                 argData.leftBoundaryPre <= pre) ||
-            (argData.rightBoundaryPre > 0 && argData.rightBoundaryPre <= pre)) {
+            (direction == Associativity.rtl &&
+                argData.rightBoundaryPre > 0 &&
+                argData.rightBoundaryPre <= pre)) {
           tex = '\\left($tex\\right)';
         }
 
