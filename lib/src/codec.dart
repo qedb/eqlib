@@ -128,7 +128,7 @@ class ExprCodecData {
   }
 
   void storeFunction(int id, int argc, bool generic) {
-    if (id >= 0 && id <= 4294967295 && argc <= 65536) {
+    if (id >= 0 && argc <= 65536) {
       final idx = functionIds.indexOf(id);
       if (idx == -1) {
         if (generic) {

@@ -50,6 +50,7 @@ void main() {
     printer.dict[id('int')] = r'\int_{$0}^{$1}$2~\text{d}$(3*)';
     printer.dict[id('sin')] = r'\sin$(0*)';
     printer.dict[id('delta')] = r'\Delta$(0*)';
+    printer.dict[id('celcius')] = r'$(0*)^\circ';
 
     final tests = {
       '(a + -5) ^ (b * c)': r'\left(a+-5\right)^{bc}',
@@ -59,6 +60,8 @@ void main() {
       '-1 ^ 2': r'-1^{2}',
       '---a': r'---a',
       'a + b + c': r'a+b+c',
+      'celcius(10)': r'10^\circ',
+      'celcius(a+10)': r'\left(a+10\right)^\circ',
       'delta(1+x)+sin(a)^2': r'\Delta\left(1+x\right)+\left(\sin a\right)^{2}',
       'delta(2x)+sin(2a)^2': r'\Delta2x+\left(\sin2a\right)^{2}',
       'int(0,1,x^2+2x+1,1/x)*2':
