@@ -21,6 +21,9 @@ class _LaTeXRenderData {
 
 /// LaTeX Expr printer
 class LaTeXPrinter {
+  static var leftParenthesis = r'\left(';
+  static var rightParenthesis = r'\right)';
+
   final ExprContext ctx;
   final dict = new Map<int, LaTeXTemplate>();
 
@@ -191,9 +194,9 @@ class LaTeXPrinter {
 
         // Add result to parts.
         if (useParentheses) {
-          parts.add(r'\left(');
+          parts.add(leftParenthesis);
           parts.add(rendered.tex);
-          parts.add(r'\right)');
+          parts.add(rightParenthesis);
 
           // Since we added parentheses, we clear all flags indicating possible
           // collisions.
