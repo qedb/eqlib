@@ -65,6 +65,10 @@ class LaTeXTemplate {
   final bool noParamBefore, noParamAfter;
 
   LaTeXTemplate.fromTokens(this.tokens, this.noParamBefore, this.noParamAfter);
+
+  /// Count number of parameters.
+  int get parameterCount =>
+      tokens.where((token) => token.paramIndex != -1).length;
 }
 
 LaTeXTemplate parseLaTeXTemplate(String input, OperatorConfig ops) {
