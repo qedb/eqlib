@@ -11,8 +11,8 @@ import 'dummy_expr.dart';
 void main() {
   final ctx = new SimpleExprContext();
   final parser = new LaTeXParser(ctx.labelResolver);
-  final printer = new LaTeXPrinter(ctx);
-  printer.addDefaultEntries();
+  final printer = new LaTeXPrinter(ctx.labelResolver.getLabel, ctx.operators);
+  printer.addDefaultEntries(ctx.labelResolver.assignId);
 
   // Helper.
   final ops = new OperatorConfig(0);

@@ -24,17 +24,18 @@ class LaTeXPrinter {
   static var leftParenthesis = r'\left(';
   static var rightParenthesis = r'\right)';
 
-  final ExprContext ctx;
+  final ExprGetLabel getLabel;
+  final OperatorConfig operators;
   final dict = new Map<int, LaTeXTemplate>();
 
-  LaTeXPrinter(this.ctx);
+  LaTeXPrinter(this.getLabel, this.operators);
 
   void addTemplate(int functionId, String template) {
-    dict[functionId] = parseLaTeXTemplate(template, ctx.operators);
+    dict[functionId] = parseLaTeXTemplate(template, operators);
   }
 
-  void addDefaultEntries() {
-    final id = (String str) => ctx.labelResolver.assignId(str, false);
+  void addDefaultEntries(ExprAssignId assignId) {
+    final id = (String str) => assignId(str, false);
     addTemplate(id('+'), r'${.0}+${1(+).}');
     addTemplate(id('-'), r'${.0}-${2(+).}');
     addTemplate(id('*'), r'${.0(+):}${:1(*).}');
@@ -51,7 +52,7 @@ class LaTeXPrinter {
   }
 
   /// Render LaTeX string from the given expression. Expressions that are not in
-  /// the printer dictionary use the [ctx] label resolver and a generic function
+  /// the printer dictionary use the label resolver and a generic function
   /// notation.
   ///
   /// The render function figures out how to prevent unintended side effects of
@@ -61,8 +62,8 @@ class LaTeXPrinter {
     // Numbers
     if (expr is NumberExpr) {
       if (expr.value < 0) {
-        return _render(new FunctionExpr(ctx.operators.byChar[char('~')].id,
-            false, [new NumberExpr(expr.value.abs())]));
+        return _render(new FunctionExpr(operators.byChar[char('~')].id, false,
+            [new NumberExpr(expr.value.abs())]));
       } else {
         return new _LaTeXRenderData(expr.value.toString(), true, true);
       }
@@ -79,7 +80,7 @@ class LaTeXPrinter {
           return new _LaTeXRenderData([
             genericPrefix,
             r'\text{',
-            ctx.labelResolver.getLabel(expr.id),
+            getLabel(expr.id),
             r'}{\left(',
             new List<String>.generate(
                     expr.arguments.length, (i) => render(expr.arguments[i]))
@@ -88,7 +89,7 @@ class LaTeXPrinter {
           ].join());
         } else {
           return new _LaTeXRenderData(
-              [genericPrefix, ctx.labelResolver.getLabel(expr.id)].join());
+              [genericPrefix, getLabel(expr.id)].join());
         }
       }
     } else {
@@ -151,8 +152,8 @@ class LaTeXPrinter {
 
         // 1
         if (argument is FunctionExpr &&
-            ctx.operators.byId.containsKey(argument.id) &&
-            ctx.operators.byId[argument.id].precedenceLevel <=
+            operators.byId.containsKey(argument.id) &&
+            operators.byId[argument.id].precedenceLevel <=
                 token.parenthesesPriority) {
           useParentheses = true;
         }
@@ -173,8 +174,8 @@ class LaTeXPrinter {
         }
 
         // 4
-        else if (ctx.operators.byId.containsKey(expr.id)) {
-          final opPre = ctx.operators.byId[expr.id].precedenceLevel;
+        else if (operators.byId.containsKey(expr.id)) {
+          final opPre = operators.byId[expr.id].precedenceLevel;
           if (token.paramLeftBaseline &&
               rendered.rightFacingPrecedence != -1 &&
               rendered.rightFacingPrecedence < opPre) {
