@@ -6,68 +6,86 @@ part of eqlib.latex;
 
 class _LaTeXRenderData {
   final String tex;
-  final int leftBoundaryPre;
-  final int rightBoundaryPre;
+  final bool startsWithInteger, endsWithInteger;
+  final bool noParamBefore, noParamAfter;
+  final int leftFacingPrecedence, rightFacingPrecedence;
 
   _LaTeXRenderData(this.tex,
-      [this.leftBoundaryPre = -1, this.rightBoundaryPre = -1]);
+      [this.startsWithInteger = false,
+      this.endsWithInteger = false,
+      this.noParamBefore = false,
+      this.noParamAfter = false,
+      this.leftFacingPrecedence = -1,
+      this.rightFacingPrecedence = -1]);
 }
 
 /// LaTeX Expr printer
 class LaTeXPrinter {
-  final dict = new Map<int, String>();
+  final ExprContext ctx;
+  final dict = new Map<int, LaTeXTemplate>();
 
-  void addDefaultEntries(ExprContextLabelResolver res) {
-    final id = (String str) => res.assignId(str, false);
-    dict[id('+')] = r'$(0+)+$(+1)';
-    dict[id('-')] = r'$(0-)-$(-1)';
-    dict[id('*')] = r'$(0*)$(*1)';
-    dict[id('/')] = r'\frac{$0}{$1}';
-    dict[id('^')] = r'$(0^)^{$1}';
-    dict[id('~')] = r'-$(~0)';
-    dict[id('!')] = r'$(0!)!';
-    dict[id('_')] = r'$(0_)_{$1}';
+  LaTeXPrinter(this.ctx);
+
+  void addTemplate(int functionId, String template) {
+    dict[functionId] = parseLaTeXTemplate(template, ctx.operators);
+  }
+
+  void addDefaultEntries() {
+    final id = (String str) => ctx.labelResolver.assignId(str, false);
+    addTemplate(id('+'), r'${.0}+${1(+).}');
+    addTemplate(id('-'), r'${.0}-${2(+).}');
+    addTemplate(id('*'), r'${.0(+):}${:1(*).}');
+    addTemplate(id('/'), r'\frac{${0}}{${1}}');
+    addTemplate(id('^'), r'{${.0(*)}}^{${1}}');
+    addTemplate(id('~'), r'$!-${0(^).}');
+    addTemplate(id('!'), r'${.0(~)}!');
+    addTemplate(id('_'), r'{${.0(!)}}_{${1}}');
   }
 
   /// Public alias for [_render].
-  String render(Expr expr, ExprGetLabel resolveName, OperatorConfig ops) {
-    return _render(expr, resolveName, ops).tex;
+  String render(Expr expr) {
+    return _render(expr).tex;
   }
 
   /// Render LaTeX string from the given expression. Expressions that are not in
-  /// the printer dictionary use [resolveName] and a generic function notation.
+  /// the printer dictionary use the [ctx] label resolver and a generic function
+  /// notation.
   ///
   /// The render function figures out how to prevent unintended side effects of
   /// nested templates. Templates should be as compact as possible and not
   /// contain spaces etc.
-  _LaTeXRenderData _render(
-      Expr expr, ExprGetLabel resolveName, OperatorConfig ops) {
+  _LaTeXRenderData _render(Expr expr) {
     // Numbers
     if (expr is NumberExpr) {
-      return new _LaTeXRenderData(expr.value.toString());
+      if (expr.value < 0) {
+        return _render(new FunctionExpr(ctx.operators.byChar[char('~')].id,
+            false, [new NumberExpr(expr.value.abs())]));
+      } else {
+        return new _LaTeXRenderData(expr.value.toString(), true, true);
+      }
     }
 
     // Functions
     else if (expr is FunctionExpr) {
       // Render expression.
       if (dict.containsKey(expr.id)) {
-        return _renderTemplate(expr, resolveName, ops);
+        return _renderTemplate(expr);
       } else {
         final genericPrefix = expr.isGeneric ? r'{}_\text{?}' : '';
         if (!expr.isSymbol) {
           return new _LaTeXRenderData([
             genericPrefix,
             r'\text{',
-            resolveName(expr.id),
+            ctx.labelResolver.getLabel(expr.id),
             r'}{\left(',
-            new List<String>.generate(expr.arguments.length,
-                    (i) => render(expr.arguments[i], resolveName, ops))
+            new List<String>.generate(
+                    expr.arguments.length, (i) => render(expr.arguments[i]))
                 .join(r',\,'),
             r'\right)}'
           ].join());
         } else {
           return new _LaTeXRenderData(
-              [genericPrefix, resolveName(expr.id)].join());
+              [genericPrefix, ctx.labelResolver.getLabel(expr.id)].join());
         }
       }
     } else {
@@ -77,67 +95,135 @@ class LaTeXPrinter {
 
   /// Render template string.
   /// Borrows functionality from [SimpleExprContext.formatExplicitParentheses].
-  _LaTeXRenderData _renderTemplate(
-      FunctionExpr expr, ExprGetLabel resolveName, OperatorConfig ops) {
+  _LaTeXRenderData _renderTemplate(FunctionExpr expr) {
     assert(dict.containsKey(expr.id));
-    final argRegex = new RegExp(r'\$(?:(\d+)|\(([^\d]?)(\d+)([^\d]?)\))');
+    final template = dict[expr.id];
+    final tok = template.tokens;
 
-    var leftBoundaryPre = -1;
-    var rightBoundaryPre = -1;
-    final tex = dict[expr.id].replaceAllMapped(argRegex, (match) {
-      final nr = match.group(1) ?? match.group(3);
-      final arg = expr.arguments[int.parse(nr)];
-      final argData = _render(arg, resolveName, ops);
-      var tex = argData.tex;
+    var startsWithInteger = false, endsWithInteger = false;
+    var noParamBefore = false, noParamAfter = false;
+    var leftFacingPrecedence = -1, rightFacingPrecedence = -1;
 
-      // Parentheses
-      final g2 = match.group(2);
-      final g4 = match.group(4);
-      final opChar = g2 != null && g2.isNotEmpty ? g2 : g4;
-      if (opChar != null && opChar.isNotEmpty) {
-        final op = ops.byChar[char(opChar)];
-        final pre = op.precedenceLevel;
-        final direction = opChar == g2 ? Associativity.ltr : Associativity.rtl;
+    // Render string from template.
+    final parts = new List<String>();
 
-        // Proceed with adding parentheses if the argument is an operator or
-        // has colliding boundaries.
-        if (arg is FunctionExpr && ops.byId.containsKey(arg.id)) {
-          tex = SimpleExprContext.formatExplicitParentheses(
-              r'\left(', r'\right)', arg, tex, pre, direction, ops);
-        } else if ((direction == Associativity.ltr &&
-                argData.leftBoundaryPre > 0 &&
-                argData.leftBoundaryPre <= pre) ||
-            (direction == Associativity.rtl &&
-                argData.rightBoundaryPre > 0 &&
-                argData.rightBoundaryPre <= pre)) {
-          tex = '\\left($tex\\right)';
+    _LaTeXRenderData prevParam;
+    var passedTextToken = false;
+
+    for (var i = 0; i < tok.length; i++) {
+      final token = tok[i];
+
+      if (token.text.isNotEmpty) {
+        parts.add(token.text);
+        passedTextToken = true;
+      } else {
+        final argument = expr.arguments[token.paramIndex];
+        final rendered = _render(argument);
+        var useParentheses = false;
+
+        if (token.paramLeftBaseline) {
+          startsWithInteger = startsWithInteger || rendered.startsWithInteger;
+          noParamBefore = noParamBefore || rendered.noParamBefore;
+          leftFacingPrecedence = token.parenthesesPriority;
+        }
+        if (token.paramRightBaseline) {
+          endsWithInteger = endsWithInteger || rendered.endsWithInteger;
+          noParamAfter = noParamAfter || rendered.noParamAfter;
+          rightFacingPrecedence = token.parenthesesPriority;
         }
 
-        // Propagate boundary settings.
-        // Also check if we just added parentheses.
-        if (match.start == 0) {
-          leftBoundaryPre = pre;
-        } else if (match.end == match.input.length) {
-          rightBoundaryPre = pre;
+        // Determine if this argument should be surrounded in parentheses.
+        // There are 5 cases when parentheses must be used:
+        // 1. The argument is an operator, and has a precedence level lower or
+        //    equal to the one indicated by this token.
+        // 2. There is no text token between this parameter and the previous one
+        //    and both have colliding integers.
+        // 3. There is no text token between this parameter and the previous one
+        //    and either one has an noParamBefore/noParamAfter flag set.
+        // 4. This template is an operator, and the argument has a left facing
+        //    parameter with a parentheses priority lower than this one or
+        //    vice versa.
+        // 5. This parameter has the noParamBefore flag set and the token has
+        //    the paramImposterLeft flag set or vice versa.
+
+        // 1
+        if (argument is FunctionExpr &&
+            ctx.operators.byId.containsKey(argument.id) &&
+            ctx.operators.byId[argument.id].precedenceLevel <=
+                token.parenthesesPriority) {
+          useParentheses = true;
         }
+
+        // 2
+        else if (prevParam != null &&
+            !passedTextToken &&
+            prevParam.endsWithInteger &&
+            rendered.startsWithInteger) {
+          useParentheses = true;
+        }
+
+        // 3
+        else if (prevParam != null &&
+            !passedTextToken &&
+            (prevParam.noParamAfter || rendered.noParamBefore)) {
+          useParentheses = true;
+        }
+
+        // 4
+        else if (ctx.operators.byId.containsKey(expr.id)) {
+          final opPre = ctx.operators.byId[expr.id].precedenceLevel;
+          if (token.paramLeftBaseline &&
+              rendered.rightFacingPrecedence != -1 &&
+              rendered.rightFacingPrecedence < opPre) {
+            useParentheses = true;
+          } else if (token.paramRightBaseline &&
+              rendered.leftFacingPrecedence != -1 &&
+              rendered.leftFacingPrecedence < opPre) {
+            useParentheses = true;
+          }
+        }
+
+        // 5
+        else if ((rendered.noParamBefore && token.paramImposterLeft) ||
+            (rendered.noParamAfter && token.paramImposterRight)) {
+          useParentheses = true;
+        }
+
+        // Add result to parts.
+        if (useParentheses) {
+          parts.add(r'\left(');
+          parts.add(rendered.tex);
+          parts.add(r'\right)');
+
+          // Since we added parentheses, we clear all flags indicating possible
+          // collisions.
+          prevParam = new _LaTeXRenderData(rendered.tex);
+        } else {
+          // If the last part ends with a letter and the parameter tex starts
+          // with a letter, a space must be added.
+          if (parts.isNotEmpty &&
+              new RegExp(r'[A-Za-z]$').hasMatch(parts.last) &&
+              new RegExp(r'^[A-Za-z]').hasMatch(rendered.tex)) {
+            parts.add(' ');
+          }
+          parts.add(rendered.tex);
+
+          // This parameter is now the previous parameter and can be used for
+          // collision checks.
+          prevParam = rendered;
+        }
+
+        passedTextToken = false;
       }
+    }
 
-      // Check if a space should be added at the beginning. Spaces are added to
-      // separate letters that should not be grouped (in particular when dealing
-      // with commands).
-      if (match.start > 0) {
-        final letter = new RegExp(r'[A-Za-z]');
-        // Check character in input before this argument and the first character
-        // of this argument.
-        if (letter.hasMatch(match.input[match.start - 1]) &&
-            letter.hasMatch(tex[0])) {
-          tex = ' $tex';
-        }
-      }
-
-      return tex;
-    });
-
-    return new _LaTeXRenderData(tex, leftBoundaryPre, rightBoundaryPre);
+    return new _LaTeXRenderData(
+        parts.join(),
+        startsWithInteger,
+        endsWithInteger,
+        template.noParamBefore || noParamBefore,
+        template.noParamAfter || noParamAfter,
+        leftFacingPrecedence,
+        rightFacingPrecedence);
   }
 }

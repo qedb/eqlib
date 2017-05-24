@@ -19,7 +19,7 @@ class StringReader {
 
   /// Test if current character is equal to the current character in the given
   /// string.
-  bool currentIs(String char) => !eof && current == char.codeUnitAt(0);
+  bool currentIs(String char) => !eof && current == char.runes.first;
 
   /// Check if the current character matches the given condition.
   bool checkCurrent(bool condition(int char)) => !eof && condition(current);
@@ -40,13 +40,21 @@ class StringReader {
   /// Skip all digits.
   void skipDigits() => skip(charIsDigit);
 
-  /// Skip all letters.
-  //void skipLetters() => skip(charIsLetter);
-
   /// Move to next character.
   int next() {
     assert(!eof);
     return ++ptr;
+  }
+
+  /// Shotcut: move to the next position if the given [condition] it true.
+  int nextIf(bool condition) {
+    return condition ? next() : ptr;
+  }
+
+  /// Move to next character and match it against the given string.
+  bool nextIs(String char) {
+    next();
+    return currentIs(char);
   }
 
   /// Check if the reader is at the end of the input string.

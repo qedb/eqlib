@@ -8,5 +8,8 @@ import 'package:eqlib/eqlib.dart';
 import 'package:eqlib/utils.dart';
 import 'package:eqlib/exceptions.dart';
 
+import 'src/parser_utils.dart';
+
 part 'src/latex_parser.dart';
 part 'src/latex_printer.dart';
+part 'src/latex_template.dart';

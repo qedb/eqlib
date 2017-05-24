@@ -56,16 +56,14 @@ class SimpleLabelResolver extends ExprContextLabelResolver {
 
 /// Standalone/in-memory context for parsing and printing expressions
 class SimpleExprContext extends ExprContext {
-  /// Operator configuration used by this context.
-  final operators = new OperatorConfig(1);
-
   /// Computable functions.
   final computable = new Map<int, _Compute>();
 
   SimpleExprContext(
       [ExprContextLabelResolver labelResolver,
       bool loadDefaultOperators = true])
-      : super(labelResolver ?? new SimpleLabelResolver()) {
+      : super(
+            labelResolver ?? new SimpleLabelResolver(), new OperatorConfig(1)) {
     // Load default operator configuration.
     if (loadDefaultOperators) {
       operators

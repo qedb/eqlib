@@ -14,8 +14,9 @@ abstract class ExprContextLabelResolver {
 
 abstract class ExprContext {
   final ExprContextLabelResolver labelResolver;
+  final OperatorConfig operators;
 
-  ExprContext(this.labelResolver);
+  ExprContext(this.labelResolver, this.operators);
 
   int assignId(String label, bool generic) =>
       labelResolver.assignId(label, generic);

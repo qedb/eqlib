@@ -11,29 +11,28 @@ import 'dummy_expr.dart';
 void main() {
   final ctx = new SimpleExprContext();
   final parser = new LaTeXParser(ctx.labelResolver);
-  final printer = new LaTeXPrinter();
-  printer.addDefaultEntries(ctx.labelResolver);
+  final printer = new LaTeXPrinter(ctx);
+  printer.addDefaultEntries();
 
   // Helper.
   final ops = new OperatorConfig(0);
   LaTeXParser.setOperators(ops, ctx.assignId);
+  final id = (String label) => ctx.assignId(label, false);
   final printLaTeX = (dynamic input) => printer.render(
-      input is String ? parseExpression(input, ops, ctx.assignId) : input,
-      ctx.getLabel,
-      ops);
+      input is String ? parseExpression(input, ops, ctx.assignId) : input);
 
-  test('LaTeX dictionary', () async {
-    printer.dict[ctx.assignId('lim', false)] = r'\lim_{$0\to$1}$(*2)';
+  test('Printing basics', () async {
+    printer.addTemplate(id('pi'), r'\pi');
+    printer.addTemplate(id('lim'), r'\lim_{${0}\to${1}}${:2(+).}');
 
-    expect(printLaTeX('lim(x, 0, x ^ 2)'), equals(r'\lim_{x\to0}x^{2}'));
+    expect(printLaTeX('lim(x, 0, x ^ 2)'), equals(r'\lim_{x\to0}{x}^{2}'));
     expect(printLaTeX('lim(x, a, x + 1)'),
         equals(r'\lim_{x\to a}\left(x+1\right)'));
 
     // Render function with too few arguments (template cannot be resolved).
-    expect(() => printLaTeX('lim(x, 0)'), throwsArgumentError);
+    expect(() => printLaTeX('lim(x, 0)'), throwsRangeError);
 
     // Symbol template.
-    printer.dict[ctx.assignId('pi', false)] = r'\pi';
     expect(printLaTeX('pi'), equals(r'\pi'));
 
     // Print function that has not been defined.
@@ -44,36 +43,57 @@ void main() {
     expect(() => printLaTeX(new DummyExpr()), throwsArgumentError);
   });
 
-  test('LaTeX printing', () {
-    final id = (String label) => ctx.assignId(label, false);
-    printer.dict[id('diff')] = r'\frac{\partial}{\partial$(0*)}$(1*)';
-    printer.dict[id('int')] = r'\int_{$0}^{$1}$2~\text{d}$(3*)';
-    printer.dict[id('sin')] = r'\sin$(0*)';
-    printer.dict[id('delta')] = r'\Delta$(0*)';
-    printer.dict[id('celcius')] = r'$(0*)^\circ';
+  test('Printing extensive', () {
+    printer.addTemplate(
+        id('diff'), r'\frac{\partial}{\partial${:0(+)}}${:1(+).}');
+    printer.addTemplate(id('int'), r'\int_{${0}}^{${1}}${2}~\text{d}${:3(+).}');
+    printer.addTemplate(id('sin'), r'\sin${:0(+).}');
+    printer.addTemplate(id('delta'), r'\Delta${:0(+).}');
+    printer.addTemplate(id('celcius'), r'${.0(^)}^\circ');
 
     final tests = {
-      '(a + -5) ^ (b * c)': r'\left(a+-5\right)^{bc}',
-      '(a / -5) ^ (b * c)': r'\left(\frac{a}{-5}\right)^{bc}',
-      '-(1 ^ 2)': r'-\left(1^{2}\right)',
-      '(-1)^2': r'-1^{2}',
-      '-1 ^ 2': r'-1^{2}',
+      '1 * 2': r'1\left(2\right)',
+      '2 * 10^a': r'2\left({10}^{a}\right)',
+      '(a + -5) ^ (b * c)': r'{\left(a+-5\right)}^{b c}',
+      '(a / -5) ^ (b * c)': r'{\left(\frac{a}{-5}\right)}^{b c}',
+      '-(1 ^ 2)': r'-\left({1}^{2}\right)',
+      '(-1) ^ 2': r'{-1}^{2}',
+      '-1 ^ 2': r'{-1}^{2}',
       '---a': r'---a',
-      'a + b + c': r'a+b+c',
+      'a + b + -c': r'a+b+-c',
+      'a + b * -c': r'a+b\left(-c\right)',
       'celcius(10)': r'10^\circ',
       'celcius(a+10)': r'\left(a+10\right)^\circ',
       'celcius(10)*2': r'10^\circ2',
+      'a*celcius(10)': r'a10^\circ',
       '2*celcius(10)': r'2\left(10^\circ\right)',
-      'delta(1+x)+sin(a)^2': r'\Delta\left(1+x\right)+\left(\sin a\right)^{2}',
-      'delta(2x)+sin(2a)^2': r'\Delta2x+\left(\sin2a\right)^{2}',
+      'a*celcius(-10)': r'a\left(-10^\circ\right)',
+      '2*celcius(-10)': r'2\left(-10^\circ\right)',
+      'delta(2x)+sin(2a)^2': r'\Delta2x+{\left(\sin2a\right)}^{2}',
+      'delta(1+x)+sin(a)^2':
+          r'\Delta\left(1+x\right)+{\left(\sin a\right)}^{2}',
+      '2*sin(a*b)': r'2\sin a b',
+      'sin(a*b)*2': r'\left(\sin a b\right)2',
+      'sin(a)^2': r'{\left(\sin a\right)}^{2}',
+      'sin(a^2)': r'\sin{a}^{2}',
+
+      // Integrals
+      '2*int(0,1,x^2+2x+1,1/x)':
+          r'2\int_{0}^{1}{x}^{2}+2x+1~\text{d}\frac{1}{x}',
       'int(0,1,x^2+2x+1,1/x)*2':
-          r'\left(\int_{0}^{1}x^{2}+2x+1~\text{d}\frac{1}{x}\right)2',
-      '2*int(0,1,x^2+2x+1,1/x)': r'2\int_{0}^{1}x^{2}+2x+1~\text{d}\frac{1}{x}',
+          r'\left(\int_{0}^{1}{x}^{2}+2x+1~\text{d}\frac{1}{x}\right)2',
       'int(0,1,x^2+2x+1,1/x+1)*2':
-          r'\left(\int_{0}^{1}x^{2}+2x+1~\text{d}\left(\frac{1}{x}+1\right)\right)2',
+          r'\left(\int_{0}^{1}{x}^{2}+2x+1~\text{d}\left(\frac{1}{x}+1\right)\right)2',
+
+      // Derivatives
+      'diff(2x, x+2)': r'\frac{\partial}{\partial2x}\left(x+2\right)',
+      'diff(x, -a)': r'\frac{\partial}{\partial x}\left(-a\right)',
+      'diff(x, -1)': r'\frac{\partial}{\partial x}\left(-1\right)',
+      'diff(x, -1*a)': r'\frac{\partial}{\partial x}\left(-1a\right)',
+      'diff(-1, -1)*2':
+          r'\left(\frac{\partial}{\partial\left(-1\right)}\left(-1\right)\right)2',
       'diff(x+1, x+2)*2':
-          r'\left(\frac{\partial}{\partial\left(x+1\right)}\left(x+2\right)\right)2',
-      'diff(2x, x+2)': r'\frac{\partial}{\partial2x}\left(x+2\right)'
+          r'\left(\frac{\partial}{\partial\left(x+1\right)}\left(x+2\right)\right)2'
     };
 
     tests.forEach((input, output) {
@@ -88,6 +108,6 @@ void main() {
         equals(ctx.parse(r'diff(x^2, x)')));
 
     expect(printLaTeX(parser.parse('(a_0!+b_0!)/c_0!', ctx.assignId)),
-        equals(r'\frac{a_{0}!+b_{0}!}{c_{0}!}'));
+        equals(r'\frac{{a}_{0}!+{b}_{0}!}{{c}_{0}!}'));
   });
 }
