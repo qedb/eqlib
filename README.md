@@ -1,5 +1,5 @@
-[![Travis](https://img.shields.io/travis/eqdb/eqlib.svg)](https://travis-ci.org/eqdb/eqlib)
-[![Codecov](https://img.shields.io/codecov/c/github/eqdb/eqlib.svg)](https://codecov.io/gh/eqdb/eqlib)
+[![Travis](https://img.shields.io/travis/qedb/eqlib.svg)](https://travis-ci.org/qedb/eqlib)
+[![Codecov](https://img.shields.io/codecov/c/github/qedb/eqlib.svg)](https://codecov.io/gh/qedb/eqlib)
 
 Equation manipulation library
 =============================
