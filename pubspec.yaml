@@ -2,7 +2,7 @@ name:         eqlib
 version:      0.14.2
 author:       Herman Bergwerf <hermanbergwerf@gmail.com>
 description:  Equation manipulation library
-homepage:     https://github.com/eqdb/eqlib
+homepage:     https://github.com/qedb/eqlib
 environment:
   sdk:        '>=1.8.0 <2.0.0'
 dependencies:
