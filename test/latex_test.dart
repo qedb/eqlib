@@ -50,6 +50,7 @@ void main() {
     printer.addTemplate(id('sin'), r'\sin${:0(+).}');
     printer.addTemplate(id('delta'), r'\Delta${:0(+).}');
     printer.addTemplate(id('celcius'), r'${.0(^)}^\circ');
+    printer.addTemplate(id('hp'), r'${0(+)}+$!');
 
     final tests = {
       '1 * 2': r'1\left(2\right)',
@@ -76,6 +77,9 @@ void main() {
       'sin(a*b)*2': r'\left(\sin a b\right)2',
       'sin(a)^2': r'{\left(\sin a\right)}^{2}',
       'sin(a^2)': r'\sin{a}^{2}',
+      'hp(10)': r'10+',
+      'hp(10)+1': r'10++1',
+      'hp(10)*1': r'\left(10+\right)1',
 
       // Integrals
       '2*int(0,1,x^2+2x+1,1/x)':
@@ -109,5 +113,17 @@ void main() {
 
     expect(printLaTeX(parser.parse('(a_0!+b_0!)/c_0!', ctx.assignId)),
         equals(r'\frac{{a}_{0}!+{b}_{0}!}{{c}_{0}!}'));
+  });
+
+  test('Negative integers', () {
+    expect(printLaTeX(new NumberExpr(-10)), equals('-10'));
+  });
+
+  test('LaTeX templates', () {
+    expect(
+        parseLaTeXTemplate(
+                r'\int_{${0}}^{${1}}${2}~\text{d}${:3(+).}', ctx.operators)
+            .parameterCount,
+        equals(4));
   });
 }

@@ -111,6 +111,7 @@ class LaTeXPrinter {
     // Render string from template.
     final parts = new List<String>();
 
+    var prevParamIdx = 0;
     _LaTeXRenderData prevParam;
     var passedTextToken = false;
 
@@ -170,7 +171,16 @@ class LaTeXPrinter {
         else if (prevParam != null &&
             !passedTextToken &&
             (prevParam.noParamAfter || rendered.noParamBefore)) {
-          useParentheses = true;
+          // By convention: we add parentheses around the parameter that has set
+          // the flag. If this is the previous one, we will do some tricks here.
+          if (prevParam.noParamAfter) {
+            parts.insert(prevParamIdx, leftParenthesis);
+            prevParamIdx++;
+            parts.insert(prevParamIdx + 1, rightParenthesis);
+            prevParamIdx++;
+          } else {
+            useParentheses = true;
+          }
         }
 
         // 4
@@ -196,7 +206,10 @@ class LaTeXPrinter {
         // Add result to parts.
         if (useParentheses) {
           parts.add(leftParenthesis);
+
+          prevParamIdx = parts.length;
           parts.add(rendered.tex);
+
           parts.add(rightParenthesis);
 
           // Since we added parentheses, we clear all flags indicating possible
@@ -210,6 +223,7 @@ class LaTeXPrinter {
               new RegExp(r'^[A-Za-z]').hasMatch(rendered.tex)) {
             parts.add(' ');
           }
+          prevParamIdx = parts.length;
           parts.add(rendered.tex);
 
           // This parameter is now the previous parameter and can be used for
