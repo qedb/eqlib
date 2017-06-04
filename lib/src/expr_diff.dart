@@ -153,7 +153,7 @@ List<Rearrangement> _computeRearrangement(
 
     final result = new List<Rearrangement>();
 
-    // Build child map.
+    // Build hash map of children in a.
     final map = new Map<int, List<int>>();
     final aChildren = a.getChildren();
     for (var i = 0; i < aChildren.length; i++) {
@@ -163,8 +163,16 @@ List<Rearrangement> _computeRearrangement(
       map[hash].add(i);
     }
 
-    // Iterate over children in b and construct a rearrangement format.
+    // Get children in b, and check if it has the same number of children as a.
+    // Note that we need to check for null because null annotates function
+    // boundaries.
     final bChildren = b.getChildren(true);
+    if (aChildren.where((f) => f != null).length !=
+        bChildren.where((f) => f != null).length) {
+      return [];
+    }
+
+    // Iterate over children in b and construct a rearrangement format.
     final format = new List<int>();
     for (final bChild in bChildren) {
       if (bChild == null) {
@@ -199,8 +207,8 @@ List<Rearrangement> _computeRearrangement(
   }
 }
 
-/// Computes expression hash. Except this hash is equal when the expression can
-/// be rearranged.
+/// Computes expression hash. Except that this hash is the same for
+/// rearrangeable functions with the same arguments in different order.
 int _computeRearrangeableHash(Expr expr, List<int> rearrangeableIds) {
   if (expr is FunctionExpr && rearrangeableIds.contains(expr.id)) {
     final children = expr

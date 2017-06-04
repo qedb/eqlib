@@ -12,6 +12,9 @@ void main() {
   final b = symbol('b', generic: true);
   final rearrangeableIds = [ctx.operators.id('+'), ctx.operators.id('*')];
 
+  final getDiff = (String left, String right) =>
+      getExpressionDiff(ctx.parse(left), ctx.parse(right), rearrangeableIds);
+
   test('Chain rule', () {
     final sin = fn1('sin');
     final cos = fn1('cos');
@@ -70,22 +73,22 @@ void main() {
     expect(getExpressionDiff(one, two, rearrangeableIds),
         equals(new ExprDiffResult(numericInequality: true)));
     expect(
-        getExpressionDiff(
-            ctx.parse('1 + a'), ctx.parse('2 + a'), rearrangeableIds),
+        getDiff('1 + a', '2 + a'),
         equals(new ExprDiffResult(
             branch:
                 new ExprDiffBranch(0, ctx.parse('1+a'), ctx.parse('2+a')))));
   });
 
   test('Rearrange expressions', () {
-    final diff1 = getExpressionDiff(ctx.parse('a * b * (c * (d + e + f))'),
-        ctx.parse('b * (c * ((f + (e + d)) * a))'), rearrangeableIds);
-    final diff2 = getExpressionDiff(ctx.parse('a * (b * c * (d + e + f))'),
-        ctx.parse('a * (c * ((f + (e + d)) * b))'), rearrangeableIds);
-    final diff3 = getExpressionDiff(ctx.parse('?b * ?a + ?c * ?a'),
-        ctx.parse('?a * ?b + ?a * ?c'), rearrangeableIds);
-    final diff4 = getExpressionDiff(ctx.parse('?b * ?a + ?c * ?a * ?d * ?e'),
-        ctx.parse('?a * ?b + ?e * ?d * ?a * ?c'), rearrangeableIds);
+    final diff1 = //
+        getDiff('a * b * (c * (d + e + f))', 'b * (c * ((f + (e + d)) * a))');
+    final diff2 = //
+        getDiff('a * (b * c * (d + e + f))', 'a * (c * ((f + (e + d)) * b))');
+    final diff3 = //
+        getDiff('?b * ?a + ?c * ?a', '?a * ?b + ?a * ?c');
+    final diff4 = //
+        getDiff('?b * ?a + ?c * ?a * ?d * ?e', '?a * ?b + ?e * ?d * ?a * ?c');
+
     expect(
         diff1.branch.rearrangements,
         equals([
@@ -118,8 +121,8 @@ void main() {
           new Rearrangement.at(0, [0, 1])
         ]));
 
-    final shouldFail = getExpressionDiff(ctx.parse('a * b * c * ((d + e) + f)'),
-        ctx.parse('b * f * (c + e + d) * a'), rearrangeableIds);
+    final shouldFail =
+        getDiff('a * b * c * ((d + e) + f)', 'b * f * (c + e + d) * a');
     expect(shouldFail.branch.rearrangements, equals([]));
 
     // Just to test Rearrangement.hashCode.
@@ -129,5 +132,8 @@ void main() {
         isNot(new Rearrangement.at(6, [1, 2, 0, -1]).hashCode));
     expect(new Rearrangement.at(6, [2, 1, 0, -1]).hashCode,
         isNot(new Rearrangement.at(7, [2, 1, 0, -1]).hashCode));
+
+    // Rearrangement into fewer children should fail (this was a bug).
+    expect(getDiff('?a*?b*?c', '?a*?b').branch.rearrangements, equals([]));
   });
 }
