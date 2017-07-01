@@ -8,7 +8,7 @@ part of eqlib;
 /// This is a one-pass, linear-time, linear-space algorithm.
 Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
   if (input.isEmpty) {
-    throw new FormatException('input cannot be empty');
+    throw const FormatException('input cannot be empty');
   }
 
   final output = new List<Expr>();
@@ -53,7 +53,7 @@ Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
     else if (reader.currentIs(')')) {
       if (stack.isEmpty) {
         // The stack already ran out without finding a parentheses.
-        throw new FormatException('mismatched parentheses');
+        throw const FormatException('mismatched parentheses');
       }
 
       // Pop all remaining stack elements.
@@ -61,7 +61,7 @@ Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
         _popStack(stack, output, ops);
         if (stack.isEmpty) {
           // If the stack runs out without finding a left parentheses...
-          throw new FormatException('mismatched parentheses');
+          throw const FormatException('mismatched parentheses');
         }
       }
 
@@ -81,14 +81,14 @@ Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
     else if (reader.currentIs(',')) {
       // If stack is already empty, also throw an error.
       if (stack.isEmpty) {
-        throw new FormatException('argument separator but no parenthesis');
+        throw const FormatException('argument separator but no parenthesis');
       }
 
       // Pop operators.
       while (!stack.last.isLeftParenthesis) {
         _popStack(stack, output, ops);
         if (stack.isEmpty) {
-          throw new FormatException('argument separator but no parenthesis');
+          throw const FormatException('argument separator but no parenthesis');
         }
       }
 
@@ -97,7 +97,7 @@ Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
       if (stack.length >= 2 && stack.last.isLeftParenthesis) {
         stack[stack.length - 2].argc++;
       } else {
-        throw new FormatException('argument separators outside function');
+        throw const FormatException('argument separators outside function');
       }
 
       // Rest block start distance.
@@ -286,7 +286,7 @@ void _popStack(
 
   // Check if arguments are in the stack.
   if (output.length < fn.argc) {
-    throw new FormatException(
+    throw const FormatException(
         'stack function arguments are not in the output queue');
   }
 

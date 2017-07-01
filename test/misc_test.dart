@@ -32,7 +32,7 @@ void main() {
   });
 
   test('EqLibException', () {
-    expect(new EqLibException('abc').toString(), equals('abc'));
+    expect(const EqLibException('abc').toString(), equals('abc'));
     expect(eqlibThrows('abc').describe(new StringDescription()).toString(),
         equals('throws EqLibException:<abc>'));
   });
@@ -56,8 +56,8 @@ void main() {
 
     // Resolve generic/non-generic is distinctive.
     expect(ctx.assignId('x', false), isNot(equals(ctx.assignId('x', true))));
-    expect(new PrinterEntry('x', false).hashCode,
-        isNot(new PrinterEntry('x', true).hashCode));
+    expect(const PrinterEntry('x', false).hashCode,
+        isNot(const PrinterEntry('x', true).hashCode));
 
     // Printing.
     final printTest = ctx.parse('1 + a - 3 * (b / 5) ^-c');

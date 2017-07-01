@@ -25,7 +25,7 @@ abstract class Expr {
 
   /// Transform the given value into an expression if it is not an expression
   /// already.
-  factory Expr.from(dynamic value) {
+  factory Expr.from(value) {
     if (value is Expr) {
       return value;
     } else if (value is num) {
@@ -53,7 +53,7 @@ abstract class Expr {
   bool equals(Expr other);
 
   @override
-  bool operator ==(dynamic other) => other is Expr && equals(other);
+  bool operator ==(other) => other is Expr && equals(other);
 
   /// Get expression hash (used by [hashCode])
   int get expressionHash;
@@ -105,7 +105,7 @@ abstract class Expr {
     final _position = new W<int>(position);
     final result = _substituteAt(rule, _position);
     if (_position.v >= 0) {
-      throw new EqLibException('position not found');
+      throw const EqLibException('position not found');
     } else {
       return result;
     }
@@ -120,7 +120,7 @@ abstract class Expr {
     final _position = new W<int>(position);
     final result = _rearrangeAt(rearrange, _position, rearrangeableIds);
     if (_position.v >= 0) {
-      throw new EqLibException('position not found');
+      throw const EqLibException('position not found');
     } else {
       return result;
     }
@@ -184,7 +184,7 @@ Expr substituteRecursive(
   while (n > 0) {
     cycles++;
     if (cycles > max) {
-      throw new EqLibException('reached maximum number of recursions');
+      throw const EqLibException('reached maximum number of recursions');
     }
 
     // Try to substitute rule.

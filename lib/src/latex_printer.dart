@@ -35,7 +35,7 @@ class LaTeXPrinter {
   }
 
   void addDefaultEntries(ExprAssignId assignId) {
-    final id = (String str) => assignId(str, false);
+    int id(String str) => assignId(str, false);
     addTemplate(id('+'), r'${.0}+${1(+).}');
     addTemplate(id('-'), r'${.0}-${2(+).}');
     addTemplate(id('*'), r'${.0(+):}${:1(*).}');

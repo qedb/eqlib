@@ -193,7 +193,7 @@ Expr exprCodecDecode(ExprCodecData data) =>
 /// Note: this function does not perform sanity checks, and is unsafe on corrupt
 /// data arrays.
 Expr _exprCodecDecode(W<int> ptr, ExprCodecData data) {
-  int value = data.expression[ptr.v++];
+  var value = data.expression[ptr.v++];
   if (data.inFunctionRange(value)) {
     final id = data.functionIds[value];
     final generic = data.inGenericRange(value);

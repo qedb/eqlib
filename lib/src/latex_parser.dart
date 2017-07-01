@@ -109,8 +109,8 @@ class LaTeXParser {
     // Add variations of basic trigonometry functions to [allFunctions].
     allFunctions.addAll(generateList<String>(basicTrigFunctions.length, [
       (i) => basicTrigFunctions[i],
-      (i) => 'arc' + basicTrigFunctions[i],
-      (i) => basicTrigFunctions[i] + 'h'
+      (i) => 'arc${basicTrigFunctions[i]}',
+      (i) => '${basicTrigFunctions[i]}h'
     ]));
 
     // Parse all specified rules.
@@ -134,7 +134,7 @@ class LaTeXParser {
 
   /// Static method to get LaTeX operators.
   static void setOperators(OperatorConfig operators, ExprAssignId assignId) {
-    final id = (String str) => assignId(str, false);
+    int id(String str) => assignId(str, false);
 
     // Load default operator configuration.
     operators

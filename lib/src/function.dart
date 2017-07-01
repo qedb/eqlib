@@ -44,15 +44,19 @@ class FunctionExpr extends Expr {
 
   @override
   List<Expr> flatten() {
-    final List<Expr> list = [this];
-    arguments.forEach((arg) => list.addAll(arg.flatten()));
+    final list = new List<Expr>()..add(this);
+    for (final arg in arguments) {
+      list.addAll(arg.flatten());
+    }
     return list;
   }
 
   @override
   void getFunctionIds(target) {
     target.add(id);
-    arguments.forEach((arg) => arg.getFunctionIds(target));
+    for (final arg in arguments) {
+      arg.getFunctionIds(target);
+    }
   }
 
   @override
@@ -89,7 +93,7 @@ class FunctionExpr extends Expr {
       if (isGeneric) {
         final depVars = mapping.dependantVars[id] ?? [];
         if (depVars.length != arguments.length) {
-          throw new EqLibException(
+          throw const EqLibException(
               'dependant variable count does not match the target substitutions');
         }
 
@@ -111,14 +115,14 @@ class FunctionExpr extends Expr {
               // one.
               if (ExprMapping.strictMode &&
                   !_exprOnlyDependsOn(targetExpr.id, substitute)) {
-                throw new EqLibException(
+                throw const EqLibException(
                     'in strict mode the generic substitute can only depend on the variable that is remapped');
               }
 
               innerMapping[targetExpr.id] =
                   argument.remap(new ExprMapping({depVarId: targetExpr}));
             } else {
-              throw new EqLibException(
+              throw const EqLibException(
                   'generic function inner mapping must map from a symbol');
             }
           }
@@ -140,7 +144,7 @@ class FunctionExpr extends Expr {
       if (compare(rule.left, mapping)) {
         return rule.right.remap(mapping);
       } else {
-        throw new EqLibException('rule does not match at the given position');
+        throw const EqLibException('rule does not match at the given position');
       }
     } else {
       final newArguments =
@@ -155,7 +159,7 @@ class FunctionExpr extends Expr {
       if (rearrangeableIds.contains(id)) {
         return _rearrangeArguments(rearrange);
       } else {
-        throw new EqLibException(
+        throw const EqLibException(
             'given position is not a rearrangeable function');
       }
     } else {
@@ -198,14 +202,14 @@ class FunctionExpr extends Expr {
         if (value >= 0 && value < children.length && used.add(value)) {
           output.add(children[value].expr);
         } else {
-          throw new EqLibException('illegal value');
+          throw const EqLibException('illegal value');
         }
       }
     }
 
     // Wrap final output in function.
     if (output.length != argc || used.length != children.length) {
-      throw new EqLibException('malformed format');
+      throw const EqLibException('malformed format');
     }
 
     return new FunctionExpr(id, _generic, output);
@@ -242,14 +246,12 @@ class FunctionExpr extends Expr {
       newArguments.add(arguments[i].evaluate(compute));
     }
 
-    final numericValues = newArguments.map((expr) {
+    final numericValues = new List<num>();
+    for (final expr in newArguments) {
       if (expr is NumberExpr) {
-        return expr.value;
-      } else {
-        return null;
+        numericValues.add(expr.value);
       }
-    }).toList();
-    numericValues.removeWhere((number) => number == null);
+    }
 
     if (numericValues.length == arguments.length) {
       final value = compute(id, numericValues);

@@ -13,23 +13,23 @@ class ExprOperators {
   static int _opId(String char) => inlineExprContext.assignId(char, false);
 
   /// Add other expression.
-  FunctionExprOps operator +(dynamic other) => new FunctionExprOps(
+  FunctionExprOps operator +(other) => new FunctionExprOps(
       _opId('+'), false, [new Expr.from(this), new Expr.from(other)]);
 
   /// Subtract other expression.
-  FunctionExprOps operator -(dynamic other) => new FunctionExprOps(
+  FunctionExprOps operator -(other) => new FunctionExprOps(
       _opId('-'), false, [new Expr.from(this), new Expr.from(other)]);
 
   /// Multiply by other expression.
-  FunctionExprOps operator *(dynamic other) => new FunctionExprOps(
+  FunctionExprOps operator *(other) => new FunctionExprOps(
       _opId('*'), false, [new Expr.from(this), new Expr.from(other)]);
 
   /// Divide by other expression.
-  FunctionExprOps operator /(dynamic other) => new FunctionExprOps(
+  FunctionExprOps operator /(other) => new FunctionExprOps(
       _opId('/'), false, [new Expr.from(this), new Expr.from(other)]);
 
   /// Power by other expression.
-  FunctionExprOps operator ^(dynamic other) => new FunctionExprOps(
+  FunctionExprOps operator ^(other) => new FunctionExprOps(
       _opId('^'), false, [new Expr.from(this), new Expr.from(other)]);
 
   /// Negate expression.
@@ -58,13 +58,11 @@ FunctionExprOps symbol(String label, {bool generic: false}) =>
 FunctionExprOps generic(String label) => symbol(label, generic: true);
 
 /// Quick syntax for rule contruction.
-Rule rule(dynamic left, dynamic right) =>
-    new Rule(new Expr.from(left), new Expr.from(right));
+Rule rule(left, right) => new Rule(new Expr.from(left), new Expr.from(right));
 
-typedef FunctionExprOps ExprGenerator1(dynamic arg1);
-typedef FunctionExprOps ExprGenerator2(dynamic arg1, dynamic arg2);
-typedef FunctionExprOps ExprGenerator3(
-    dynamic arg1, dynamic arg2, dynamic arg3);
+typedef FunctionExprOps ExprGenerator1(arg1);
+typedef FunctionExprOps ExprGenerator2(arg1, arg2);
+typedef FunctionExprOps ExprGenerator3(arg1, arg2, arg3);
 
 /// Create single argument expression generator.
 ExprGenerator1 fn1(String label, {bool generic: false}) {

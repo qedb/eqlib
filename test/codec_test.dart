@@ -49,25 +49,25 @@ void main() {
                 1, false, new List.generate(65537, (_) => new NumberExpr(1)))
             .toBase64(),
         throwsArgumentError);
-    expect(
-        () => new FunctionExpr(-1, false, []).toBase64(), throwsArgumentError);
-    expect(() => new NumberExpr(2147483648).toBase64(), throwsArgumentError);
+    expect(new FunctionExpr(-1, false, []).toBase64, throwsArgumentError);
+    expect(new NumberExpr(2147483648).toBase64, throwsArgumentError);
   });
 
   test('Array codec', () {
-    final id = (String str) => ctx.assignId(str, false);
-    final idg = (String str) => ctx.assignId(str, true);
-    final binary = (int value) {
+    int id(String str) => ctx.assignId(str, false);
+    int idg(String str) => ctx.assignId(str, true);
+    int binary(int value) {
+      var v = value;
       var ret = 0;
       var i = 0;
-      while (value > 0) {
-        final bit = (value / 10).ceil() > (value / 10).floor() ? 1 : 0;
-        value = value ~/ 10;
+      while (v > 0) {
+        final bit = (v / 10).ceil() > (v / 10).floor() ? 1 : 0;
+        v = v ~/ 10;
         ret |= (bit << i);
         i++;
       }
       return ret;
-    };
+    }
 
     // Basic functionality.
     final expr = ctx

@@ -17,8 +17,8 @@ void main() {
   // Helper.
   final ops = new OperatorConfig(0);
   LaTeXParser.setOperators(ops, ctx.assignId);
-  final id = (String label) => ctx.assignId(label, false);
-  final printLaTeX = (dynamic input) => printer.render(
+  int id(String label) => ctx.assignId(label, false);
+  String printLaTeX(input) => printer.render(
       input is String ? parseExpression(input, ops, ctx.assignId) : input);
 
   test('Printing basics', () async {

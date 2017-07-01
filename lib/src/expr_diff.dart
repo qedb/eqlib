@@ -31,7 +31,7 @@ class ExprDiffBranch {
             : new List<ExprDiffBranch>.from(argumentDifference);
 
   @override
-  bool operator ==(dynamic other) =>
+  bool operator ==(other) =>
       other is ExprDiffBranch &&
       other.position == position &&
       other.left == left &&
@@ -56,7 +56,7 @@ class ExprDiffResult {
   ExprDiffResult({this.numericInequality: false, this.branch: null});
 
   @override
-  bool operator ==(dynamic other) =>
+  bool operator ==(other) =>
       other is ExprDiffResult &&
       other.numericInequality == numericInequality &&
       other.branch == branch;
@@ -216,8 +216,7 @@ int _computeRearrangeableHash(Expr expr, List<int> rearrangeableIds) {
         .map((child) => _computeRearrangeableHash(child.expr, rearrangeableIds))
         .toList();
     children.sort();
-    return jPostprocess(
-        jMix(children.fold(0, (hash, arg) => jMix(hash, arg)), expr.id));
+    return jPostprocess(jMix(children.fold(0, jMix), expr.id));
   } else {
     return expr.hashCode;
   }
@@ -233,7 +232,7 @@ class Rearrangement {
   Rearrangement.at(this.position, this.format);
 
   @override
-  bool operator ==(dynamic other) =>
+  bool operator ==(other) =>
       other is Rearrangement &&
       other.position == position &&
       const ListEquality().equals(other.format, format);

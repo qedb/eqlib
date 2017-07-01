@@ -9,7 +9,7 @@ class Rule {
   Rule(this.left, this.right);
 
   @override
-  bool operator ==(dynamic other) =>
+  bool operator ==(other) =>
       other is Rule && other.left == left && other.right == right;
 
   @override

@@ -110,7 +110,7 @@ class SimpleExprContext extends ExprContext {
       assert(expr.arguments.length == 2);
       return new Rule(expr.arguments[0], expr.arguments[1]);
     } else {
-      throw new EqLibException('expr is not an equation');
+      throw const EqLibException('expr is not an equation');
     }
   }
 
@@ -158,7 +158,7 @@ class SimpleExprContext extends ExprContext {
             return _printOperator(args[0], args[1], id, label);
         }
       } else {
-        return '$generic$label(${args.map((arg) => str(arg)).join(',')})';
+        return '$generic$label(${args.map(str).join(',')})';
       }
     } else {
       throw unsupportedType('input', input, ['NumberExpr', 'FunctionExpr']);

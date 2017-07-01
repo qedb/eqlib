@@ -52,7 +52,7 @@ class NumberExpr extends Expr {
       if (compare(rule.left)) {
         return rule.right.clone();
       } else {
-        throw new EqLibException('rule does not match at the given position');
+        throw const EqLibException('rule does not match at the given position');
       }
     } else {
       return clone();
@@ -62,7 +62,7 @@ class NumberExpr extends Expr {
   @override
   Expr _rearrangeAt(rearrange, position, rearrangeableIds) {
     if (position.v-- == 0) {
-      throw new EqLibException(
+      throw const EqLibException(
           'given position is not a rearrangeable function');
     }
     return clone();

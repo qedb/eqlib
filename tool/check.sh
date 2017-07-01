@@ -12,7 +12,7 @@ dartfmt --dry-run --set-exit-if-changed ./
 
 # Run analyzer checks.
 dartanalyzer \
---options .analysis_options \
+--options analysis_options.yaml \
 --fatal-hints --fatal-warnings --fatal-lints ./
 
 # Run the tests.

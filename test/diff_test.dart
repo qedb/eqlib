@@ -12,7 +12,7 @@ void main() {
   final b = symbol('b', generic: true);
   final rearrangeableIds = [ctx.operators.id('+'), ctx.operators.id('*')];
 
-  final getDiff = (String left, String right) =>
+  ExprDiffResult getDiff(String left, String right) =>
       getExpressionDiff(ctx.parse(left), ctx.parse(right), rearrangeableIds);
 
   test('Chain rule', () {

@@ -27,7 +27,7 @@ class ExprMapping {
       [List<Expr> targetVars = const []]) {
     if (targetVars.isNotEmpty) {
       if (strictMode && targetVars.length > 1) {
-        throw new EqLibException(
+        throw const EqLibException(
             'in strict mode multiple dependant variables are not allowed');
       }
 
@@ -38,14 +38,14 @@ class ExprMapping {
           ids.add(arg.id);
         } else {
           // Generic function arguments may only contain generic symbols.
-          throw new EqLibException(
+          throw const EqLibException(
               'dependant variables must be generic symbols');
         }
       }
 
       if (dependantVars.containsKey(id)) {
         if (!const ListEquality().equals(dependantVars[id], ids)) {
-          throw new EqLibException(
+          throw const EqLibException(
               'generic functions must have the same arguments');
         }
       } else {
