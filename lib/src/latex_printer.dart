@@ -62,8 +62,8 @@ class LaTeXPrinter {
     // Numbers
     if (expr is NumberExpr) {
       if (expr.value < 0) {
-        return _render(new FunctionExpr(operators.byChar[char('~')].id, false,
-            [new NumberExpr(expr.value.abs())]));
+        return _render(new FunctionExpr(
+            operators.id('~'), false, [new NumberExpr(expr.value.abs())]));
       } else {
         return new _LaTeXRenderData(expr.value.toString(), true, true);
       }

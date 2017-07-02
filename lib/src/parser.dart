@@ -16,9 +16,9 @@ Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
   final reader = new StringReader(input);
 
   // Process operator config.
-  final opChars = ops.byChar.keys.toList();
+  final operatorChars = ops.byChar.keys.toList();
   final specialChars = '(,)? '.codeUnits.toList();
-  specialChars.addAll(opChars);
+  specialChars.addAll(operatorChars);
 
   /// Tokens:
   /// - number
@@ -108,7 +108,7 @@ Expr parseExpression(String input, OperatorConfig ops, ExprAssignId assignId) {
     }
 
     // Try math operator.
-    else if (reader.currentOneOf(opChars)) {
+    else if (reader.currentOneOf(operatorChars)) {
       // Handle unary minus operator by checking if:
       // * the previous token is also an operator
       // * this is the first token in the current block
