@@ -105,17 +105,17 @@ class SimpleExprContext extends ExprContext {
   @override
   Expr parse(String str) => parseExpression(str, operators, assignId);
 
-  Rule toRule(Expr expr) {
+  /// Convert equation expression to substitution object.
+  Subs toSubs(Expr expr) {
     if (expr is FunctionExpr && expr.id == operators.id('=')) {
       assert(expr.arguments.length == 2);
-      return new Rule(expr.arguments[0], expr.arguments[1]);
+      return new Subs(expr.arguments[0], expr.arguments[1]);
     } else {
       throw const EqLibException('expr is not an equation');
     }
   }
 
-  @override
-  Rule parseRule(String str) => toRule(parse(str));
+  Subs parseSubs(String str) => toSubs(parse(str));
 
   @override
   num compute(int id, List<num> args) {

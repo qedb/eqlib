@@ -101,7 +101,7 @@ class LaTeXParser {
   };
 
   /// Parsed [rules]
-  final parsedRules = new List<Rule>();
+  final parsedRules = new List<Subs>();
 
   LaTeXParser(ExprContextLabelResolver resolver) {
     setOperators(operators, resolver.assignId);
@@ -115,17 +115,17 @@ class LaTeXParser {
 
     // Parse all specified rules.
     // Note that the right side can be parsed with a bare parser.
-    rules.forEach((left, right) => parsedRules.add(new Rule(
+    rules.forEach((left, right) => parsedRules.add(new Subs(
         parse(left, resolver.assignId, false),
         parseExpression(right, operators, resolver.assignId))));
 
     // Generate additional rules for all functions specified in [allFunctions].
-    parsedRules.addAll(generateList<Rule>(allFunctions.length, [
-      (i) => new Rule(
+    parsedRules.addAll(generateList<Subs>(allFunctions.length, [
+      (i) => new Subs(
           parse('\\${allFunctions[i]} ?a', resolver.assignId, false),
           parseExpression(
               '${allFunctions[i]}(?a)', operators, resolver.assignId)),
-      (i) => new Rule(
+      (i) => new Subs(
           parse('\\${allFunctions[i]}^?e ?a', resolver.assignId, false),
           parseExpression(
               '${allFunctions[i]}(?a)^?e', operators, resolver.assignId))

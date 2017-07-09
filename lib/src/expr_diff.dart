@@ -47,7 +47,7 @@ class ExprDiffBranch {
 }
 
 class ExprDiffResult {
-  /// Difference rules
+  /// Top level difference branch
   final ExprDiffBranch branch;
 
   /// The two expressions are both numbers and not equal.
@@ -108,10 +108,10 @@ ExprDiffResult getExpressionDiff(Expr a, Expr b, List<int> rearrangeableIds,
           a.arguments[i], b.arguments[i], rearrangeableIds, position);
 
       if (argResult.numericInequality) {
-        // The branch is illegal: discard argument rules.
+        // The branch is illegal: discard argument branches.
         // Note that the difference can never be fully resolved if one of the
-        // arguments has a numeric inequality. The rule must involve the parent
-        // functions.
+        // arguments has a numeric inequality. So the difference must involve
+        // the parent functions.
         result.branch.argumentDifference.clear();
         return result;
       } else {

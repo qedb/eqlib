@@ -26,13 +26,13 @@ void main() {
     var e = diff(sin(x ^ 3), x);
     final e1 = e.clone();
 
-    e = e.substitute(rule(diff(fn(a), b), diff(a, b) * diff(fn(a), a)));
+    e = e.substitute(subs(diff(fn(a), b), diff(a, b) * diff(fn(a), a)));
     final e2 = e.clone();
 
-    e = e.substitute(rule(diff(a ^ b, a), b * (a ^ (b - 1))));
+    e = e.substitute(subs(diff(a ^ b, a), b * (a ^ (b - 1))));
     final e3 = e.clone();
 
-    e = e.substitute(rule(diff(sin(a), a), cos(a)));
+    e = e.substitute(subs(diff(sin(a), a), cos(a)));
     final e4 = e.clone();
 
     // First step difference

@@ -98,12 +98,12 @@ abstract class Expr {
   /// This method always returns a new expression instance (deep copy).
   Expr remap(ExprMapping mapping);
 
-  /// Substitute the given [rule] at the given [position]. The position of this
-  /// node is 0. The position should be decremented when passing it on to
-  /// children.
-  Expr substituteAt(Rule rule, int position) {
+  /// Substitute the given [substitution] at the given [position]. The position
+  /// of this node is 0. The position should be decremented when passing it on
+  /// to children.
+  Expr substituteAt(Subs substitution, int position) {
     final _position = new W<int>(position);
-    final result = _substituteAt(rule, _position);
+    final result = _substituteAt(substitution, _position);
     if (_position.v >= 0) {
       throw const EqLibException('position not found');
     } else {
@@ -112,13 +112,13 @@ abstract class Expr {
   }
 
   /// [substituteAt] with shared position pointer.
-  Expr _substituteAt(Rule rule, W<int> position);
+  Expr _substituteAt(Subs substitution, W<int> position);
 
-  /// Apply given [rearrange] list at [position].
+  /// Apply given [rearrangeFormat] at [position].
   Expr rearrangeAt(
-      List<int> rearrange, int position, List<int> rearrangeableIds) {
+      List<int> rearrangeFormat, int position, List<int> rearrangeableIds) {
     final _position = new W<int>(position);
-    final result = _rearrangeAt(rearrange, _position, rearrangeableIds);
+    final result = _rearrangeAt(rearrangeFormat, _position, rearrangeableIds);
     if (_position.v >= 0) {
       throw const EqLibException('position not found');
     } else {
@@ -128,7 +128,7 @@ abstract class Expr {
 
   /// [rearrangeAt] with shared position pointer.
   Expr _rearrangeAt(
-      List<int> rule, W<int> position, List<int> rearrangeableIds);
+      List<int> rearrangeFormat, W<int> position, List<int> rearrangeableIds);
 
   /// Find first [n] positions that match [expr].
   List<int> search(Expr expr, [int n = 1]) {
@@ -145,10 +145,10 @@ abstract class Expr {
     return result;
   }
 
-  /// Substitute [rule] at first [n] matching positions.
+  /// Substitute [substitution] at first [n] matching positions.
   /// Throws an error if [n] > 0 and it is not possible to substitute [n] times.
-  Expr substitute(Rule rule, [int n = 1]) {
-    final positions = search(rule.left, n);
+  Expr substitute(Subs substitution, [int n = 1]) {
+    final positions = search(substitution.left, n);
     if (n > 0 && positions.length != n) {
       throw new EqLibException('could not find $n substitution sites');
     }
@@ -156,7 +156,7 @@ abstract class Expr {
     // Iterate backwards so positions stay fixed.
     var expr = this;
     for (final position in positions.reversed) {
-      expr = expr.substituteAt(rule, position);
+      expr = expr.substituteAt(substitution, position);
     }
 
     return expr;
@@ -168,12 +168,12 @@ abstract class Expr {
   Expr evaluate(ExprCompute compute);
 }
 
-/// Repeat [n] [Expr.substitute] calls with [rule] on [target] for at most [max]
-/// cycles. After each cycle the expression is evaluated. After each cycle the
-/// terminator is substituted. When [_n] terminators are substituted this
-/// function returns with the new expression.
+/// Repeat [n] [Expr.substitute] calls with [substitution] on [target] for at
+/// most [max] cycles. After each cycle the expression is evaluated. After each
+/// cycle the [terminator] is substituted. When [_n] terminators are substituted
+/// this function returns with the new expression.
 Expr substituteRecursive(
-    Expr target, Rule rule, Rule terminator, ExprCompute compute,
+    Expr target, Subs substitution, Subs terminator, ExprCompute compute,
     [int _n = 1, int max = 100]) {
   assert(max > 0 && _n > 0);
 
@@ -187,8 +187,8 @@ Expr substituteRecursive(
       throw const EqLibException('reached maximum number of recursions');
     }
 
-    // Try to substitute rule.
-    expr = expr.substitute(rule, n);
+    // Try to substitute main substitution.
+    expr = expr.substitute(substitution, n);
 
     // Evaluate expression before searching for terminators.
     expr = expr.evaluate(compute);

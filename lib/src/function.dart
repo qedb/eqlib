@@ -138,33 +138,34 @@ class FunctionExpr extends Expr {
   }
 
   @override
-  Expr _substituteAt(rule, position) {
+  Expr _substituteAt(substitution, position) {
     if (position.v-- == 0) {
       final mapping = new ExprMapping();
-      if (compare(rule.left, mapping)) {
-        return rule.right.remap(mapping);
+      if (compare(substitution.left, mapping)) {
+        return substitution.right.remap(mapping);
       } else {
-        throw const EqLibException('rule does not match at the given position');
+        throw const EqLibException(
+            'substitution does not match at the given position');
       }
     } else {
       final newArguments =
-          arguments.map((arg) => arg._substituteAt(rule, position));
+          arguments.map((arg) => arg._substituteAt(substitution, position));
       return new FunctionExpr(id, _generic, newArguments.toList());
     }
   }
 
   @override
-  Expr _rearrangeAt(rearrange, position, rearrangeableIds) {
+  Expr _rearrangeAt(rearrangeFormat, position, rearrangeableIds) {
     if (position.v-- == 0) {
       if (rearrangeableIds.contains(id)) {
-        return _rearrangeArguments(rearrange);
+        return _rearrangeArguments(rearrangeFormat);
       } else {
         throw const EqLibException(
             'given position is not a rearrangeable function');
       }
     } else {
-      final newArguments = arguments.map(
-          (arg) => arg._rearrangeAt(rearrange, position, rearrangeableIds));
+      final newArguments = arguments.map((arg) =>
+          arg._rearrangeAt(rearrangeFormat, position, rearrangeableIds));
       return new FunctionExpr(id, _generic, newArguments.toList());
     }
   }

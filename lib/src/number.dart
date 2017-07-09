@@ -47,12 +47,13 @@ class NumberExpr extends Expr {
   NumberExpr remap(mapping) => clone();
 
   @override
-  Expr _substituteAt(rule, position) {
+  Expr _substituteAt(substitution, position) {
     if (position.v-- == 0) {
-      if (compare(rule.left)) {
-        return rule.right.clone();
+      if (compare(substitution.left)) {
+        return substitution.right.clone();
       } else {
-        throw const EqLibException('rule does not match at the given position');
+        throw const EqLibException(
+            'substitution does not match at the given position');
       }
     } else {
       return clone();
@@ -60,7 +61,7 @@ class NumberExpr extends Expr {
   }
 
   @override
-  Expr _rearrangeAt(rearrange, position, rearrangeableIds) {
+  Expr _rearrangeAt(rearrangeFormat, position, rearrangeableIds) {
     if (position.v-- == 0) {
       throw const EqLibException(
           'given position is not a rearrangeable function');

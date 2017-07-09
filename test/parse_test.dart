@@ -68,14 +68,14 @@ void main() {
   test('Derivation of centripetal acceleration (step 1)', () {
     final pvec = ctx
         .parse('pvec = vec2d')
-        .substitute(ctx.parseRule('vec2d = x ihat + y jhat'))
-        .substitute(ctx.parseRule('x = px'))
-        .substitute(ctx.parseRule('y = py'))
-        .substitute(ctx.parseRule('px = r sin(theta)'))
-        .substitute(ctx.parseRule('py = r cos(theta)'))
-        .substitute(ctx.parseRule('(?a ?b) ?c = ?a (?b ?c)'))
-        .substitute(ctx.parseRule('(?a ?b) ?c = ?a (?b ?c)'))
-        .substitute(ctx.parseRule('?a ?b + ?a ?c = ?a*(?b+?c)'));
+        .substitute(ctx.parseSubs('vec2d = x ihat + y jhat'))
+        .substitute(ctx.parseSubs('x = px'))
+        .substitute(ctx.parseSubs('y = py'))
+        .substitute(ctx.parseSubs('px = r sin(theta)'))
+        .substitute(ctx.parseSubs('py = r cos(theta)'))
+        .substitute(ctx.parseSubs('(?a ?b) ?c = ?a (?b ?c)'))
+        .substitute(ctx.parseSubs('(?a ?b) ?c = ?a (?b ?c)'))
+        .substitute(ctx.parseSubs('?a ?b + ?a ?c = ?a*(?b+?c)'));
 
     expect(ctx.str(pvec), equals('pvec=r*(sin(theta)*ihat+cos(theta)*jhat)'));
   });
@@ -83,8 +83,8 @@ void main() {
   test('Solve a simple equation', () {
     final e = ctx
         .parse('x 2 + 5 = 9')
-        .substitute(ctx.parseRule('(?a + ?b = ?c) = (?a = ?c - ?b)'))
-        .substitute(ctx.parseRule('(?a * ?b = ?c) = (?a = ?c / ?b)'))
+        .substitute(ctx.parseSubs('(?a + ?b = ?c) = (?a = ?c - ?b)'))
+        .substitute(ctx.parseSubs('(?a * ?b = ?c) = (?a = ?c / ?b)'))
         .evaluate(ctx.compute);
 
     expect(e, equals(ctx.parse('x = 2.0')));

@@ -4,17 +4,17 @@
 
 part of eqlib;
 
-class Rule {
+class Subs {
   final Expr left, right;
-  Rule(this.left, this.right);
+  Subs(this.left, this.right);
 
   @override
   bool operator ==(other) =>
-      other is Rule && other.left == left && other.right == right;
+      other is Subs && other.left == left && other.right == right;
 
   @override
   int get hashCode => hashCode2(left, right);
 
-  /// Get inverted rule (not a deep copy).
-  Rule get inverted => new Rule(right, left);
+  /// Get inverted substitution (not a deep copy).
+  Subs get inverted => new Subs(right, left);
 }

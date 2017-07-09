@@ -26,14 +26,14 @@ void main() {
 
     // Derive equation for circular motion.
     final e = equation(pvec, vec2d)
-        .substitute(rule(vec2d, x * ihat + y * jhat))
-        .substitute(rule(x, px))
-        .substitute(rule(y, py))
-        .substitute(rule(px, r * sin(theta)))
-        .substitute(rule(py, r * cos(theta)))
-        .substitute(rule((a * b) * c, a * (b * c)))
-        .substitute(rule((a * b) * c, a * (b * c)))
-        .substitute(rule(a * b + a * c, a * (b + c)));
+        .substitute(subs(vec2d, x * ihat + y * jhat))
+        .substitute(subs(x, px))
+        .substitute(subs(y, py))
+        .substitute(subs(px, r * sin(theta)))
+        .substitute(subs(py, r * cos(theta)))
+        .substitute(subs((a * b) * c, a * (b * c)))
+        .substitute(subs((a * b) * c, a * (b * c)))
+        .substitute(subs(a * b + a * c, a * (b + c)));
 
     expect(
         e, equals(equation(pvec, r * (sin(theta) * ihat + cos(theta) * jhat))));
@@ -48,9 +48,9 @@ void main() {
 
     /// Use chain rule to find derivative of sin(x^3)
     final e = equation(symbol('y'), diff(sin(x ^ 3), x))
-        .substitute(rule(diff(fn(a), b), diff(a, b) * diff(fn(a), a)))
-        .substitute(rule(diff(a ^ b, a), b * (a ^ (b - 1))))
-        .substitute(rule(diff(sin(a), a), cos(a)))
+        .substitute(subs(diff(fn(a), b), diff(a, b) * diff(fn(a), a)))
+        .substitute(subs(diff(a ^ b, a), b * (a ^ (b - 1))))
+        .substitute(subs(diff(sin(a), a), cos(a)))
         .evaluate(ctx.compute);
 
     expect(e, equals(equation(symbol('y'), number(3) * (x ^ 2) * cos(x ^ 3))));
@@ -59,7 +59,7 @@ void main() {
   test('Power operator', () {
     expect(
         equation(symbol('y'), symbol('x') ^ 3)
-            .substitute(rule(symbol('x'), 3))
+            .substitute(subs(symbol('x'), 3))
             .evaluate(ctx.compute),
         equals(equation(symbol('y'), 27)));
   });

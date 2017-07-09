@@ -57,8 +57,8 @@ FunctionExprOps symbol(String label, {bool generic: false}) =>
 /// Alias for creating generic symbols.
 FunctionExprOps generic(String label) => symbol(label, generic: true);
 
-/// Quick syntax for rule contruction.
-Rule rule(left, right) => new Rule(new Expr.from(left), new Expr.from(right));
+/// Quick syntax for substitution contruction.
+Subs subs(left, right) => new Subs(new Expr.from(left), new Expr.from(right));
 
 typedef FunctionExprOps ExprGenerator1(arg1);
 typedef FunctionExprOps ExprGenerator2(arg1, arg2);

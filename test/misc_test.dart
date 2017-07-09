@@ -64,16 +64,16 @@ void main() {
     expect(ctx.str(printTest), equals('1+a-3*(b/5)^-c'));
 
     // Equation parsing exception.
-    expect(() => ctx.parseRule('a'), eqlibThrows('expr is not an equation'));
+    expect(() => ctx.parseSubs('a'), eqlibThrows('expr is not an equation'));
   });
 
   test('Various Expr.substituteAt cases', () {
-    expect(() => ctx.parse('a').substituteAt(ctx.parseRule('b=c'), 0),
-        eqlibThrows('rule does not match at the given position'));
-    expect(ctx.parse('1').substituteAt(ctx.parseRule('1=1/1'), 0),
+    expect(() => ctx.parse('a').substituteAt(ctx.parseSubs('b=c'), 0),
+        eqlibThrows('substitution does not match at the given position'));
+    expect(ctx.parse('1').substituteAt(ctx.parseSubs('1=1/1'), 0),
         equals(ctx.parse('1/1')));
-    expect(() => ctx.parse('1').substituteAt(ctx.parseRule('2=3'), 0),
-        eqlibThrows('rule does not match at the given position'));
+    expect(() => ctx.parse('1').substituteAt(ctx.parseSubs('2=3'), 0),
+        eqlibThrows('substitution does not match at the given position'));
   });
 
   test('Rearrangement constructor', () {
@@ -83,9 +83,9 @@ void main() {
     expect(rearrangement.format, isNull);
   });
 
-  test('Rule class', () {
-    final a = ctx.parseRule('a + b = b + a');
-    final b = ctx.parseRule('b + a = a + b');
+  test('Subs class', () {
+    final a = ctx.parseSubs('a + b = b + a');
+    final b = ctx.parseSubs('b + a = a + b');
 
     expect(a, equals(b.inverted));
     expect(a.hashCode, equals(b.inverted.hashCode));

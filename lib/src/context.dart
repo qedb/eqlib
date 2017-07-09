@@ -33,7 +33,4 @@ abstract class ExprContext {
 
   /// Parse an expression string.
   Expr parse(String str);
-
-  /// Parse expression string as rule.
-  Rule parseRule(String str);
 }

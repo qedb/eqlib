@@ -16,7 +16,7 @@ import 'package:collection/collection.dart';
 import 'src/parser_utils.dart';
 
 part 'src/expr.dart';
-part 'src/rule.dart';
+part 'src/subs.dart';
 part 'src/number.dart';
 part 'src/function.dart';
 part 'src/interface.dart';

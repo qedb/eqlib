@@ -20,7 +20,7 @@ void main() {
   });
 
   test('Expr.substituteAt', () {
-    expect(() => ctx.parse('1').substituteAt(ctx.parseRule('1 = 1/1'), 1),
+    expect(() => ctx.parse('1').substituteAt(ctx.parseSubs('1 = 1/1'), 1),
         eqlibThrows('position not found'));
   });
 
