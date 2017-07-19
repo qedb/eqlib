@@ -90,8 +90,12 @@ void main() {
     expect(a, equals(b.inverted));
     expect(a.hashCode, equals(b.inverted.hashCode));
 
-    final sub = ctx.parseSubs('b^2*b^3=b^5');
-    final pat = ctx.parseSubs('?a^?b*?a^?c=?a^(?b+?c)');
+    var sub = ctx.parseSubs('b^2*b^3=b^5');
+    var pat = ctx.parseSubs('?a^?b*?a^?c=?a^(?b+?c)');
     expect(sub.compare(pat, ctx.compute), equals(true));
+
+    sub = ctx.parseSubs('vec2(?a?b, ?a?c)=?a?b*e1+?a?c*e2');
+    pat = ctx.parseSubs('vec2(?a, ?b)=?a*e1+?b*e2');
+    expect(compareSubstitutions(sub, pat, ctx.compute), equals(true));
   });
 }

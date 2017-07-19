@@ -83,15 +83,15 @@ abstract class Expr {
   /// Pattern matching
   ///
   /// Match another [pattern] expression against this expression.
-  bool compare(Expr pattern, [ExprMapping mapping]) {
+  bool compare(Expr pattern, [ExprMapping mapping, ExprCompute compute]) {
     final theMapping = mapping ?? new ExprMapping();
-    final result = _compare(pattern, theMapping);
+    final result = _compare(pattern, theMapping, compute);
     theMapping.finalize();
     return result;
   }
 
   /// Should never be called directly.
-  bool _compare(Expr pattern, ExprMapping data) => false;
+  bool _compare(Expr pattern, ExprMapping data, ExprCompute compute) => false;
 
   /// Expression remapping
   ///

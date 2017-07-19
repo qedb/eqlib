@@ -33,13 +33,16 @@ class NumberExpr extends Expr {
   void getFunctionIds(target) {}
 
   @override
-  bool _compare(pattern, mapping) {
+  bool _compare(pattern, mapping, compute) {
     if (equals(pattern)) {
       return true;
     } else if (pattern is FunctionExpr && pattern.isGeneric) {
       return mapping.addExpression(pattern.id, this);
     } else {
-      return false;
+      // Try to evaluate remapped pattern.
+      return compute != null
+          ? equals(pattern.remap(mapping).evaluate(compute))
+          : false;
     }
   }
 

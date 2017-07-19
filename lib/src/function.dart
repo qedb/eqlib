@@ -60,7 +60,7 @@ class FunctionExpr extends Expr {
   }
 
   @override
-  bool _compare(pattern, mapping) {
+  bool _compare(pattern, mapping, compute) {
     if (pattern is NumberExpr) {
       return false;
     } else if (pattern is FunctionExpr) {
@@ -74,7 +74,7 @@ class FunctionExpr extends Expr {
           pattern.arguments.length == arguments.length) {
         // Process arguments.
         for (var i = 0; i < arguments.length; i++) {
-          if (!arguments[i]._compare(pattern.arguments[i], mapping)) {
+          if (!arguments[i]._compare(pattern.arguments[i], mapping, compute)) {
             return false;
           }
         }

@@ -19,16 +19,16 @@ class Subs {
   Subs get inverted => new Subs(right, left);
 
   /// Shorthand for [compareSubstitutions].
-  bool compare(Subs pattern, ExprCompute compute, [ExprMapping mapping]) =>
-      compareSubstitutions(this, pattern, compute, mapping);
+  bool compare(Subs pattern, ExprCompute compute, [ExprMapping mapping]) {
+    return compareSubstitutions(this, pattern, compute, mapping);
+  }
 }
 
 bool compareSubstitutions(Subs subs, Subs pattern, ExprCompute compute,
     [ExprMapping mapping]) {
   final theMapping = mapping ?? new ExprMapping();
-  if (subs.left._compare(pattern.left, theMapping)) {
-    final rightEvaluated = pattern.right.remap(theMapping).evaluate(compute);
-    return subs.right._compare(rightEvaluated, theMapping);
+  if (subs.left._compare(pattern.left, theMapping, compute)) {
+    return subs.right._compare(pattern.right, theMapping, compute);
   } else {
     return false;
   }
