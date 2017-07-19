@@ -61,20 +61,33 @@ class ExprMapping {
     }
   }
 
-  /// Finalize mapping.
-  /// Generic function arguments that are not already mapped to an expression
-  /// are mapped to the argument of this function (when both have 1 argument).
-  void finalize() {
-    dependantVars.forEach((fnId, ids) {
-      if (ids.length == 1) {
-        final id = ids.first;
-        if (!substitute.containsKey(id)) {
+  /// Get dependant variables for generic function ID.
+  /// In this function we can also figure to which expression the dependant
+  /// variable is mapped.
+  List<int> getDependantVars(int fnId) {
+    final depVars = dependantVars[fnId] ?? [];
+    for (final varId in depVars) {
+      // Check if a substitution expression is mapped already.
+      if (!substitute.containsKey(varId)) {
+        if (depVars.length == 1) {
+          // Take the expression the generic function is mapped to, if this is a
+          // function with one argument (e.g. sin(x)), map the variable to the
+          // argument.
           final fn = substitute[fnId];
           if (fn is FunctionExpr && fn.arguments.length == 1) {
-            substitute[id] = fn.arguments.first;
+            substitute[varId] = fn.arguments.first;
+          } else {
+            throw const EqLibException('dependant variable cannot be inferred');
           }
+        } else {
+          throw const EqLibException('dependant variable cannot be inferred');
         }
       }
-    });
+    }
+    return depVars;
+  }
+
+  void finalize() {
+    dependantVars.keys.forEach(getDependantVars);
   }
 }

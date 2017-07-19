@@ -89,5 +89,9 @@ void main() {
 
     expect(a, equals(b.inverted));
     expect(a.hashCode, equals(b.inverted.hashCode));
+
+    final sub = ctx.parseSubs('b^2*b^3=b^5');
+    final pat = ctx.parseSubs('?a^?b*?a^?c=?a^(?b+?c)');
+    expect(sub.compare(pat, ctx.compute), equals(true));
   });
 }

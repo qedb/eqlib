@@ -74,7 +74,7 @@ class FunctionExpr extends Expr {
           pattern.arguments.length == arguments.length) {
         // Process arguments.
         for (var i = 0; i < arguments.length; i++) {
-          if (!arguments[i].compare(pattern.arguments[i], mapping)) {
+          if (!arguments[i]._compare(pattern.arguments[i], mapping)) {
             return false;
           }
         }
@@ -91,7 +91,7 @@ class FunctionExpr extends Expr {
   Expr remap(mapping) {
     if (mapping.substitute.containsKey(id)) {
       if (isGeneric) {
-        final depVars = mapping.dependantVars[id] ?? [];
+        final depVars = mapping.getDependantVars(id);
         if (depVars.length != arguments.length) {
           throw const EqLibException(
               'dependant variable count does not match the target substitutions');
