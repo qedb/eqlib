@@ -101,9 +101,10 @@ abstract class Expr {
   /// Substitute the given [substitution] at the given [position]. The position
   /// of this node is 0. The position should be decremented when passing it on
   /// to children.
-  Expr substituteAt(Subs substitution, int position) {
+  Expr substituteAt(Subs substitution, int position, [ExprMapping mapping]) {
     final _position = new W<int>(position);
-    final result = _substituteAt(substitution, _position);
+    final theMapping = mapping ?? new ExprMapping();
+    final result = _substituteAt(substitution, _position, theMapping);
     if (_position.v >= 0) {
       throw const EqLibException('position not found');
     } else {
@@ -112,7 +113,7 @@ abstract class Expr {
   }
 
   /// [substituteAt] with shared position pointer.
-  Expr _substituteAt(Subs substitution, W<int> position);
+  Expr _substituteAt(Subs substitution, W<int> position, ExprMapping mapping);
 
   /// Apply given [rearrangeFormat] at [position].
   Expr rearrangeAt(

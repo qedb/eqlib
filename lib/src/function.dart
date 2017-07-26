@@ -140,9 +140,8 @@ class FunctionExpr extends Expr {
   }
 
   @override
-  Expr _substituteAt(substitution, position) {
+  Expr _substituteAt(substitution, position, mapping) {
     if (position.v-- == 0) {
-      final mapping = new ExprMapping();
       if (compare(substitution.left, mapping)) {
         return substitution.right.remap(mapping);
       } else {
@@ -150,8 +149,8 @@ class FunctionExpr extends Expr {
             'substitution does not match at the given position');
       }
     } else {
-      final newArguments =
-          arguments.map((arg) => arg._substituteAt(substitution, position));
+      final newArguments = arguments
+          .map((arg) => arg._substituteAt(substitution, position, mapping));
       return new FunctionExpr(id, _generic, newArguments.toList());
     }
   }

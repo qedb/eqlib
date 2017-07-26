@@ -30,7 +30,7 @@ class DummyExpr extends Expr {
   Expr remap(mapping) => clone();
 
   @override
-  Expr substituteAt(equation, position) => clone();
+  Expr substituteAt(equation, position, [mapping]) => clone();
 
   @override
   Expr evaluate(compute) => clone();
