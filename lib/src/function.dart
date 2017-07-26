@@ -62,6 +62,8 @@ class FunctionExpr extends Expr {
   @override
   bool _compare(pattern, mapping, compute) {
     if (pattern is NumberExpr) {
+      // Note: we do not evaluate the input function (this) because it can be
+      // evaluated before running [_compare].
       return false;
     } else if (pattern is FunctionExpr) {
       if (pattern.isGeneric) {
