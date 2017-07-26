@@ -8,20 +8,31 @@ class Subs {
   final Expr left, right;
   Subs(this.left, this.right);
 
+  /// Get copy.
+  Subs clone({bool invert: false, bool deepCopy: false}) {
+    final l = deepCopy ? left.clone() : left;
+    final r = deepCopy ? right.clone() : right;
+    return invert ? new Subs(r, l) : new Subs(l, r);
+  }
+
+  /// Get inverted substitution (not a deep copy).
+  Subs get inverted => new Subs(right, left);
+
+  /// Remap both sides.
+  Subs remap(ExprMapping mapping) =>
+      new Subs(left.remap(mapping), right.remap(mapping));
+
+  /// Shorthand for [compareSubstitutions].
+  bool compare(Subs pattern, ExprCompute compute, [ExprMapping mapping]) {
+    return compareSubstitutions(this, pattern, compute, mapping);
+  }
+
   @override
   bool operator ==(other) =>
       other is Subs && other.left == left && other.right == right;
 
   @override
   int get hashCode => hashCode2(left, right);
-
-  /// Get inverted substitution (not a deep copy).
-  Subs get inverted => new Subs(right, left);
-
-  /// Shorthand for [compareSubstitutions].
-  bool compare(Subs pattern, ExprCompute compute, [ExprMapping mapping]) {
-    return compareSubstitutions(this, pattern, compute, mapping);
-  }
 }
 
 bool compareSubstitutions(Subs subs, Subs pattern, ExprCompute compute,

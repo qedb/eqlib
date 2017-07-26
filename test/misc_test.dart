@@ -97,5 +97,17 @@ void main() {
     sub = ctx.parseSubs('vec2(?a?b, ?a?c)=?a?b*e1+?a?c*e2');
     pat = ctx.parseSubs('vec2(?a, ?b)=?a*e1+?b*e2');
     expect(compareSubstitutions(sub, pat, ctx.compute), equals(true));
+
+    expect(a.clone(invert: false, deepCopy: false), equals(a));
+    expect(a.clone(invert: false, deepCopy: true), equals(a));
+    expect(a.clone(invert: true, deepCopy: false), equals(a.inverted));
+    expect(a.clone(invert: true, deepCopy: true), equals(a.inverted));
+
+    final c = ctx.parseSubs('?a?b = ?c');
+    final mapping = new ExprMapping();
+    mapping.addExpression(ctx.assignId('a', true), number(2));
+    mapping.addExpression(ctx.assignId('b', true), number(3));
+    mapping.addExpression(ctx.assignId('c', true), number(6));
+    expect(c.remap(mapping), equals(ctx.parseSubs('2*3 = 6')));
   });
 }
