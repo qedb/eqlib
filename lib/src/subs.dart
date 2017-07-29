@@ -22,6 +22,10 @@ class Subs {
   Subs remap(ExprMapping mapping) =>
       new Subs(left.remap(mapping), right.remap(mapping));
 
+  /// Return evaluated [Subs].
+  Subs evaluate(ExprCompute compute) =>
+      new Subs(left.evaluate(compute), right.evaluate(compute));
+
   /// Shorthand for [compareSubstitutions].
   bool compare(Subs pattern, ExprCompute compute, [ExprMapping mapping]) {
     return compareSubstitutions(this, pattern, compute, mapping);

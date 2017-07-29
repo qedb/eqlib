@@ -109,5 +109,7 @@ void main() {
     mapping.addExpression(ctx.assignId('b', true), number(3));
     mapping.addExpression(ctx.assignId('c', true), number(6));
     expect(c.remap(mapping), equals(ctx.parseSubs('2*3 = 6')));
+
+    expect(c.remap(mapping).evaluate(ctx.compute).left, equals(ctx.parse('6')));
   });
 }
