@@ -50,9 +50,9 @@ class NumberExpr extends Expr {
   NumberExpr remap(mapping) => clone();
 
   @override
-  Expr _substituteAt(substitution, position, mapping) {
+  Expr _substituteAt(substitution, position, mapping, literal) {
     if (position.v-- == 0) {
-      if (compare(substitution.left)) {
+      if (literal ? substitution.left == this : compare(substitution.left)) {
         return substitution.right.clone();
       } else {
         throw const EqLibException(

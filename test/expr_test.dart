@@ -22,6 +22,19 @@ void main() {
   test('Expr.substituteAt', () {
     expect(() => ctx.parse('1').substituteAt(ctx.parseSubs('1 = 1/1'), 1),
         eqlibThrows('position not found'));
+
+    expect(ctx.parse('a + b').substitute(ctx.parseSubs('b = c'), literal: true),
+        equals(ctx.parse('a + c')));
+    expect(
+        () => ctx
+            .parse('a + b')
+            .substituteAt(ctx.parseSubs('?a = 1'), 1, literal: true),
+        eqlibThrows('substitution does not match at the given position'));
+    expect(
+        ctx
+            .parse('a + b')
+            .substituteAt(ctx.parseSubs('?a = 1'), 1, literal: false),
+        equals(ctx.parse('1 + b')));
   });
 
   test('Expr.rearrangeAt', () {

@@ -178,7 +178,7 @@ class LaTeXParser {
     // 3. Apply rules.
     if (applyRules) {
       for (final rule in parsedRules) {
-        expr = expr.substitute(rule, -1);
+        expr = expr.substitute(rule, n: -1);
       }
     }
 

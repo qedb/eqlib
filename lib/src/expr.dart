@@ -101,10 +101,11 @@ abstract class Expr {
   /// Substitute the given [substitution] at the given [position]. The position
   /// of this node is 0. The position should be decremented when passing it on
   /// to children.
-  Expr substituteAt(Subs substitution, int position, [ExprMapping mapping]) {
+  Expr substituteAt(Subs substitution, int position,
+      {ExprMapping mapping, bool literal: false}) {
     final _position = new W<int>(position);
     final theMapping = mapping ?? new ExprMapping();
-    final result = _substituteAt(substitution, _position, theMapping);
+    final result = _substituteAt(substitution, _position, theMapping, literal);
     if (_position.v >= 0) {
       throw const EqLibException('position not found');
     } else {
@@ -113,7 +114,8 @@ abstract class Expr {
   }
 
   /// [substituteAt] with shared position pointer.
-  Expr _substituteAt(Subs substitution, W<int> position, ExprMapping mapping);
+  Expr _substituteAt(
+      Subs substitution, W<int> position, ExprMapping mapping, bool literal);
 
   /// Apply given [rearrangeFormat] at [position].
   Expr rearrangeAt(
@@ -132,24 +134,37 @@ abstract class Expr {
       List<int> rearrangeFormat, W<int> position, List<int> rearrangeableIds);
 
   /// Find first [n] positions that match [expr].
-  List<int> search(Expr expr, [int n = 1]) {
+  List<int> search(Expr expr, {int n = 1, bool literal: false}) {
     final result = new List<int>();
     final flat = flatten();
-    for (var i = 0; i < flat.length; i++) {
-      if (flat[i].compare(expr)) {
-        result.add(i);
-        if (n > 0 && result.length == n) {
-          break;
+
+    if (literal) {
+      for (var i = 0; i < flat.length; i++) {
+        if (flat[i] == expr) {
+          result.add(i);
+          if (n > 0 && result.length == n) {
+            break;
+          }
+        }
+      }
+    } else {
+      for (var i = 0; i < flat.length; i++) {
+        if (flat[i].compare(expr)) {
+          result.add(i);
+          if (n > 0 && result.length == n) {
+            break;
+          }
         }
       }
     }
+
     return result;
   }
 
   /// Substitute [substitution] at first [n] matching positions.
   /// Throws an error if [n] > 0 and it is not possible to substitute [n] times.
-  Expr substitute(Subs substitution, [int n = 1]) {
-    final positions = search(substitution.left, n);
+  Expr substitute(Subs substitution, {int n: 1, bool literal: false}) {
+    final positions = search(substitution.left, n: n, literal: literal);
     if (n > 0 && positions.length != n) {
       throw new EqLibException('could not find $n substitution sites');
     }
@@ -157,7 +172,7 @@ abstract class Expr {
     // Iterate backwards so positions stay fixed.
     var expr = this;
     for (final position in positions.reversed) {
-      expr = expr.substituteAt(substitution, position);
+      expr = expr.substituteAt(substitution, position, literal: literal);
     }
 
     return expr;
@@ -171,36 +186,36 @@ abstract class Expr {
 
 /// Repeat [n] [Expr.substitute] calls with [substitution] on [target] for at
 /// most [max] cycles. After each cycle the expression is evaluated. After each
-/// cycle the [terminator] is substituted. When [_n] terminators are substituted
+/// cycle the [terminator] is substituted. When [n] terminators are substituted
 /// this function returns with the new expression.
 Expr substituteRecursive(
     Expr target, Subs substitution, Subs terminator, ExprCompute compute,
-    [int _n = 1, int max = 100]) {
-  assert(max > 0 && _n > 0);
+    {int n = 1, int max = 100, bool literal: false}) {
+  assert(max > 0 && n > 0);
 
-  var n = _n;
+  var _n = n;
   var cycles = 0;
   var expr = target;
 
-  while (n > 0) {
+  while (_n > 0) {
     cycles++;
     if (cycles > max) {
       throw const EqLibException('reached maximum number of recursions');
     }
 
     // Try to substitute main substitution.
-    expr = expr.substitute(substitution, n);
+    expr = expr.substitute(substitution, n: _n, literal: literal);
 
     // Evaluate expression before searching for terminators.
     expr = expr.evaluate(compute);
 
     // Substitute terminators.
-    var nextPosition = expr.search(terminator.left, 1);
+    var nextPosition = expr.search(terminator.left, n: 1);
     while (nextPosition.isNotEmpty) {
       expr = expr.substituteAt(terminator, nextPosition.first);
-      nextPosition = expr.search(terminator.left, 1);
-      n--;
-      if (n == 0) {
+      nextPosition = expr.search(terminator.left, n: 1);
+      _n--;
+      if (_n == 0) {
         break;
       }
     }

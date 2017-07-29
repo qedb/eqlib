@@ -19,7 +19,7 @@ void main() {
         equals(ctx.parse('55')));
 
     // Test max recursions.
-    expect(() => substituteRecursive(e, ffib, ffib0, ctx.compute, 1, 9),
+    expect(() => substituteRecursive(e, ffib, ffib0, ctx.compute, n: 1, max: 9),
         eqlibThrows('reached maximum number of recursions'));
 
     // Test incorrect recursion.

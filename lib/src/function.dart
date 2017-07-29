@@ -140,17 +140,22 @@ class FunctionExpr extends Expr {
   }
 
   @override
-  Expr _substituteAt(substitution, position, mapping) {
+  Expr _substituteAt(substitution, position, mapping, literal) {
     if (position.v-- == 0) {
-      if (compare(substitution.left, mapping)) {
-        return substitution.right.remap(mapping);
+      if (literal) {
+        if (substitution.left == this) {
+          return substitution.right.clone();
+        }
       } else {
-        throw const EqLibException(
-            'substitution does not match at the given position');
+        if (compare(substitution.left, mapping)) {
+          return substitution.right.remap(mapping);
+        }
       }
+      throw const EqLibException(
+          'substitution does not match at the given position');
     } else {
-      final newArguments = arguments
-          .map((arg) => arg._substituteAt(substitution, position, mapping));
+      final newArguments = arguments.map(
+          (arg) => arg._substituteAt(substitution, position, mapping, literal));
       return new FunctionExpr(id, _generic, newArguments.toList());
     }
   }
